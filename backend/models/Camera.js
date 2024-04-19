@@ -19,7 +19,7 @@ const cameraSchema = new mongoose.Schema({
   },
   rtspUrl: {
     type: String,
-    required: true,
+    
   },
   createdAt: {
     type: Date,

@@ -1,0 +1,50 @@
+.network-config {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+  }
+  
+  .network-config h2 {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+  }
+  
+  .network-config div {
+    margin-bottom: 10px;
+  }
+  
+  .network-config label {
+    display: block;
+    font-weight: bold;
+  }
+  
+  .network-config input[type="radio"] {
+    margin-right: 5px;
+  }
+  
+  .network-config input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    box-sizing: border-box;
+  }
+  
+  .network-config button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  
+  .network-config button:hover {
+    background-color: #0056b3;
+  }
+  

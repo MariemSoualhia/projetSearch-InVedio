@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  CircularProgress,
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 import DeleteIcon from "@material-ui/icons/Delete";
@@ -82,11 +83,11 @@ const CameraConfig = () => {
     address: "",
     username: "",
     password: "",
-    rtspUrl: "",
     resolution: "",
   });
   const [openDialog, setOpenDialog] = useState(false);
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
   const itemsPerPage = 5;
 
   useEffect(() => {
@@ -111,6 +112,7 @@ const CameraConfig = () => {
   };
 
   const handleAddCamera = async () => {
+    setLoading(true);
     try {
       await axios.post("http://localhost:3002/api/cameras", formData);
       fetchCameras();
@@ -119,11 +121,12 @@ const CameraConfig = () => {
         address: "",
         username: "",
         password: "",
-        rtspUrl: "",
         resolution: "",
       });
+      setLoading(false);
     } catch (error) {
       console.error("Error adding camera:", error);
+      setLoading(false);
     }
   };
 
@@ -143,7 +146,6 @@ const CameraConfig = () => {
       address: camera.address,
       username: camera.username,
       password: camera.password,
-      rtspUrl: camera.rtspUrl,
       resolution: camera.resolution,
     });
     setOpenDialog(true);
@@ -161,7 +163,6 @@ const CameraConfig = () => {
         address: "",
         username: "",
         password: "",
-        rtspUrl: "",
         resolution: "",
       });
       setOpenDialog(false);
@@ -176,7 +177,6 @@ const CameraConfig = () => {
       address: "",
       username: "",
       password: "",
-      rtspUrl: "",
       resolution: "",
     });
     setOpenDialog(false);
@@ -235,33 +235,9 @@ const CameraConfig = () => {
               value={formData.password}
               onChange={handleInputChange}
             />
-            <TextField
-              label="RTSP URL"
-              variant="outlined"
-              fullWidth
-              className={classes.textField}
-              name="rtspUrl"
-              value={formData.rtspUrl}
-              onChange={handleInputChange}
-            />
-            <TextField
-              label="Resolution"
-              variant="outlined"
-              fullWidth
-              className={classes.textField}
-              name="resolution"
-              value={formData.resolution}
-              onChange={handleInputChange}
-            />
-            {formData.id ? (
-              <Button
-                variant="contained"
-                color="primary"
-                className={classes.button}
-                onClick={handleUpdateCamera}
-              >
-                Update Camera
-              </Button>
+  
+            {loading ? (
+              <CircularProgress />
             ) : (
               <Button
                 variant="contained"
@@ -280,9 +256,10 @@ const CameraConfig = () => {
               <ListItem key={camera._id} className={classes.listItem}>
                 <ListItemText
                   primary={camera.name}
-                  secondary={`RTSP URL: ${camera.rtspUrl}, Resolution: ${camera.resolution}`}
+                  secondary={`IP Address: ${camera.address}, Username: ${camera.username}, RTSP: ${camera.rtspUrl}`}
                   classes={{ primary: classes.listItemText }}
                 />
+                
                 <ListItemSecondaryAction>
                   <IconButton
                     edge="end"
@@ -351,15 +328,6 @@ const CameraConfig = () => {
             className={classes.textField}
             name="password"
             value={formData.password}
-            onChange={handleInputChange}
-          />
-          <TextField
-            label="RTSP URL"
-            variant="outlined"
-            fullWidth
-            className={classes.textField}
-            name="rtspUrl"
-            value={formData.rtspUrl}
             onChange={handleInputChange}
           />
           <TextField

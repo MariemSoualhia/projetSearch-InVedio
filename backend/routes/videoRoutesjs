@@ -1,0 +1,16 @@
+// routes/videos.js
+const express = require('express');
+const Video = require('../models/Video');
+const videoController = require("../controllers/videoController");
+
+const fs = require('fs');
+const router = express.Router();
+
+// Route pour récupérer tous les vidéos enregistrés
+router.get("/", videoController.getAllVideos);
+// Route pour servir les vidéos en streaming
+router.get('/:id', videoController.getVideo);
+
+router.delete("/:_id", videoController.deleteVideoById);
+
+module.exports = router;
