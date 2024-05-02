@@ -1,0 +1,20 @@
+# Utilisez l'image Node.js
+FROM node:latest
+
+# Créez et définissez le répertoire de travail de l'application
+WORKDIR /app
+
+# Copiez les fichiers nécessaires de l'application dans le conteneur
+COPY package*.json ./
+
+# Installez les dépendances de l'application
+RUN npm install
+
+# Copiez le reste des fichiers de l'application dans le conteneur
+COPY . .
+
+# Exposez le port sur lequel le serveur de l'application va écouter
+EXPOSE 3002
+
+# Commande pour démarrer le serveur
+CMD ["node", "server.js"]

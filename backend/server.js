@@ -13,6 +13,7 @@ const moment = require('moment');
 const path = require('path');
 const setIpAddress = require('set-ip-address');
 const multer = require('multer'); 
+const dotenv = require("dotenv")
 const app = express()
 const port = 3002
 let stream = null
@@ -25,6 +26,7 @@ app.use(
     credentials: true,
   })
 )
+dotenv.config()
 // Parse application/json
 app.use(bodyParser.json());
 connectDB();
@@ -60,6 +62,7 @@ async function createStream(rtspUrl) {
 
 }
 
+
 app.get("/stream", async (req, res) => {
   const newRtspStreamUrl = req.query.rtsp;
   let currentRtspStreamUrl = "";
@@ -73,7 +76,7 @@ app.get("/stream", async (req, res) => {
       await createStream(newRtspStreamUrl);
       currentRtspStreamUrl = newRtspStreamUrl;
       stream.on('data', data => {
-        console.log(`hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh`,data);
+        console.log(data);
       });
 
     
@@ -86,6 +89,100 @@ app.get("/stream", async (req, res) => {
     res.status(500).json({ error: "Erreur lors de la création du stream." });
   }
 });
+let allStreams = []; // Tableau pour stocker tous les flux de caméras actifs
+
+
+async function createStreamByPort(rtspUrl,port) {
+  return new Promise((resolve, reject) => {
+    stream = new Stream({
+      name: "Camera Stream",
+      streamUrl: rtspUrl,
+      wsPort: port,
+      ffmpegOptions: {
+        "-rtsp_transport": "tcp",
+        "-f": "mpegts",
+        "-codec:v": "mpeg1video",
+        "-codec:a": "mp2",
+        "-stats": "",
+        "-b:v": "3000k",
+        "-s": "532x324",
+        "-ar": "44100",
+        "-r": 30,
+      },
+    });
+    let newStreamData={
+      url :rtspUrl,
+      port:port,
+      stream:stream
+    }
+    allStreams.push(newStreamData);
+
+
+   
+  });
+
+
+}
+// Fonction pour arrêter un flux sur un port spécifié
+const stopStreamByPort = (port) => {
+  // Chercher le flux existant correspondant au port spécifié
+  const index = allStreams.findIndex(stream => stream.port === port);
+  if (index !== -1) {
+    // Si un flux correspondant est trouvé, l'arrêter
+    const stream = allStreams[index];
+    stream.stream.stop();
+    // Retirer le flux du tableau
+    allStreams.splice(index, 1);
+  }
+  console.log('allStreams après suppression :', allStreams);
+};
+
+
+app.get("/stopStream", async (req, res) => {
+  const port = req.query.port;
+  
+  try {
+    // Arrêter le flux sur le port spécifié en utilisant async/await
+    await stopStreamByPort(port);
+    res.status(200).json({ message: "Stream stopped successfully." });
+  } catch (error) {
+    console.error("Erreur lors de l'arrêt du flux :", error);
+    res.status(500).json({ error: "Erreur lors de l'arrêt du flux." });
+  }
+});
+
+
+app.get("/streamAll", async (req, res) => {
+  const newRtspStreamUrl = req.query.rtsp;
+  const port = req.query.port;
+  let currentRtspStream = null;
+
+  try {
+    // Chercher le flux existant correspondant à la nouvelle URL RTSP
+    currentRtspStream = allStreams.find(stream => stream.rtspUrl === newRtspStreamUrl);
+
+    // Si un flux existant est trouvé, arrêter ce flux
+    if (currentRtspStream) {
+      currentRtspStream.stop();
+      allStreams = allStreams.filter(stream => stream.rtspUrl !== newRtspStreamUrl);
+    }
+
+    // Créer et démarrer le nouveau flux
+    const newStream = await createStreamByPort(newRtspStreamUrl, port);
+  
+
+    // Écouter les données du flux
+    newStream.on('data', data => {
+      console.log(data);
+    });
+
+  } catch (error) {
+    console.error("Erreur lors de la création du stream :", error);
+    res.status(500).json({ error: "Erreur lors de la création du stream." });
+  }
+});
+
+
 
 let rtspRecorder = null;
 
@@ -212,6 +309,14 @@ app.post('/upload', upload.single('image'), (req, res) => {
   res.send(req.file.filename);
 });
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`)
+// Endpoint POST pour recevoir les coordonnées du rectangle
+app.post('/rectangle', (req, res) => {
+  const rectangleData = req.body;
+  console.log('Coordonnées du rectangle reçues :', rectangleData);
+  // Vous pouvez traiter les coordonnées du rectangle ici, par exemple les enregistrer dans une base de données
+
+  res.status(200).send('Coordonnées du rectangle reçues avec succès !');
+});
+app.listen(process.env.PORT, () => {
+  console.log(`Server running on port ${process.env.PORT}`)
 })

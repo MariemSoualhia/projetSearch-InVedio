@@ -13,8 +13,15 @@ import {
   Typography,
   MenuItem,
   Menu,
+  ListItemIcon
 } from "@material-ui/core";
+
+import Select from '@material-ui/core/Select';
+import FormControl from '@material-ui/core/FormControl';
+import InputLabel from '@material-ui/core/InputLabel';
 import { makeStyles } from "@material-ui/core/styles";
+import { API_API_URL } from "../../config/serverApiConfig";
+import { Videocam } from "@material-ui/icons";
 const useStyles = makeStyles((theme) => ({
   root: {
   
@@ -38,30 +45,23 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: "#000",
   },
   cameraList: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "flex-end", 
-    "& > *": {
-      marginBottom: theme.spacing(1),
-      width: "100%",
-      maxWidth: "400px",
+    padding: 0,
+  },
+  cameraList: {
+    padding: 0,
+  },
+  cameraItem: {
+    borderRadius: theme.spacing(1),
+    marginBottom: theme.spacing(1),
+    "&:hover": {
+      backgroundColor: theme.palette.primary.light,
     },
   },
-  
-  cameraItem: {
-    backgroundColor: theme.palette.primary.main,
-    padding: theme.spacing(2),
-    borderRadius: theme.spacing(2),
-    cursor: "pointer",
-    transition: "background-color 0.3s",
-    "&:hover": {
-      backgroundColor: theme.palette.primary.dark,
-    },
+  selectedCameraItem: {
+    backgroundColor: theme.palette.primary.light,
   },
   cameraText: {
-    color: "#fff",
-    fontWeight: "bold",
-   
+    color: theme.palette.text.primary,
   },
   sectionTitle: {
     color: "#333",
@@ -100,7 +100,11 @@ const useStyles = makeStyles((theme) => ({
     width: "1280px", // Taille initiale de 1280px
     height: "720px", // Taille initiale de 720px
   },
-  
+  sectionTitle: {
+    color: theme.palette.primary.main, // Change the color to match your theme
+    fontWeight: 'bold', // Make the text bold
+    marginBottom: theme.spacing(2), // Add some bottom margin for spacing
+  },
 }));
 const LivePage = () => {
   const classes = useStyles();
@@ -124,7 +128,9 @@ const LivePage = () => {
   const [startCoords, setStartCoords] = useState({ x: 0, y: 0 });
   const [endCoords, setEndCoords] = useState({ x: 0, y: 0 });
   const [points, setPoints] = useState([]);
-  const [drawMode, setDrawMode] = useState(false);
+  const [drawMode, setDrawMode] = useState("line");
+  const [drawDirection, setDrawDirection] = useState('left'); // Direction du rectangle
+  const [lineCoordinates, setLineCoordinates] = useState({ });
 
   useEffect(() => {
     const url = 'ws://127.0.0.1:9999'
@@ -143,7 +149,7 @@ const LivePage = () => {
 
   const fetchCameras = async () => {
     try {
-      const response = await axios.get("http://localhost:3002/api/cameras");
+      const response = await axios.get(API_API_URL+"/api/cameras");
       setCameras(response.data);
     } catch (error) {
       console.error("Error fetching cameras:", error);
@@ -154,7 +160,7 @@ const LivePage = () => {
 
   const httpRequest = async (url) => {
     try {
-     const resp= await axios.get(`http://127.0.0.1:3002/stream?rtsp=${url}`);
+     const resp= await axios.get(API_API_URL+`/stream?rtsp=${url}`);
      console.log(resp)
     } catch (error) {
       console.error("Error starting stream:", error);
@@ -200,7 +206,7 @@ const LivePage = () => {
     };
 
     axios
-    .post("http://127.0.0.1:3002/api/start-recording", recordingData)
+    .post(API_API_URL+"/api/start-recording", recordingData)
     .then((response) => {
       console.log(response);
       console.log("Recording started");
@@ -219,7 +225,7 @@ const LivePage = () => {
       recordingDuration: 2 * 60 * 1000, // 2 minutes par défaut
     };
     axios
-    .post("http://127.0.0.1:3002/api/stop-recording", recordingData)
+    .post(API_API_URL+"/api/stop-recording", recordingData)
     .then((response) => {
       console.log("Recording stopped", response);
       setIsRecording(false);
@@ -243,7 +249,8 @@ const LivePage = () => {
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
-    setStartCoords({ x, y });
+    console.log("la pt est ", event.clientY)
+    setStartCoords({ x, y:canvas.height });
    }
 else{
   const rect = canvasRef.current.getBoundingClientRect();
@@ -259,31 +266,95 @@ else{
   }
 }
   };
-  
   const draw = (event) => {
-    if(drawMode=="line"){
+    if (drawMode === "line") {
       if (!isDrawing) return;
       const canvas = canvasRef.current;
       const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      setEndCoords({ x, y });
-    
+  
+      const x = startCoords.x; // Coordonnée x fixe
+      const y = event.clientY - rect.top; // Coordonnée y du curseur
+      setEndCoords({ x, y:0 });
+  
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.beginPath();
-      
+  
       // Dessine une ligne verticale
-      ctx.moveTo(startCoords.x, 0); // Commence du haut de la toile (y = 0)
-      ctx.lineTo(x, canvas.height); // Se termine en bas de la toile
+      ctx.moveTo(x, 0); // Commence en haut du canvas
+      ctx.lineTo(x, canvas.height); // Se termine en bas du canvas
       
       ctx.lineWidth = 5; // Épaisseur de la ligne
       ctx.strokeStyle = 'red'; // Couleur de la ligne
       ctx.stroke();
+      
     }
- 
   };
   
+  
+ 
+  const handleDirectionChange = (event) => {
+    setDrawDirection(event.target.value);
+  }; 
+  
+ const drawRectangle = (side) => {
+  // Récupération des coordonnées de la ligne
+  const { start, end } = lineCoordinates;
+  const canvas = canvasRef.current;
+  const ctx = canvas.getContext('2d');
+
+  // Calcul des coordonnées du rectangle
+  
+
+  let x1, x2, y1,y2;
+  let    rectangleData = {};
+  if (side === 'left')  {
+    x1 = 0;
+    y1 = 0;
+    x2 = 0;
+    y2 = canvas.height;
+  } else if (side === 'right') {
+     x1 = canvas.width;
+   y1 = 0;
+   x2 = canvas.width;
+   y2 = canvas.height;
+  } else {
+    // Gérer les cas invalides ou par défaut
+    return;
+  }
+  const x3 = startCoords.x;
+  const y3 = startCoords.y;
+  const x4 = endCoords.x;
+  const y4 = endCoords.y;
+
+  // Dessin du rectangle
+  //ctx.clearRect(0, 0, canvas.width, canvas.height); // Effacer le canvas
+  ctx.beginPath();
+
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.lineTo(x3, y3);
+  ctx.lineTo(x4, y4);
+  ctx.closePath();
+  ctx.strokeStyle = 'blue';
+  ctx.stroke();
+  rectangleData = {
+    point1: { x: x1, y: y1 },
+    point2: { x: x2, y: y2 },
+    point3: { x: x3, y: y3 },
+    point4: { x: x4, y: y4 }
+  };
+
+    // Envoyer les coordonnées du rectangle au backend (exemple avec Axios)
+    axios.post(API_API_URL+'/rectangle', rectangleData)
+    .then(response => {
+      console.log('Coordonnées du rectangle envoyées avec succès !');
+    })
+    .catch(error => {
+      console.error('Erreur lors de l\'envoi des coordonnées du rectangle :', error);
+    });
+};
+
   
 
   const stopDrawing = () => {
@@ -328,7 +399,20 @@ else{
   const drawZone = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
+    
+    // Effacer le contenu précédent du canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Dessiner les points
+    points.forEach((point) => {
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 5, 0, Math.PI * 2); // Dessiner un cercle de rayon 5
+      ctx.fillStyle = 'blue';
+      ctx.fill();
+      ctx.closePath();
+    });
+    
+    // Dessiner les lignes reliant les points
     ctx.beginPath();
     points.forEach((point, index) => {
       if (index === 0) {
@@ -343,12 +427,19 @@ else{
     ctx.lineWidth = 2;
     ctx.strokeStyle = 'blue';
     ctx.stroke();
+  
+    console.log(points);
   };
-
+  
   // Redessiner la zone à chaque changement dans les points
   React.useEffect(() => {
     drawZone();
   }, [points]);
+
+
+
+
+
 return(
 
   <div>
@@ -356,30 +447,28 @@ return(
     Video Stream
   </Typography>
   <Grid container spacing={2}>
-    <Grid item xs={12} sm={8}>
+    <Grid item xs={12} md={8}>
       <div className={classes.streamContainer}>
-      <div style={{ position: 'relative', width: '1280px', height: '720px' }}>
-        <canvas
-          id='video-canvas'
-          width={1280}
-          height={720}
-          style={{ border: '1px solid black', position: 'absolute', top: 0, left: 0 }}
-        ></canvas>
-        <canvas
-          ref={canvasRef}
-          width={1280}
-          height={720}
-          style={{ border: '1px solid black', position: 'absolute', top: 0, left: 0 }}
-          onMouseDown={ startDrawing }
-          onMouseMove={draw}
-          onMouseUp={ stopDrawing}
-    
-        ></canvas>
-        <p style={{ position: 'absolute', top: '10px', left: '10px' }}>Start: ({startCoords.x}, {startCoords.y})</p>
-        <p style={{ position: 'absolute', top: '30px', left: '10px' }}>End: ({endCoords.x}, {endCoords.y})</p>
-       
-      </div>
-      <br></br>
+        <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
+          <canvas
+            id='video-canvas'
+            width={1280}
+            height={720}
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+          ></canvas>
+          <canvas
+            ref={canvasRef}
+            width={1280}
+            height={720}
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+            onMouseDown={startDrawing}
+            onMouseMove={draw}
+            onMouseUp={stopDrawing}
+          ></canvas>
+          <p style={{ position: 'absolute', top: '10px', left: '10px' }}>Start: ({startCoords.x}, {startCoords.y})</p>
+          <p style={{ position: 'absolute', top: '30px', left: '10px' }}>End: ({endCoords.x}, {endCoords.y})</p>
+        </div>
+        <br />
         {!isStreaming && (
           <div className={classes.stream}>
             <Typography variant="body1" className={classes.cameraText}>
@@ -387,88 +476,115 @@ return(
             </Typography>
           </div>
         )}
-      </div>
-      <Button
-        variant="contained"
-        color="secondary"
-        onClick={stopRTSPFeed}
-        disabled={!isStreaming}
-        className={classes.button}
-      >
-        Stop Stream
-      </Button>
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleStartRecording}
-        disabled={!isStreaming || isRecording}
-        className={classes.button}
-      >
-        Start Record
-      </Button>
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleStopRecording}
-        disabled={!isRecording}
-        className={classes.button}
-      >
-        Stop Record
-      </Button>
-      <Button
-        variant="contained"
-        color="primary"
-       onClick={drawMode=="line"?clearCanvas:clearZone}
-        disabled={!isDrawingStart}
-        className={classes.button}
-      >
-        Clear 
-      </Button>
-      <Button
-        variant="contained"
-        color="primary"
-       onClick={()=>setDurationDialogOpen(true)}
-       disabled={!isStreaming}
-     
-      >
-       Draw
-      </Button>
-      <Menu
-        anchorEl={null}
-        open={durationDialogOpen}
-        onClose={()=>setDurationDialogOpen(false)}
-      >
-        <MenuItem  onClick={() => handleDrawMode("line")}>Line</MenuItem>
-        <MenuItem onClick={() => handleDrawMode("zone")}>Zone</MenuItem>
- 
-        {/* Ajoutez autant d'options que nécessaire */}
-      </Menu>
-    </Grid>
-    <Grid item xs={12} sm={4}>
-      <List className={classes.cameraList}>
-        {cameras.map((camera, index) => (
-          <Paper
-            key={camera.id}
-            className={`${classes.cameraItem} ${
-              selectedCamera === camera.id ? classes.selectedCameraItem : ""
-            } ${
-              isStreaming ? classes.disabledCameraItem : ""
-            }`}
-            onClick={() => handleCameraSelect(camera, index)}
+        <div>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={stopRTSPFeed}
+            disabled={!isStreaming}
+            className={classes.button}
           >
-            <ListItemText
-              primary={
-                <Typography variant="body1" className={classes.cameraText}>
-                  {camera.name}
-                </Typography>
-              }
-            />
-          </Paper>
-        ))}
-      </List>
+            Stop Stream
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleStartRecording}
+            disabled={!isStreaming || isRecording}
+            className={classes.button}
+          >
+            Start Record
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleStopRecording}
+            disabled={!isRecording}
+            className={classes.button}
+          >
+            Stop Record
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={drawMode === "line" ? clearCanvas : clearZone}
+            disabled={!isDrawingStart}
+            className={classes.button}
+          >
+            Clear
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setDurationDialogOpen(true)}
+            disabled={!isStreaming}
+            className={classes.button}
+          >
+            Draw
+          </Button>
+          <FormControl>
+            <InputLabel id="direction-label">Direction</InputLabel>
+            <Select
+              labelId="direction-label"
+              id="direction-select"
+              value={drawDirection}
+              onChange={handleDirectionChange}
+            >
+              <MenuItem value="left">Left</MenuItem>
+              <MenuItem value="right">Right</MenuItem>
+            </Select>
+          </FormControl>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => drawRectangle(drawDirection)}
+            disabled={!isStreaming}
+            className={classes.button}
+          >
+            Draw Rectangle
+          </Button>
+          <Menu
+            anchorEl={null}
+            open={durationDialogOpen}
+            onClose={() => setDurationDialogOpen(false)}
+          >
+            <MenuItem onClick={() => handleDrawMode("line")}>Line</MenuItem>
+            <MenuItem onClick={() => handleDrawMode("zone")}>Zone</MenuItem>
+            {/* Ajoutez autant d'options que nécessaire */}
+          </Menu>
+        </div>
+      </div>
     </Grid>
+    <Grid item xs={12} md={4}>
+    <Typography variant="body1" gutterBottom className={classes.sectionTitle}>
+  Select a camera to view the live stream:
+</Typography>
+
+  <List className={classes.cameraList}>
+    {cameras.map((camera, index) => (
+      <ListItem
+        key={camera.id}
+        button
+        onClick={() => handleCameraSelect(camera, index)}
+        className={`${classes.cameraItem} ${selectedCamera === camera.id ? classes.selectedCameraItem : ""}`}
+      >
+        <ListItemIcon>
+          <Videocam color="primary" />
+        </ListItemIcon>
+        <ListItemText primary={
+          <Typography variant="body1" className={classes.cameraText}>
+            {camera.name}
+          </Typography>
+        } />
+      </ListItem>
+    ))}
+  </List>
+</Grid>
+
   </Grid>
 </div>
+
+
 
 
 )}

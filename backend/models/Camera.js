@@ -21,6 +21,9 @@ const cameraSchema = new mongoose.Schema({
     type: String,
     
   },
+port:{
+  type:Number,
+},
   createdAt: {
     type: Date,
     default: Date.now,

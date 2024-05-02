@@ -6,6 +6,8 @@ function CanvasLine() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [startCoords, setStartCoords] = useState({ x: 0, y: 0 });
   const [endCoords, setEndCoords] = useState({ x: 0, y: 0 });
+  const [upperRightCoords, setUpperRightCoords] = useState({ x: 0, y: 0 });
+  const [lowerRightCoords, setLowerRightCoords] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const url = 'ws://127.0.0.1:9999';
@@ -29,7 +31,9 @@ function CanvasLine() {
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
+  
     setEndCoords({ x, y });
+
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.beginPath();
@@ -38,6 +42,8 @@ function CanvasLine() {
     ctx.lineWidth = 5; // Épaisseur de la ligne
     ctx.strokeStyle = 'red'; // Couleur de la ligne
     ctx.stroke();
+
+
   };
 
   const stopDrawing = () => {

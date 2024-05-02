@@ -1,0 +1,32 @@
+version: '3.7'
+
+services:
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    networks:
+      - mynetwork
+
+  testbackend:
+    image: testbackend
+    container_name: testbackend
+    ports:
+      - "3002:3002"
+    networks:
+      - mynetwork
+
+  testfrontend:
+    image: testfrontend
+    container_name: testfrontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - testbackend
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:
+    driver: bridge

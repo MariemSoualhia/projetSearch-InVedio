@@ -3,15 +3,24 @@ const fs = require('fs');
 
 
 // Récupérer toutes les caméras
-const getAllVideos= async (req, res) => {
-    try {
-        const videos = await Video.find(); // Récupérer tous les vidéos depuis la base de données
-        res.json(videos); // Renvoyer les vidéos en tant que réponse JSON
-      } catch (error) {
-        console.error('Erreur lors de la récupération des vidéos :', error);
-        res.status(500).json({ error: 'Erreur lors de la récupération des vidéos depuis la base de données' });
+const getAllVideos = async (req, res) => {
+  try {
+      let query = {}; // Requête de recherche vide par défaut
+
+      // Vérifier si un terme de recherche est fourni dans les paramètres de requête
+      if (req.query.search) {
+          // Utiliser une expression régulière pour rechercher le terme dans le nom du vidéo
+          query.name = { $regex: req.query.search, $options: 'i' }; // 'i' pour l'insensibilité à la casse
       }
-  };
+
+      const videos = await Video.find(query); // Récupérer les vidéos correspondant à la requête
+      res.json(videos); // Renvoyer les vidéos en tant que réponse JSON
+  } catch (error) {
+      console.error('Erreur lors de la récupération des vidéos :', error);
+      res.status(500).json({ error: 'Erreur lors de la récupération des vidéos depuis la base de données' });
+  }
+};
+
 
 const getVideo = async(req, res) => {
     const videoId = req.params.id;

@@ -1,48 +1,62 @@
 .menu-horizontal {
-  background-color: #333; /* Fond de couleur plus sombre */
-  border-bottom: 2px solid #fff; /* Bordure blanche en dessous */
+  background-color: #3f51b5; /* Couleur de fond de la barre de navigation */
+  border-bottom: 1px solid #ffffff; /* Bordure inférieure blanche */
 }
 
-.menu-horizontal .ant-menu-item,
-.menu-horizontal .ant-menu-submenu-title {
-  color: #fff; /* Texte blanc */
-  font-size: 16px; /* Taille de police légèrement plus petite */
-  padding: 12px 20px; /* Espacement intérieur */
+.menu-horizontal .ant-menu-item a {
+  color: #ffffff; /* Couleur du texte des éléments de menu */
+  font-family: 'Arial', sans-serif; /* Police de caractères */
 }
 
-
-
-.menu-horizontal .ant-menu-item:hover,
-.menu-horizontal .ant-menu-submenu-title:hover {
-  background-color: #1890ff !important;
+.menu-horizontal .ant-menu-item a:hover {
+  color: #ffeb3b; /* Couleur du texte des éléments de menu au survol */
+  background-color: transparent; /* Fond transparent au survol */
 }
 
-.menu-horizontal .ant-menu-item-selected,
-.menu-horizontal .ant-menu-submenu-title-selected {
-  background-color: #1890ff !important;
+.menu-horizontal .ant-menu-item-selected a {
+  color: #ffeb3b; /* Couleur du texte de l'élément de menu sélectionné */
+  background-color: transparent; /* Fond transparent pour l'élément sélectionné */
 }
 
-.menu-horizontal .ant-menu-item-selected a,
-.menu-horizontal .ant-menu-submenu-title-selected a {
-  color: #fff !important;
-}
-.menu-horizontal .ant-menu-item-icon,
-.menu-horizontal .ant-menu-submenu-title-icon {
-  color: #fff; /* Icônes blanches */
+.menu-horizontal .ant-menu-item-icon {
+  color: #ffffff; /* Couleur des icônes des éléments de menu */
 }
 
+.menu-horizontal .ant-menu-item-selected .ant-menu-item-icon {
+  color: #ffeb3b; /* Couleur de l'icône de l'élément de menu sélectionné */
+}
+
+.menu-horizontal .logo-text {
+  color: #ffffff; /* Couleur du texte du logo */
+}
+
+.menu-horizontal .logo-text:hover {
+  color: #ffeb3b; /* Couleur du texte du logo au survol */
+}
+
+.menu-horizontal .logout-item {
+  margin-left: auto; /* Déplace l'élément de déconnexion vers la droite */
+  color: #ffffff; /* Couleur du texte de l'élément de déconnexion */
+}
+
+.menu-horizontal .logout-item:hover {
+  color: #ffeb3b; /* Couleur du texte de l'élément de déconnexion au survol */
+}
 .logo-container {
-  display: flex;
-  align-items: center;
+  display: flex; /* Utilisez Flexbox pour aligner les éléments horizontalement */
+  align-items: center; /* Centrez verticalement les éléments */
+  padding: 0 20px; /* Ajoutez un peu de marge intérieure pour l'espace autour du logo */
 }
 
 .logo-img {
-  width: 30px;
-  height: 30px;
-  margin-right: 10px;
+  width: 40px; /* Largeur du logo */
+  height: auto; /* Hauteur automatique pour maintenir les proportions */
+  margin-right: 10px; /* Marge à droite pour séparer le logo du texte */
 }
 
 .logo-text {
-  font-size: 18px;
-  font-weight: bold;
+  color: #ffffff; /* Couleur du texte du logo */
+  font-size: 18px; /* Taille de la police du texte */
+  font-weight: bold; /* Gras pour le texte du logo */
 }
+

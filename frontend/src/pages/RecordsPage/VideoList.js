@@ -4,6 +4,7 @@ import VideoPlayer from './VideoPlayer';
 import {
     Button,
     Typography,
+    TextField,
     Modal,
     Box,
     Grid,
@@ -58,20 +59,13 @@ const VideoList = () => {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [videoToDelete, setVideoToDelete] = useState(null);
     const [page, setPage] = useState(1);
+    const [searchTerm, setSearchTerm] = useState(''); // Nouvel état pour stocker les termes de recherche
     const videosPerPage = 6; // Nombre de vidéos par page
 
     useEffect(() => {
         fetchVideos();
     }, [page]); // Recharger les vidéos lorsque la page change
 
-    const fetchVideos = async () => {
-        try {
-            const response = await axios.get('http://127.0.0.1:3002/api/videos/');
-            setVideos(response.data);
-        } catch (error) {
-            console.error('Error fetching videos:', error);
-        }
-    };
 
     const handleDelete = async (videoId) => {
         try {
@@ -96,6 +90,25 @@ const VideoList = () => {
         setPage(value);
     };
 
+    useEffect(() => {
+        fetchVideos();
+    }, [page, searchTerm]); // Mettre à jour les vidéos lorsque la page ou les termes de recherche changent
+
+    const fetchVideos = async () => {
+        try {
+            const response = await axios.get('http://127.0.0.1:3002/api/videos/', {
+                params: { search: searchTerm } // Passer les termes de recherche en tant que paramètre de requête
+            });
+            setVideos(response.data);
+        } catch (error) {
+            console.error('Error fetching videos:', error);
+        }
+    };
+
+    const handleSearchChange = (event) => {
+        setSearchTerm(event.target.value); // Mettre à jour les termes de recherche à chaque changement dans le champ de recherche
+    };
+
     // Calcul du début et de la fin des vidéos à afficher pour la pagination
     const startIndex = (page - 1) * videosPerPage;
     const endIndex = startIndex + videosPerPage;
@@ -105,6 +118,18 @@ const VideoList = () => {
             <Typography variant="h4" gutterBottom className={classes.title}>
                 Video List
             </Typography>
+    
+            {/* Champ de recherche */}
+            <TextField
+                label="Search"
+                variant="outlined"
+                value={searchTerm}
+                onChange={handleSearchChange}
+                fullWidth
+                margin="normal"
+                placeholder="Search for videos..."
+            />
+    
             <Grid container spacing={3}>
                 {videos.slice(startIndex, endIndex).map((video) => (
                     <Grid item key={video._id} xs={12} sm={6} md={4}>
@@ -137,7 +162,7 @@ const VideoList = () => {
                     color="primary"
                 />
             </Box>
-
+    
             {/* Delete Confirmation Modal */}
             <Modal open={showDeleteModal} onClose={handleCloseDeleteModal}>
                 <Box
@@ -163,6 +188,7 @@ const VideoList = () => {
             </Modal>
         </div>
     );
+    
 };
 
 export default VideoList;

@@ -1,12 +1,17 @@
 import React from "react";
 import { Menu } from "antd";
-import { Link, useHistory } from "react-router-dom";
-import { useNavigate } from "react-router-dom"; 
+import { Link } from "react-router-dom";
 import { AppstoreOutlined, VideoCameraOutlined, LogoutOutlined } from "@ant-design/icons";
 import "./navigation.css";
 const { SubMenu } = Menu;
 
 const items = [
+  {
+    label: "All streams",
+    key: "streams",
+    icon: <VideoCameraOutlined />,
+    path: "/liveAll",
+  },
   {
     label: "Live",
     key: "live",
@@ -20,31 +25,23 @@ const items = [
     path: "/camera_config",
   },
   {
-    label: "list of records",
+    label: "List of Records",
     key: "records",
     icon: <AppstoreOutlined />,
     path: "/videoList",
   },
   {
-    label: "NetworkConfig",
+    label: "Network Config",
     key: "network",
     icon: <AppstoreOutlined />,
     path: "/networkConfig",
   },
-  
-  // Ajoutez d'autres éléments de menu avec leurs chemins
 ];
 
 const Navigation = () => {
-  const navigate = useNavigate(); 
   const handleLogout = () => {
-    // Supprimer le token JWT du localStorage
     localStorage.removeItem('token');
-    
-    // Rediriger l'utilisateur vers la page de connexion par exemple
-    navigate('/login');
-    window.location.reload()
-    
+    window.location.reload();
     console.log("Déconnexion...");
   };
 
@@ -65,7 +62,7 @@ const Navigation = () => {
           <Link to={item.path}>{item.label}</Link>
         </Menu.Item>
       ))}
-      <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleLogout} style={{ marginLeft: 'auto' }}>
+      <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleLogout} className="logout-item">
         Logout
       </Menu.Item>
     </Menu>

@@ -9,6 +9,7 @@ import VideoList from "./pages/RecordsPage/VideoList";
 import NetworkConfigPage from "./pages/NetworkConfig/NetworkConfigPage";
 import CanvasLine from "./CanvasLine";
 import CanvasWithArea from "./CanvasWithArea";
+import MultipleStreamsPage from "./pages/LivePage/MultipleStreamsPage";
 // Fonction pour vérifier si l'utilisateur est connecté
 const isUserAuthenticated = () => {
   const token = localStorage.getItem('token');
@@ -26,7 +27,8 @@ function App() {
             
             {/* Route protégée pour la page Live */}
             <Route path="/live" element={isUserAuthenticated() ? <LivePage /> : <Navigate to="/login" />} />
-            
+            <Route path="/liveAll" element={isUserAuthenticated() ? <MultipleStreamsPage /> : <Navigate to="/login" />} />
+
             {/* Route protégée pour la page CameraConfig */}
             <Route path="/camera_config" element={isUserAuthenticated() ? <CameraConfig /> : <Navigate to="/login" />} />
             <Route path="/videoList" element={isUserAuthenticated() ? <VideoList /> : <Navigate to="/login" />} />
