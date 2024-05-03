@@ -205,13 +205,16 @@ const StreamComponent = ({
         }}
       >{`${camera.name} - ${new Date().toLocaleString()}`}</p>
       
-      <IconButton onClick={handleStreamAction} disabled={isRecording} className={classes.button} style={{ color: isStreaming ? "#ff0000" : "#3f51b5" }}>
-  {isStreaming ? <Stop /> : <PlayArrow />}
-</IconButton>
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+  <IconButton onClick={handleStreamAction} disabled={isRecording} className={classes.button} style={{ color: isStreaming ? "#ff0000" : "#3f51b5" }}>
+    {isStreaming ? <Stop /> : <PlayArrow />}
+  </IconButton>
 
-<IconButton onClick={handleRecordAction} disabled={!isStreaming} className={classes.button} style={{ color: isRecording ? "#ff0000" : "#3f51b5" }}>
-  <FiberManualRecord />
-</IconButton>
+  <IconButton onClick={handleRecordAction} disabled={!isStreaming} className={classes.button} style={{ color: isRecording ? "#ff0000" : "#3f51b5" }}>
+    <FiberManualRecord />
+  </IconButton>
+</div>
+
 
     </div>
 
