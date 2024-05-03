@@ -89,7 +89,8 @@ app.get("/stream", async (req, res) => {
     res.status(500).json({ error: "Erreur lors de la création du stream." });
   }
 });
-let allStreams = []; // Tableau pour stocker tous les flux de caméras actifs
+let allStreams = [];
+
 
 
 async function createStreamByPort(rtspUrl,port) {
@@ -159,12 +160,13 @@ app.get("/streamAll", async (req, res) => {
 
   try {
     // Chercher le flux existant correspondant à la nouvelle URL RTSP
-    currentRtspStream = allStreams.find(stream => stream.rtspUrl === newRtspStreamUrl);
-
-    // Si un flux existant est trouvé, arrêter ce flux
-    if (currentRtspStream) {
-      currentRtspStream.stop();
-      allStreams = allStreams.filter(stream => stream.rtspUrl !== newRtspStreamUrl);
+    const index = allStreams.findIndex(stream => stream.port === port);
+    if (index !== -1) {
+      // Si un flux correspondant est trouvé, l'arrêter
+      const stream = allStreams[index];
+      stream.stream.stop();
+      // Retirer le flux du tableau
+      allStreams.splice(index, 1);
     }
 
     // Créer et démarrer le nouveau flux
@@ -184,7 +186,7 @@ app.get("/streamAll", async (req, res) => {
 
 
 
-let rtspRecorder = null;
+
 
 // Route pour démarrer l'enregistrement
 app.post('/api/start-recording', (req, res) => {
@@ -233,7 +235,7 @@ app.post('/api/stop-recording', (req,res) => {
     rec.stopRecording((output) => {
       recordedFilePath = output.file;
       console.log('Enregistrement terminé :', recordedFilePath);
-      res.json({ filePath: recordedFilePath }); // Envoyer le chemin du fichier enregistré en réponse
+      res.json({ filePath: recordedFilePath }); 
     });
     rec = null;
     console.log('Recording stopped');
@@ -242,6 +244,92 @@ app.post('/api/stop-recording', (req,res) => {
     res.status(400).json({ error: 'No recording in progress' });
   }
 });
+
+let allRecords = [];
+
+async function createRecord(url,port, recordingDuration, name, cameraName) {
+  return new Promise((resolve, reject) => {
+    // Créez l'enregistreur avec les paramètres fournis
+    const rec = new Recorder({
+      url: url,
+      timeLimit: recordingDuration,
+      folder: dirname,
+      name: 'video.mp4',
+    });
+
+    // Démarrer l'enregistrement
+    rec.startRecording();
+
+    // Créez un objet pour représenter l'enregistrement
+    const newRecord = {
+      rec: rec,
+      port:port,
+      url:url,
+      videoData: {
+        path: rec.getFilename(rec.getMediaTypePath()),
+        name: name,
+        cameraName: cameraName
+      }
+    };
+
+    // Ajouter l'enregistrement au tableau
+    allRecords.push(newRecord);
+      console.log('all records', allRecords)
+    // Enregistrez la vidéo dans la base de données
+    const video = new Video(newRecord.videoData);
+    video.save()
+      .then(savedVideo => {
+        console.log('Vidéo enregistrée dans la base de données :', savedVideo);
+        resolve(savedVideo);
+      })
+      .catch(error => {
+        console.error('Erreur lors de l\'enregistrement de la vidéo dans la base de données :', error);
+        reject(error);
+      });
+  });
+}
+
+const stopRecordByPort = (port) => {
+  console.log('lee port est ', port)
+  // Trouver l'enregistrement correspondant au port spécifié
+  const index = allRecords.findIndex(record => record.port == port);
+  console.log('la resultat est',index)
+  if (index !== -1) {
+    
+    // Si un enregistrement correspondant est trouvé, l'arrêter
+    const record = allRecords[index];
+    record.rec.stopRecording();
+    // Retirer l'enregistrement du tableau
+    allRecords.splice(index, 1);
+  }
+};
+
+app.post('/api/startAllRecording', async (req, res) => {
+  const { url, port,recordingDuration, name, cameraName } = req.body;
+
+  try {
+    // Créer un nouvel enregistrement
+    const savedVideo = await createRecord(url, port,recordingDuration, name, cameraName);
+    res.json({ message: 'Recording Started', video: savedVideo });
+  } catch (error) {
+    console.error('Error starting recording:', error);
+    res.status(500).json({ error: 'Error starting recording' });
+  }
+});
+
+app.post('/api/stopAllRecording', async (req, res) => {
+  const port = req.query.port;
+  console.log('le port arriver est ', port)
+  try {
+    // Arrêter l'enregistrement sur le port spécifié
+    await stopRecordByPort(port);
+    res.json({ message: 'Recording stopped' });
+  } catch (error) {
+    console.error('Error stopping recording:', error);
+    res.status(500).json({ error: 'Error stopping recording' });
+  }
+});
+
 
 
 app.post('/config', async (req, res) => {

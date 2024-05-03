@@ -9,13 +9,18 @@ const getAllCameras = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-const getAvailablePort = async () => {
+const getAvailablePort = async (usedPorts) => {
   // Définir la plage de ports disponibles
   const minPort = 8000;
   const maxPort = 9000;
 
   // Vérifier chaque port dans la plage
   for (let port = minPort; port <= maxPort; port++) {
+    // Vérifier si le port est déjà utilisé par une autre caméra
+    if (usedPorts.includes(port)) {
+      continue; // Passer au port suivant s'il est déjà utilisé
+    }
+
     try {
       // Utiliser une promesse pour vérifier si le port est disponible
       await new Promise((resolve, reject) => {
@@ -38,52 +43,50 @@ const getAvailablePort = async () => {
   // Si aucun port disponible n'est trouvé, retournez null ou lancez une exception
   return null;
 };
-// Créer une nouvelle caméra
+
+// Utilisation de la fonction getAvailablePort lors de la création d'une nouvelle caméra
 const createCamera = async (req, res) => {
-
-
   try {
-    
-
     // Envoyer une requête POST vers l'autre serveur
     const networkData = {
       ip_address: req.body.address,
       login: req.body.username,
       pwd: req.body.password,
     };
-
     const response = await axios.post('http://localhost:5000/add_network', networkData);
-    console.log(req.body)
-    console.log(response.data)
+
     // Vérifier la réponse et enregistrer l'URL RTSP dans la base de données
     const rtspUrl = response.data.valid_links.find(link => link.includes(req.body.address));
-     // Obtenir un port disponible pour la mise à jour de la caméra
-     const port = await getAvailablePort();
-     if (!port) {
-       return res.status(400).json({
-         Message: "Failed to update Camera: No available ports within the specified range.",
-         Success: false,
-       });
-     }
-
-     
-      const camera = new Camera({
-        name: req.body.name,
-        address: req.body.address,
-        username: req.body.username,
-        password: req.body.password,
-       rtspUrl : rtspUrl,
-       port:port
-      });
-  
-      await camera.save();
     
+    // Récupérer les ports utilisés par d'autres caméras
+    const usedPorts = await Camera.distinct("port");
+
+    // Obtenir un port disponible pour la nouvelle caméra
+    const port = await getAvailablePort(usedPorts);
+    if (!port) {
+      return res.status(400).json({
+        Message: "Failed to update Camera: No available ports within the specified range.",
+        Success: false,
+      });
+    }
+
+    // Créer et enregistrer la nouvelle caméra
+    const camera = new Camera({
+      name: req.body.name,
+      address: req.body.address,
+      username: req.body.username,
+      password: req.body.password,
+      rtspUrl: rtspUrl,
+      port: port
+    });
+    await camera.save();
 
     res.status(201).json(camera);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 };
+
 
 // Récupérer une caméra par son ID
 const getCameraById = async (req, res) => {

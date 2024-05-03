@@ -1,48 +1,60 @@
 import React from "react";
 import { Menu } from "antd";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; 
 import { AppstoreOutlined, VideoCameraOutlined, LogoutOutlined } from "@ant-design/icons";
+import SwitchVideoIcon from '@mui/icons-material/SwitchVideo';
+import OndemandVideoIcon from '@mui/icons-material/OndemandVideo';
+import VideoSettingsIcon from '@mui/icons-material/VideoSettings';
+import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import LiveTvIcon from '@mui/icons-material/LiveTv';
 import "./navigation.css";
+
 const { SubMenu } = Menu;
 
 const items = [
   {
     label: "All streams",
     key: "streams",
-    icon: <VideoCameraOutlined />,
+    icon: <LiveTvIcon />,
     path: "/liveAll",
-  },
-  {
-    label: "Live",
-    key: "live",
-    icon: <VideoCameraOutlined />,
-    path: "/",
   },
   {
     label: "Camera Config",
     key: "cameraConfig",
-    icon: <AppstoreOutlined />,
+    icon: <CameraAltIcon />,
     path: "/camera_config",
   },
   {
+    label: "Camera Stream",
+    key: "live",
+    icon: <SwitchVideoIcon />,
+    path: "/live",
+  },
+
+  {
     label: "List of Records",
     key: "records",
-    icon: <AppstoreOutlined />,
+    icon: <VideoSettingsIcon />,
     path: "/videoList",
   },
-  {
-    label: "Network Config",
-    key: "network",
-    icon: <AppstoreOutlined />,
-    path: "/networkConfig",
-  },
+  //{
+    //label: "Network Config",
+    //key: "network",
+    //icon: <AppstoreOutlined />,
+    //path: "/networkConfig",
+  //},
 ];
 
+
 const Navigation = () => {
+  const navigate = useNavigate(); 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    window.location.reload();
+
     console.log("Déconnexion...");
+    navigate('/');
+    window.location.reload();
   };
 
   return (

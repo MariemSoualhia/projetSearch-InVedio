@@ -53,7 +53,7 @@ const LoginPage = () => {
       localStorage.setItem('token', token);
   
       console.log('Token JWT stocké dans le localStorage:', token);
-      navigate('/live');
+      navigate('/liveAll');
       window.location.reload()
   
       // Ajouter ici la redirection vers une nouvelle page, par exemple

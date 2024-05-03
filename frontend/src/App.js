@@ -19,36 +19,33 @@ const isUserAuthenticated = () => {
 function App() {
   return (
     <Router>
-      {
-        isUserAuthenticated()? (<Layout>
+      {isUserAuthenticated() ? (
+        <Layout>
           <Routes>
-            {/* Route protégée pour la page Live */}
-            <Route path="/" element={isUserAuthenticated() ? <LivePage /> : <Navigate to="/login" />} />
-            
-            {/* Route protégée pour la page Live */}
-            <Route path="/live" element={isUserAuthenticated() ? <LivePage /> : <Navigate to="/login" />} />
-            <Route path="/liveAll" element={isUserAuthenticated() ? <MultipleStreamsPage /> : <Navigate to="/login" />} />
-
-            {/* Route protégée pour la page CameraConfig */}
-            <Route path="/camera_config" element={isUserAuthenticated() ? <CameraConfig /> : <Navigate to="/login" />} />
-            <Route path="/videoList" element={isUserAuthenticated() ? <VideoList /> : <Navigate to="/login" />} />
-            <Route path="/networkConfig" element={isUserAuthenticated() ? <NetworkConfigPage /> : <Navigate to="/login" />} />
-            <Route path="/canvasLine" element={isUserAuthenticated() ? <CanvasLine /> : <Navigate to="/login" />} />
-            <Route path="/canvasWithArea" element={isUserAuthenticated() ? <CanvasWithArea /> : <Navigate to="/login" />} />
-            
+            {/* Routes protégées */}
+            <Route path="/" element={<MultipleStreamsPage />} />
+            <Route path="/live" element={<LivePage />} />
+            <Route path="/liveAll" element={<MultipleStreamsPage />} />
+            <Route path="/camera_config" element={<CameraConfig />} />
+            <Route path="/videoList" element={<VideoList />} />
+            <Route path="/networkConfig" element={<NetworkConfigPage />} />
+            <Route path="/canvasLine" element={<CanvasLine />} />
+            <Route path="/canvasWithArea" element={<CanvasWithArea />} />
             {/* Route publique pour la page Login */}
             <Route path="/login" element={<LoginPage />} />
           </Routes>
-        </Layout>): (<Routes>
-         
-            
-            {/* Route publique pour la page Login */}
-            <Route path="/login" element={<LoginPage />} />
-          </Routes>)
-      }
-      
+        </Layout>
+      ) : (
+        <Routes>
+          {/* Route publique pour la page Login */}
+          <Route path="/login" element={<LoginPage />} />
+          {/* Redirection vers la page de connexion pour toutes les autres URL */}
+          <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+      )}
     </Router>
   );
 }
+
 
 export default App;
