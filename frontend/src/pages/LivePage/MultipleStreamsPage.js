@@ -62,26 +62,34 @@ const MultipleStreamsPage = () => {
       );
       console.log(resp);
       localStorage.setItem(`isStreaming-${rtspUrl}`, "true");
-      setCameras((prevCameras) =>
-        prevCameras.map((camera) =>
-          camera.rtspUrl === rtspUrl ? { ...camera, isStreaming: true } : camera
-        )
-      );
+      if (cameras && cameras.length > 0) {
+        setCameras((prevCameras) =>
+          prevCameras.map((camera) =>
+            camera.rtspUrl === rtspUrl ? { ...camera, isStreaming: true } : camera
+          )
+        );
+      }
     } catch (error) {
       console.error("Error starting stream:", error);
     }
   };
-
+  
   const stopStreamHandler = (port) => {
     stopStream(port);
     const targetCamera = cameras.find((camera) => camera.port === port);
-    localStorage.removeItem(`isStreaming-${targetCamera.rtspUrl}`);
-    setCameras((prevCameras) =>
-      prevCameras.map((camera) =>
-        camera.port === port ? { ...camera, isStreaming: false } : camera
-      )
-    );
+    if (targetCamera) {
+      localStorage.removeItem(`isStreaming-${targetCamera.rtspUrl}`);
+      if (cameras && cameras.length > 0) {
+        setCameras((prevCameras) =>
+          prevCameras.map((camera) =>
+            camera.port === port ? { ...camera, isStreaming: false } : camera
+          )
+        );
+        window.location.reload()
+      }
+    }
   };
+  
 
   const startRecording = async (rtspUrl, port, cameraName) => {
     try {
