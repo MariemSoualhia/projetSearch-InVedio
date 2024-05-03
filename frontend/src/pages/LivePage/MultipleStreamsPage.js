@@ -110,9 +110,7 @@ const MultipleStreamsPage = () => {
         { params: { port: port } }
       );
       console.log(response);
-      if(response){
-        window.location.reload()
-      }
+     
     } catch (error) {
       console.error("Error stopping recording:", error);
     }
@@ -208,12 +206,16 @@ const StreamComponent = ({
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
   <IconButton onClick={handleStreamAction} disabled={isRecording} className={classes.button} style={{ color: isStreaming ? "#ff0000" : "#3f51b5" }}>
     {isStreaming ? <Stop /> : <PlayArrow />}
+    <span style={{ marginLeft: "5px", fontSize: "0.6em" }}>Stream</span>
   </IconButton>
 
   <IconButton onClick={handleRecordAction} disabled={!isStreaming} className={classes.button} style={{ color: isRecording ? "#ff0000" : "#3f51b5" }}>
     <FiberManualRecord />
+    <span style={{ marginLeft: "5px", fontSize: "0.6em" }}>Record</span>
   </IconButton>
 </div>
+
+
 
 
     </div>
