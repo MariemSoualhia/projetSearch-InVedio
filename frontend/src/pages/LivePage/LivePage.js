@@ -24,7 +24,6 @@ import { API_API_URL } from "../../config/serverApiConfig";
 import { Videocam } from "@material-ui/icons";
 const useStyles = makeStyles((theme) => ({
   root: {
-  
     paddingTop: theme.spacing(4),
   },
   button: {
@@ -36,16 +35,12 @@ const useStyles = makeStyles((theme) => ({
   streamContainer: {
     width: "100%",
     margin: "2",
-  
   },
   stream: {
     width: "100%",
     height: "auto",
     borderRadius: theme.spacing(1),
     backgroundColor: "#000",
-  },
-  cameraList: {
-    padding: 0,
   },
   cameraList: {
     padding: 0,
@@ -59,6 +54,9 @@ const useStyles = makeStyles((theme) => ({
   },
   selectedCameraItem: {
     backgroundColor: theme.palette.primary.light,
+    "&:hover": {
+      backgroundColor: theme.palette.primary.main,
+    },
   },
   cameraText: {
     color: theme.palette.text.primary,
@@ -70,9 +68,8 @@ const useStyles = makeStyles((theme) => ({
     paddingBottom: theme.spacing(1),
     fontWeight: "bold",
     fontSize: "1.5rem",
-    marginRight: theme.spacing(2), // Ajoute une marge à droite de 16px (2 * theme.spacing(2))
+    marginRight: theme.spacing(2),
   },
-  
   videoEditor: {
     width: "100%",
     height: "auto",
@@ -85,27 +82,16 @@ const useStyles = makeStyles((theme) => ({
       transform: "scale(1.05)",
     },
   },
-  selectedCameraItem: {
-    backgroundColor: theme.palette.primary.light,
-    "&:hover": {
-      backgroundColor: theme.palette.primary.main,
-    },
-  },
   disabledCameraItem: {
     opacity: 0.6,
     pointerEvents: "none",
   },
   canvas: {
-
-    width: "1280px", // Taille initiale de 1280px
-    height: "720px", // Taille initiale de 720px
-  },
-  sectionTitle: {
-    color: theme.palette.primary.main, // Change the color to match your theme
-    fontWeight: 'bold', // Make the text bold
-    marginBottom: theme.spacing(2), // Add some bottom margin for spacing
+    width: "1280px",
+    height: "720px",
   },
 }));
+
 const LivePage = () => {
   const classes = useStyles();
   const [streamUrl, setStreamUrl] = useState("");
@@ -131,17 +117,29 @@ const LivePage = () => {
   const [drawMode, setDrawMode] = useState("line");
   const [drawDirection, setDrawDirection] = useState('left'); // Direction du rectangle
   const [lineCoordinates, setLineCoordinates] = useState({ });
-
+  const [connectedToStream, setConnectedToStream] = useState(false);
   useEffect(() => {
     const url = 'ws://127.0.0.1:9999'
     let canvas = document.getElementById("video-canvas")
     new JSMpeg.Player(url, { canvas: canvas })
 
-    // Vérifier si le stream est en cours au chargement de la page
     if (isStreaming && selectedCamera) {
       startRTSPFeed(cameras.findIndex(camera => camera.id === selectedCamera));
     }
   }, []);
+  useEffect(() => {
+    const url = 'ws://127.0.0.1:9999';
+    const canvas = document.getElementById("video-canvas");
+
+    const checkConnection = setInterval(() => {
+      if (!connectedToStream && selectedCamera) {
+        new JSMpeg.Player(url, { canvas: canvas });
+        setConnectedToStream(true);
+      }
+    }, 1000);
+
+    return () => clearInterval(checkConnection);
+  }, [connectedToStream, selectedCamera]);
 
   useEffect(() => {
     fetchCameras();
@@ -560,25 +558,28 @@ return(
   Select a camera to view the live stream:
 </Typography>
 
-  <List className={classes.cameraList}>
-    {cameras.map((camera, index) => (
-      <ListItem
-        key={camera.id}
-        button
-        onClick={() => handleCameraSelect(camera, index)}
-        className={`${classes.cameraItem} ${selectedCamera === camera.id ? classes.selectedCameraItem : ""}`}
-      >
-        <ListItemIcon>
-          <Videocam color="primary" />
-        </ListItemIcon>
-        <ListItemText primary={
-          <Typography variant="body1" className={classes.cameraText}>
-            {camera.name}
-          </Typography>
-        } />
-      </ListItem>
-    ))}
-  </List>
+<List className={classes.cameraList}>
+  {cameras.map((camera, index) => (
+    <ListItem
+      key={camera.id}
+      button
+      onClick={() => handleCameraSelect(camera, index)}
+      className={classes.cameraItem}
+      disabled={selectedCamera && selectedCamera !== camera.id}
+    >
+      <ListItemIcon>
+        <Videocam color="primary" />
+      </ListItemIcon>
+      <ListItemText primary={
+        <Typography variant="body1" className={classes.cameraText}>
+          {camera.name}
+        </Typography>
+      } />
+    </ListItem>
+  ))}
+</List>
+
+
 </Grid>
 
   </Grid>

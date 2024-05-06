@@ -207,17 +207,17 @@ const StreamComponent = ({
           position: "absolute",
           top: 0,
           left: 20,
-          color: "#3f51b5",
+          color: "#1A237E",
         }}
       >{`${camera.name} - ${new Date().toLocaleString()}`}</p>
       
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-  <IconButton onClick={handleStreamAction} disabled={isRecording} className={classes.button} style={{ color: isStreaming ? "#ff0000" : "#3f51b5" }}>
+  <IconButton onClick={handleStreamAction} disabled={isRecording} className={classes.button} style={{ color: isStreaming ? "#ff0000" : "#1A237E" }}>
     {isStreaming ? <Stop /> : <PlayArrow />}
     <span style={{ marginLeft: "5px", fontSize: "0.6em" }}>Stream</span>
   </IconButton>
 
-  <IconButton onClick={handleRecordAction} disabled={!isStreaming} className={classes.button} style={{ color: isRecording ? "#ff0000" : "#3f51b5" }}>
+  <IconButton onClick={handleRecordAction} disabled={!isStreaming} className={classes.button} style={{ color: isRecording ? "#ff0000" : "#1A237E" }}>
     <FiberManualRecord />
     <span style={{ marginLeft: "5px", fontSize: "0.6em" }}>Record</span>
   </IconButton>

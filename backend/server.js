@@ -71,6 +71,7 @@ app.get("/stream", async (req, res) => {
     // Create the WebSocket stream only if it doesn't exist or the RTSP URL has changed
     if (!stream || currentRtspStreamUrl !== newRtspStreamUrl) {
       if (stream || newRtspStreamUrl === "stop") {
+        
         stream.stop()
       }
       await createStream(newRtspStreamUrl);

@@ -11,6 +11,8 @@ import {
   Paper,
   TextField,
   Typography,
+  ThemeProvider,
+  createTheme,
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useNavigate } from "react-router-dom"; 
@@ -64,119 +66,127 @@ const LoginPage = () => {
       // Ajouter ici la logique pour afficher un message d'erreur à l'utilisateur
     }
   };
-  
+
+  // Définition du thème sombre
+  const darkTheme = createTheme({
+    palette: {
+      mode: 'dark',
+    },
+  });
 
   return (
-    <Container component="main" maxWidth="lg">
+    <ThemeProvider theme={darkTheme}>
       <CssBaseline />
-      <Box
-        sx={{
-          marginTop: 8,
-        }}
-      >
-        <Grid container>
-          <Grid
-            item
-            xs={false}
-            sm={4}
-            md={7}
-            sx={{
-              backgroundImage: 'url(https://datadoit.io/wp-content/uploads/2023/09/nexus-datadoit-768x678.png)',
-              backgroundRepeat: 'no-repeat',
-              backgroundColor: (theme) =>
-                theme.palette.mode === 'light' ? theme.palette.grey[50] : theme.palette.grey[900],
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
-           
-          </Grid>
-          <Grid
-            item
-            xs={12}
-            sm={8}
-            md={5}
-            component={Paper}
-            elevation={6}
-            square
-          >
-            <Box
+      <Container component="main" maxWidth="lg">
+        <Box
+          sx={{
+            marginTop: 8,
+          }}
+        >
+          <Grid container>
+            <Grid
+              item
+              xs={false}
+              sm={4}
+              md={7}
               sx={{
-                my: 8,
-                mx: 4,
+                backgroundImage: 'url(https://datadoit.io/wp-content/uploads/2023/09/nexus-datadoit-768x678.png)',
+                backgroundRepeat: 'no-repeat',
+                backgroundColor: (theme) =>
+                  theme.palette.mode === 'light' ? theme.palette.grey[50] : theme.palette.grey[900],
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
                 display: 'flex',
-                flexDirection: 'column',
+                justifyContent: 'center',
                 alignItems: 'center',
               }}
             >
-               <img src="https://data-doit.com/wp-content/uploads/2022/11/datadoit1-150x150.png" alt="Logo" />
-              <Typography component="h1" variant="h5">
-                Sign in
-              </Typography>
+             
+            </Grid>
+            <Grid
+              item
+              xs={12}
+              sm={8}
+              md={5}
+              component={Paper}
+              elevation={6}
+              square
+            >
               <Box
-                component="form"
-                noValidate
-                onSubmit={handleSubmit}
-                sx={{ mt: 1 }}
+                sx={{
+                  my: 8,
+                  mx: 4,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                }}
               >
-                <TextField
-                  margin="normal"
-                  required
-                  fullWidth
-                  id="email"
-                  label="Email Address"
-                  name="email"
-                  autoComplete="email"
-                  autoFocus
-                  value={formData.email}
-                  onChange={handleChange}
-                />
-                <TextField
-                  margin="normal"
-                  required
-                  fullWidth
-                  name="password"
-                  label="Password"
-                  type="password"
-                  id="password"
-                  autoComplete="current-password"
-                  value={formData.password}
-                  onChange={handleChange}
-                />
-                <FormControlLabel
-                  control={<Checkbox value="remember" color="primary" />}
-                  label="Remember me"
-                />
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  sx={{ mt: 3, mb: 2, backgroundColor: '#9e58ff', color: '#fff' }}
+                 <img src="https://data-doit.com/wp-content/uploads/2022/11/datadoit1-150x150.png" alt="Logo" />
+                <Typography component="h1" variant="h5">
+                  Sign in
+                </Typography>
+                <Box
+                  component="form"
+                  noValidate
+                  onSubmit={handleSubmit}
+                  sx={{ mt: 1 }}
                 >
-                  Sign In
-                </Button>
-                <Grid container>
-                  <Grid item xs>
-                    <Link href="#" variant="body2" sx={{ color: '#9e58ff' }}>
-                      <LockOutlinedIcon sx={{ mr: 1 }} />
-                      Forgot password?
-                    </Link>
+                  <TextField
+                    margin="normal"
+                    required
+                    fullWidth
+                    id="email"
+                    label="Email Address"
+                    name="email"
+                    autoComplete="email"
+                    autoFocus
+                    value={formData.email}
+                    onChange={handleChange}
+                  />
+                  <TextField
+                    margin="normal"
+                    required
+                    fullWidth
+                    name="password"
+                    label="Password"
+                    type="password"
+                    id="password"
+                    autoComplete="current-password"
+                    value={formData.password}
+                    onChange={handleChange}
+                  />
+                  <FormControlLabel
+                    control={<Checkbox value="remember" color="primary" />}
+                    label="Remember me"
+                  />
+                  <Button
+                    type="submit"
+                    fullWidth
+                    variant="contained"
+                    sx={{ mt: 3, mb: 2, backgroundColor: '#9e58ff', color: '#fff' }}
+                  >
+                    Sign In
+                  </Button>
+                  <Grid container>
+                    <Grid item xs>
+                      <Link href="#" variant="body2" sx={{ color: '#9e58ff' }}>
+                        <LockOutlinedIcon sx={{ mr: 1 }} />
+                        Forgot password?
+                      </Link>
+                    </Grid>
+                    <Grid item>
+                      <Link href="#" variant="body2" sx={{ color: '#9e58ff' }}>
+                        {"Don't have an account? Sign Up"}
+                      </Link>
+                    </Grid>
                   </Grid>
-                  <Grid item>
-                    <Link href="#" variant="body2" sx={{ color: '#9e58ff' }}>
-                      {"Don't have an account? Sign Up"}
-                    </Link>
-                  </Grid>
-                </Grid>
+                </Box>
               </Box>
-            </Box>
+            </Grid>
           </Grid>
-        </Grid>
-      </Box>
-    </Container>
+        </Box>
+      </Container>
+    </ThemeProvider>
   );
 };
 

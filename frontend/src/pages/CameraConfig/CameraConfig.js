@@ -18,7 +18,8 @@ import {
 
 
 } from "@material-ui/core";
-import { Select, MenuItem, InputLabel ,FormControl} from '@mui/material';
+import { Select, MenuItem, InputLabel ,FormControl,  ThemeProvider,
+  createTheme, CssBaseline} from '@mui/material';
 import { makeStyles } from "@material-ui/core/styles";
 import DeleteIcon from "@material-ui/icons/Delete";
 import EditIcon from "@material-ui/icons/Edit";
@@ -222,12 +223,19 @@ const CameraConfig = () => {
     (page - 1) * itemsPerPage,
     page * itemsPerPage
   );
+    // Définition du thème sombre
+    const darkTheme = createTheme({
+      palette: {
+        mode: 'dark',
+      },
+    });
 
   return (
     <Container className={classes.root}>
       <Typography variant="h3" gutterBottom className={classes.pageTitle}>
         Camera Configuration
       </Typography>
+   
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6}>
           <form className={classes.formContainer}>
@@ -392,7 +400,9 @@ const CameraConfig = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
     </Container>
+    
   );
 };
 
