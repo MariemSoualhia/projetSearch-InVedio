@@ -8,6 +8,8 @@ const connectDB = require("./db");
 const cameraRoutes = require("./routes/cameraRoutes");
 const userRoutes = require('./routes/userRoutes');
 const videoRoutes = require('./routes/videoRoutesjs');
+const streamRoutes = require('./routes/streamRouttes');
+
 const Video = require('./models/Video');
 const moment = require('moment');
 const path = require('path');
@@ -34,6 +36,8 @@ connectDB();
 app.use("/api/cameras", cameraRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/videos', videoRoutes);
+app.use('/api/stream', streamRoutes);
+
 app.get("/api/test", (req, res) => { 
   res.send(200).json({ test: `ok` })
 })

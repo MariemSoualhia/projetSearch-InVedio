@@ -229,8 +229,35 @@ const CameraConfig = () => {
         mode: 'dark',
       },
     });
-
+    const lightTheme = createTheme({
+      palette: {
+        mode: 'light',
+      
+      },
+    });
+  
+    useEffect(() => {
+      const storedDarkMode = localStorage.getItem('darkMode');
+      const isDarkMode = storedDarkMode === 'true';
+      if (isDarkMode) {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+    }, []);
+    const handleDarkModeToggle = () => {
+      const storedDarkMode = localStorage.getItem('darkMode');
+      const newDarkMode = storedDarkMode !== 'true';
+      localStorage.setItem('darkMode', newDarkMode.toString());
+      if (newDarkMode) {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+    };
   return (
+    <ThemeProvider theme={localStorage.getItem('darkMode') === 'true' ? darkTheme : lightTheme}>
+    <CssBaseline />
     <Container className={classes.root}>
       <Typography variant="h3" gutterBottom className={classes.pageTitle}>
         Camera Configuration
@@ -402,7 +429,7 @@ const CameraConfig = () => {
       </Dialog>
 
     </Container>
-    
+    </ThemeProvider>
   );
 };
 

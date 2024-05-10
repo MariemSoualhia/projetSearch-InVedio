@@ -11,6 +11,10 @@ import CanvasLine from "./CanvasLine";
 import CanvasWithArea from "./CanvasWithArea";
 import MultipleStreamsPage from "./pages/LivePage/MultipleStreamsPage";
 import VideoComponent from "./pages/VideoComponent/VideoComponent";
+import StreamPage from "./pages/VideoComponent/StreamPage";
+import WebRTCStreamer from "./pages/VideoComponent/WebRTCStreamer";
+import DetectionPage from "./pages/LivePage/DetectionPage";
+import AllDetection from "./pages/LivePage/AllDetection";
 // Fonction pour vérifier si l'utilisateur est connecté
 const isUserAuthenticated = () => {
   const token = localStorage.getItem('token');
@@ -30,7 +34,7 @@ function App() {
             <Route path="/camera_config" element={<CameraConfig />} />
             <Route path="/videoList" element={<VideoList />} />
             <Route path="/networkConfig" element={<NetworkConfigPage />} />
-            <Route path="/videoComponent" element={<VideoComponent />} />
+            <Route path="/videoComponent" element={<AllDetection />} />
             <Route path="/canvasLine" element={<CanvasLine />} />
             <Route path="/canvasWithArea" element={<CanvasWithArea />} />
             {/* Route publique pour la page Login */}

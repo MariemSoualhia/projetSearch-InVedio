@@ -44,7 +44,7 @@ const items = [
     label: "Camera Stream",
     key: "live",
     icon: <SwitchVideoIcon />,
-    path: "/live",
+    path: "/videoComponent",
   },
 
   {
