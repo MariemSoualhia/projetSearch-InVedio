@@ -1,6 +1,7 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-
+const defimg =
+  "https://cdn.pixabay.com/photo/2017/03/21/13/27/evil-2162179_640.png";
 // Définition du schéma du modèle User
 const userSchema = new Schema({
   username: {
@@ -17,6 +18,8 @@ const userSchema = new Schema({
     type: String,
     required: true,
   },
+  photoProfil: { type: String, default: defimg },
+
   // Vous pouvez ajouter d'autres champs ici selon les besoins
   createdAt: {
     type: Date,
@@ -25,6 +28,6 @@ const userSchema = new Schema({
 });
 
 // Création du modèle User à partir du schéma
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model("User", userSchema);
 
 module.exports = User;

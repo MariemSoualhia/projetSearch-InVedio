@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -13,15 +13,15 @@ import {
   Typography,
   ThemeProvider,
   createTheme,
-} from '@mui/material';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { useNavigate } from "react-router-dom"; 
+} from "@mui/material";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
   });
 
   const handleChange = (event) => {
@@ -33,36 +33,36 @@ const LoginPage = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-  
+
     try {
-      const response = await fetch('http://localhost:3002/api/user/signin', {
-        method: 'POST',
+      const response = await fetch("http://localhost:3002/api/user/signin", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message);
       }
-  
+      console.log(response.data);
       const responseData = await response.json();
       const token = responseData.token;
-  
+      const user = JSON.stringify(responseData.user);
       // Stocker le token dans le localStorage
-      localStorage.setItem('token', token);
-  
-      console.log('Token JWT stocké dans le localStorage:', token);
-      navigate('/liveAll');
-      window.location.reload()
-  
+      localStorage.setItem("token", token);
+      localStorage.setItem("currentuser", user);
+
+      console.log("Token JWT stocké dans le localStorage:", token);
+      navigate("/liveAll");
+      window.location.reload();
+
       // Ajouter ici la redirection vers une nouvelle page, par exemple
       // history.push('/dashboard');
-  
     } catch (error) {
-      console.error('Erreur lors de la connexion:', error.message);
+      console.error("Erreur lors de la connexion:", error.message);
       // Ajouter ici la logique pour afficher un message d'erreur à l'utilisateur
     }
   };
@@ -70,7 +70,7 @@ const LoginPage = () => {
   // Définition du thème sombre
   const darkTheme = createTheme({
     palette: {
-      mode: 'dark',
+      mode: "dark",
     },
   });
 
@@ -90,19 +90,20 @@ const LoginPage = () => {
               sm={4}
               md={7}
               sx={{
-                backgroundImage: 'url(https://datadoit.io/wp-content/uploads/2023/09/nexus-datadoit-768x678.png)',
-                backgroundRepeat: 'no-repeat',
+                backgroundImage:
+                  "url(https://datadoit.io/wp-content/uploads/2023/09/nexus-datadoit-768x678.png)",
+                backgroundRepeat: "no-repeat",
                 backgroundColor: (theme) =>
-                  theme.palette.mode === 'light' ? theme.palette.grey[50] : theme.palette.grey[900],
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
+                  theme.palette.mode === "light"
+                    ? theme.palette.grey[50]
+                    : theme.palette.grey[900],
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
               }}
-            >
-             
-            </Grid>
+            ></Grid>
             <Grid
               item
               xs={12}
@@ -116,12 +117,15 @@ const LoginPage = () => {
                 sx={{
                   my: 8,
                   mx: 4,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
                 }}
               >
-                 <img src="https://data-doit.com/wp-content/uploads/2022/11/datadoit1-150x150.png" alt="Logo" />
+                <img
+                  src="https://data-doit.com/wp-content/uploads/2022/11/datadoit1-150x150.png"
+                  alt="Logo"
+                />
                 <Typography component="h1" variant="h5">
                   Sign in
                 </Typography>
@@ -163,19 +167,24 @@ const LoginPage = () => {
                     type="submit"
                     fullWidth
                     variant="contained"
-                    sx={{ mt: 3, mb: 2, backgroundColor: '#9e58ff', color: '#fff' }}
+                    sx={{
+                      mt: 3,
+                      mb: 2,
+                      backgroundColor: "#9e58ff",
+                      color: "#fff",
+                    }}
                   >
                     Sign In
                   </Button>
                   <Grid container>
                     <Grid item xs>
-                      <Link href="#" variant="body2" sx={{ color: '#9e58ff' }}>
+                      <Link href="#" variant="body2" sx={{ color: "#9e58ff" }}>
                         <LockOutlinedIcon sx={{ mr: 1 }} />
                         Forgot password?
                       </Link>
                     </Grid>
                     <Grid item>
-                      <Link href="#" variant="body2" sx={{ color: '#9e58ff' }}>
+                      <Link href="#" variant="body2" sx={{ color: "#9e58ff" }}>
                         {"Don't have an account? Sign Up"}
                       </Link>
                     </Grid>

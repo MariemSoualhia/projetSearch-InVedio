@@ -1,9 +1,14 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 
-import Layout from './composants/Layout/Layout';
-import LivePage from './pages/LivePage/LivePage';
-import CameraConfig from './pages/CameraConfig/CameraConfig';
+import Layout from "./composants/Layout/Layout";
+import LivePage from "./pages/LivePage/LivePage";
+import CameraConfig from "./pages/CameraConfig/CameraConfig";
 import LoginPage from "./pages/Login/LoginPage";
 import VideoList from "./pages/RecordsPage/VideoList";
 import NetworkConfigPage from "./pages/NetworkConfig/NetworkConfigPage";
@@ -12,12 +17,13 @@ import CanvasWithArea from "./CanvasWithArea";
 import MultipleStreamsPage from "./pages/LivePage/MultipleStreamsPage";
 import VideoComponent from "./pages/VideoComponent/VideoComponent";
 import StreamPage from "./pages/VideoComponent/StreamPage";
-import WebRTCStreamer from "./pages/VideoComponent/WebRTCStreamer";
+//import WebRTCStreamer from "./pages/VideoComponent/WebRTCStreamer";
 import DetectionPage from "./pages/LivePage/DetectionPage";
 import AllDetection from "./pages/LivePage/AllDetection";
+import ProfilePage from "./pages/ProfilePage/ProfilePage";
 // Fonction pour vérifier si l'utilisateur est connecté
 const isUserAuthenticated = () => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
   return !!token; // Renvoie true si le token existe, sinon false
 };
 
@@ -37,6 +43,8 @@ function App() {
             <Route path="/videoComponent" element={<AllDetection />} />
             <Route path="/canvasLine" element={<CanvasLine />} />
             <Route path="/canvasWithArea" element={<CanvasWithArea />} />
+            <Route path="/profile" element={<ProfilePage />} />
+
             {/* Route publique pour la page Login */}
             <Route path="/login" element={<LoginPage />} />
           </Routes>
@@ -52,6 +60,5 @@ function App() {
     </Router>
   );
 }
-
 
 export default App;
