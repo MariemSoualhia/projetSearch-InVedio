@@ -66,10 +66,10 @@ const Navigation = () => {
         <Link to="/profile">Profil</Link>
       </Menu.Item>
       <Menu.Item key="settings">
-        <Link to="/settings">Paramètres</Link>
+        <Link to="/settings">Settings</Link>
       </Menu.Item>
       <Menu.Item key="logout" onClick={handleLogout}>
-        Déconnexion
+        Logout
       </Menu.Item>
     </Menu>
   );

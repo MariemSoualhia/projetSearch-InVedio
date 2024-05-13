@@ -42,13 +42,24 @@ const useStyles = makeStyles((theme) => ({
     borderRadius: theme.spacing(1),
     backgroundColor: "transparent", // Modification pour rendre le canvas transparent
   },
+  controlsContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: theme.spacing(2), // Espacement entre les éléments
+    padding: theme.spacing(2), // Ajoutez du padding selon vos besoins
+    backgroundColor: '#f0f0f0', // Couleur de fond
+    borderRadius: theme.shape.borderRadius, // Ajoutez des bordures arrondies
+    boxShadow: theme.shadows[2], // Ajoutez une ombre si nécessaire
+  },
 }));
 
-const DetectionPage = ({ allCameras }) => {
+const DetectionPage = ({ stream: initialStream, allCameras }) => {
   const classes = useStyles();
   const [selectedCamera, setSelectedCamera] = useState({
     name: "",
   });
+  const [stream, setStream] = useState(initialStream);
   const [selectedCameraList, setSelectedCameraList] = useState([{}]);
   const [selectedPort, setSelectedPort] = useState(() => {
     // Récupérer le port initial depuis le stockage local, ou null s'il n'existe pas
@@ -74,7 +85,7 @@ const DetectionPage = ({ allCameras }) => {
   const [lineCoordinates, setLineCoordinates] = useState({});
   const [connectedToStream, setConnectedToStream] = useState(false);
   const [connections, setConnections] = useState({});
-  const [connectionNow, setConnectionsNow] = useState(); // Ajout de la déclaration de la variable connections
+  const [connectionNow, setConnectionsNow] = useState(); 
   const socketRef = useRef();
   const peersRef = useRef([]);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -119,15 +130,14 @@ const DetectionPage = ({ allCameras }) => {
     // Jouer la vidéo lorsque videoReady est true
 
     const videoElement = videoRef.current;
-    const playPromise = videoElement.play();
+    //const playPromise = videoElement.play();
+if(stream){
 
-    if (playPromise !== undefined) {
-      FristStream();
-      playPromise.catch((error) => {
-        // Gérer l'erreur de lecture
-        console.error("Error playing video:", error);
-      });
-    }
+    FristStream();
+ 
+  
+}
+  
   }, []);
 
   useEffect(() => {
@@ -332,7 +342,7 @@ const DetectionPage = ({ allCameras }) => {
       var wsPort =
         port != undefined
           ? port
-          : localStorage.getItem("selectedPort" + allCameras[0].name);
+          : stream.output_port
       var wsPath = path != undefined ? path : "/ws";
       if (wsPort) wsPort = ":" + wsPort;
       var wsUrl = wsProt + wsHost + wsPort + wsPath;
@@ -423,6 +433,7 @@ const DetectionPage = ({ allCameras }) => {
     console.log("la resultat est", response.data);
     console.log(response.data.port);
     setCurrentStream(response.data.stream);
+ 
     //const selectedCamera = JSON.parse(localStorage.getItem('selectedCamera'+selectedCamera.name));
     localStorage.setItem(
       "selectedPort" + selectedCamera.name,
@@ -430,6 +441,18 @@ const DetectionPage = ({ allCameras }) => {
     );
 
     if (response) {
+      const dataStream ={
+        input_stream: cam.rtspUrl,
+        output_port:response.data.port,
+  
+        stream_name:cam.name,
+        streamplay:true,
+  
+      }
+      const response2 = await axios.post("http://127.0.0.1:3002/api/stream/", dataStream);
+      console.log(response2)
+      const updatedStream = { ...initialStream, ...response2.data };
+        setStream(updatedStream);
       setSelectedPort(response.data.port);
       var connections = {};
       var reportError;
@@ -527,7 +550,7 @@ const DetectionPage = ({ allCameras }) => {
         var url = event.srcElement.url;
         console.log("Adding remote stream to HTML video player (%s)", url);
         connections[url].videoElement.srcObject = event.streams[0];
-        connections[url].videoElement.play();
+        //connections[url].videoElement.play();
       }
 
       function onIceCandidate(event) {
@@ -625,7 +648,37 @@ const DetectionPage = ({ allCameras }) => {
         connections[url].webrtcConfig = configuration;
         reportError =
           reportErrorCB != undefined ? reportErrorCB : function (text) {};
-        setConnectionsNow(connections[url]);
+         
+          
+          
+          
+          // Mettez à jour les données de connexion dans le state ou où vous en avez besoin
+          setConnectionsNow(connections[url]);
+          const videoData = {
+            src: videoRef.current.src,
+            // Ajoutez d'autres propriétés pertinentes si nécessaire
+          };
+          
+          // Créez l'objet connections[url] avec les données extraites
+          const connectionData = {
+          type : "inbound",
+           videoElement : videoRef.current.src,
+            webrtcConfig : configuration,
+            reportError :
+              reportErrorCB != undefined ? reportErrorCB : function (text) {},
+          };
+          
+          
+          // Mettez à jour les données de connexion dans le state ou où vous en avez besoin
+          setConnectionsNow(connections[url]);
+          
+          // Enregistrez les données de connexion dans le localStorage
+          localStorage.setItem(
+            "connections[" + response.data.port + "]",
+            JSON.stringify(connectionData)
+          );
+        
+    
         connections[url].websocket = new WebSocket(wsUrl);
         connections[url].websocket.addEventListener("message", onServerMessage);
         //connections[url].websocket.close()
@@ -708,13 +761,23 @@ const DetectionPage = ({ allCameras }) => {
       const rect = canvasRef.current.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
-
-      // Effacer les points existants si le nombre de points est égal à quatre
-      if (points.length === 4) {
+    
+      if (points.length === 0) {
+        // Premier clic : enregistrer le point de départ (coin supérieur gauche)
         setPoints([{ x, y }]);
+      } else if (points.length === 1) {
+        // Deuxième clic : enregistrer le point de fin (coin inférieur droit)
+        const startPoint = points[0];
+        const endPoint = { x, y };
+        const width = Math.abs(endPoint.x - startPoint.x);
+        const height = Math.abs(endPoint.y - startPoint.y);
+        const bottomRight = { x: startPoint.x + width, y: startPoint.y + height };
+        const topRight = { x: bottomRight.x, y: startPoint.y };
+        const bottomLeft = { x: startPoint.x, y: bottomRight.y };
+        setPoints([...points, topRight, bottomRight, bottomLeft]);
       } else {
-        // Ajouter un nouveau point
-        setPoints([...points, { x, y }]);
+        // Reset si déjà quatre points enregistrés
+        setPoints([{ x, y }]);
       }
     }
   };
@@ -756,9 +819,9 @@ const DetectionPage = ({ allCameras }) => {
     return () => {
       closeConnection();
     };
-  }, []); // Le tableau de dépendances est vide, donc cet effet ne s'exécutera qu'une seule fois lors du montage du composant
+  }, []); 
 
-  // Autres parties du code...
+
 
   const handleDirectionChange = (event) => {
     setDrawDirection(event.target.value);
@@ -776,21 +839,27 @@ const DetectionPage = ({ allCameras }) => {
     localStorage.removeItem("selectedPort");
     videoPlayer.srcObject = null;
   }
-
   const stopStream = async () => {
     const data = {
       input_stream: selectedCamera.rtspUrl,
     };
     console.log(data);
-    const response = await axios.post(
-      "http://127.0.0.1:5050/stop_stream",
-      data
-    );
-    if (response) {
+  
+    const response = await axios.post("http://127.0.0.1:5050/stop_stream", data);
+    const response2 = await axios.put(`http://127.0.0.1:3002/api/stream/stop/${stream._id}`);
+  
+    if (response && response2) {
       console.log(response);
-      connectionNow.websocket.close();
+      console.log(response2);
+      window.location.reload()
+  
+      // Récupérer les données de connexion du localStorage
+      const connectionData = JSON.parse(localStorage.getItem("connections[" + stream.output_port + ']'));
+  
+     
     }
   };
+  
 
   const drawRectangle = (side) => {
     // Récupération des coordonnées de la ligne
@@ -834,8 +903,8 @@ const DetectionPage = ({ allCameras }) => {
     ctx.stroke();
     if (drawMode == "line") {
       rectangleData = {
-        input_stream: selectedCamera.rtspUrl,
-        port: selectedPort,
+        input_stream: stream.input_stream,
+        port: stream.output_port,
         type_app: drawMode,
         pos_line: drawDirection,
         flow_dir: drawFlowDirection,
@@ -846,8 +915,8 @@ const DetectionPage = ({ allCameras }) => {
       };
     } else {
       rectangleData = {
-        input_stream: selectedCamera.rtspUrl,
-        port: selectedPort,
+        input_stream: stream.input_stream,
+        port:stream.output_port,
         type_app: drawMode,
         enable_timer: isTimer,
 
@@ -858,27 +927,38 @@ const DetectionPage = ({ allCameras }) => {
       };
     }
     stopStreamedVideo(videoRef.current);
-    if (connectionNow) {
-      connectionNow.websocket.close();
-    }
+    //stopStream()
 
     console.log(rectangleData);
+    const data = {
+      input_stream: stream.rtspUrl,
+    };
     // Envoyer les coordonnées du rectangle au backend (exemple avec Axios)
+   axios.post("http://127.0.0.1:5050/stop_stream", data);
+   //connectionNow.websocket.close()
     axios
       .post("http://127.0.0.1:5050/start_counting", rectangleData)
+      
 
       .then((response) => {
         console.log("Coordonnées du rectangle envoyées avec succès !");
         console.log(response.data.port);
+        const dataToSend={
+          port:response.data.port
+        }
+        axios.put(`http://127.0.0.1:3002/api/stream/updatePort/${stream._id}`, dataToSend) .then((resp) => {
+          console.log("Coordonnées du rectangle envoyées avec succès !");
+          
+         const updatedStream = { ...initialStream, ...resp.data };
+         setStream(updatedStream);
+        })
+       
+
+          
         setSelectedPort(response.data.port);
-        localStorage.setItem(
-          "selectedPort" +
-            localStorage.getItem("selectedCamera" + selectedCamera.name).name,
-          response.data.port
-        );
 
         clearCanvas();
-        console.log(connectionNow.websocket);
+        console.log( connectionNow.websocket);
 
         var connections = {};
         var reportError;
@@ -1057,11 +1137,7 @@ const DetectionPage = ({ allCameras }) => {
           var wsPort =
             port != undefined
               ? port
-              : localStorage.getItem(
-                  "selectedPort" +
-                    localStorage.getItem("selectedCamera" + selectedCamera.name)
-                      .name
-                );
+              : response.data.port
           var wsPath = path != undefined ? path : "/ws";
           if (wsPort) wsPort = ":" + wsPort;
           var wsUrl = wsProt + wsHost + wsPort + wsPath;
@@ -1075,7 +1151,9 @@ const DetectionPage = ({ allCameras }) => {
           connections[url].webrtcConfig = configuration;
           reportError =
             reportErrorCB != undefined ? reportErrorCB : function (text) {};
+       
           setConnectionsNow(connections[url]);
+      
           connections[url].websocket = new WebSocket(wsUrl);
           connections[url].websocket.addEventListener(
             "message",
@@ -1102,7 +1180,7 @@ const DetectionPage = ({ allCameras }) => {
           }
           var wsProt = l.protocol == "https:" ? "wss://" : "ws://";
           var wsHost = hostname != undefined ? hostname : l.hostname;
-          var wsPort = port != undefined ? port : response.data.port;
+          var wsPort = port != undefined ? port : stream.output_port;
           var wsPath = path != undefined ? path : "/ws";
           if (wsPort) wsPort = ":" + wsPort;
           var wsUrl = wsProt + wsHost + wsPort + wsPath;
@@ -1193,10 +1271,10 @@ const DetectionPage = ({ allCameras }) => {
   const drawZone = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-
+  
     // Effacer le contenu précédent du canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+  
     // Dessiner les points
     points.forEach((point) => {
       ctx.beginPath();
@@ -1205,25 +1283,30 @@ const DetectionPage = ({ allCameras }) => {
       ctx.fill();
       ctx.closePath();
     });
-
-    // Dessiner les lignes reliant les points
-    ctx.beginPath();
-    points.forEach((point, index) => {
-      if (index === 0) {
-        ctx.moveTo(point.x, point.y);
-      } else {
-        ctx.lineTo(point.x, point.y);
-      }
-    });
+  
+    // Vérifier si nous avons exactement quatre points
     if (points.length === 4) {
-      ctx.closePath(); // Fermer la forme si les 4 points sont présents
+      const topLeft = points[0];
+      const topRight = points[1];
+      const bottomRight = points[2];
+      const bottomLeft = points[3];
+  
+      // Dessiner le rectangle
+      ctx.beginPath();
+      ctx.moveTo(topLeft.x, topLeft.y);
+      ctx.lineTo(topRight.x, topRight.y);
+      ctx.lineTo(bottomRight.x, bottomRight.y);
+      ctx.lineTo(bottomLeft.x, bottomLeft.y);
+      ctx.closePath();
+  
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "blue";
+      ctx.stroke();
     }
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "blue";
-    ctx.stroke();
-
+  
     console.log(points);
   };
+  
 
   React.useEffect(() => {
     drawZone();
@@ -1233,6 +1316,7 @@ const DetectionPage = ({ allCameras }) => {
   };
   return (
     <>
+        <p> {stream&&stream.input_stream}</p>
       <div className={classes.streamContainer}>
         <video
           id="video-player"
@@ -1260,8 +1344,8 @@ const DetectionPage = ({ allCameras }) => {
         ></canvas>
       </div>
 
-      {selectedCamera && (
-        <div>
+      {stream.output_port&& (
+       <div className={classes.controlsContainer}>
           <FormControl component="fieldset">
             <RadioGroup
               aria-labelledby="demo-radio-buttons-group-label"
@@ -1326,7 +1410,7 @@ const DetectionPage = ({ allCameras }) => {
             onClick={() => drawRectangle(drawDirection)}
             className={classes.button}
           >
-            Start Stream
+            Start Counting
           </Button>
           <Button
             variant="contained"

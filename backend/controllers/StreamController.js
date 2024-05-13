@@ -73,10 +73,38 @@ const stopStream = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+const updatePortStream = async (req, res) => {
+  try {
+    const { _id } = req.params;
+    const updatedStream = await Stream.findByIdAndUpdate(
+      _id,
+      { $set: { output_port: req.body.port } },
+      { new: true }
+    );
+    res.json(updatedStream);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+const updateConnectStream = async (req, res) => {
+  try {
+    const { _id } = req.params;
+    const updatedStream = await Stream.findByIdAndUpdate(
+      _id,
+      { $set: { stream: req.body.stream } },
+      { new: true }
+    );
+    res.json(updatedStream);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 module.exports = {
   getAllStreams,
   createStream,
   updateStreamById,
   getAllStreamsPlay,
   stopStream,
+  updatePortStream,
+  updateConnectStream
 };
