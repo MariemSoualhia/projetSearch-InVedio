@@ -19,7 +19,10 @@ import {
   Radio,
   Checkbox,
   FormGroup,
+  Box
 } from "@material-ui/core";
+import { Col, Row } from 'antd';
+
 import Select from "@material-ui/core/Select";
 import FormControl from "@material-ui/core/FormControl";
 import InputLabel from "@material-ui/core/InputLabel";
@@ -30,8 +33,8 @@ import { API_API_URL } from "../../config/serverApiConfig";
 const useStyles = makeStyles((theme) => ({
   streamContainer: {
     position: "relative",
-    width: "960px", // Ajouter une largeur fixe pour le conteneur
-    height: "544px", // Ajouter une hauteur fixe pour le conteneur
+    width: "854px", // Ajouter une largeur fixe pour le conteneur
+    height: "480px", // Ajouter une hauteur fixe pour le conteneur
   },
   stream: {
     position: "absolute",
@@ -45,13 +48,33 @@ const useStyles = makeStyles((theme) => ({
   controlsContainer: {
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'flex-start',
+    //alignItems: 'flex-start',
     gap: theme.spacing(2), // Espacement entre les éléments
     padding: theme.spacing(2), // Ajoutez du padding selon vos besoins
     backgroundColor: '#f0f0f0', // Couleur de fond
     borderRadius: theme.shape.borderRadius, // Ajoutez des bordures arrondies
     boxShadow: theme.shadows[2], // Ajoutez une ombre si nécessaire
   },
+    button: {
+    margin: theme.spacing(1),
+    borderRadius: theme.spacing(2),
+
+    color: "#fff",
+  },
+  buttonStop: {
+    margin: theme.spacing(1),
+    borderRadius: theme.spacing(2),
+    padding: `${theme.spacing(1)}px ${theme.spacing(3)}px`,
+    color: "#fff",
+    backgroundColor:"#f44336",
+  },
+  radio: {
+    '&$checked': {
+      color: '#f44336'
+    }
+  },
+  checked: {}
+
 }));
 
 const DetectionPage = ({ stream: initialStream, allCameras }) => {
@@ -93,7 +116,37 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
   const [currentStream, setCurrentStream] = useState();
 
   const [isTimer, setTimer] = useState("off");
+  const [link, setLink] = useState();
+  const [videoPath, setVideoPath] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploadStatus, setUploadStatus] = useState('');
+  const [internalZones, setInternalZones] = useState([]);
+  const [gateZones, setGateZones] = useState([]);
 
+  useEffect(() => {
+    const fetchInternalZones = async () => {
+      try {
+        const response = await axios.get('http://localhost:3002/api/zone/internal');
+        setInternalZones(response.data);
+        console.log(response.data)
+      } catch (error) {
+        console.error('Error fetching internal zones:', error);
+      }
+    };
+
+    const fetchGateZones = async () => {
+      try {
+        const response = await axios.get('http://localhost:3002/api/zone/gate');
+        setGateZones(response.data);
+        console.log(response.data)
+      } catch (error) {
+        console.error('Error fetching gate zones:', error);
+      }
+    };
+
+    fetchInternalZones();
+    fetchGateZones();
+  }, []);
   useEffect(() => {
     const selectedCameraName = localStorage.getItem(
       "selectedCamera" + selectedCamera.name
@@ -144,7 +197,37 @@ if(stream){
     fetchCameras();
     //initializeVideo();
   }, []);
+  const handleFileChange = (event) => {
+    setSelectedFile(event.target.files[0]);
+  };
 
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      setUploadStatus('Please select a file first');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      const response = await axios.post('http://localhost:3002/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.success) {
+        setUploadStatus('File uploaded successfully');
+        setVideoPath(response.data.filePath);
+      } else {
+        setUploadStatus('File upload failed');
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      setUploadStatus('Error uploading file');
+    }
+  };
   const initializeVideo = () => {
     const videoPlayer = videoRef.current;
     if (videoPlayer) {
@@ -914,6 +997,7 @@ if(stream){
         y2: { x: x4, y: y4 },
       };
     } else {
+
       rectangleData = {
         input_stream: stream.input_stream,
         port:stream.output_port,
@@ -1314,9 +1398,12 @@ if(stream){
   const handleDrawModeChange = (event) => {
     setDrawMode(event.target.value);
   };
+  const handleSelectLink = (event) => {
+    setLink(event.target.value);
+  };
   return (
-    <>
-        <p> {stream&&stream.input_stream}</p>
+    <> 
+
       <div className={classes.streamContainer}>
         <video
           id="video-player"
@@ -1330,7 +1417,8 @@ if(stream){
           muted
         >
           Your browser does not support video
-          <source src="https://vimeo.com/475068701.mp4" type="video/mp4" />
+          <source src={`http://localhost:3002/${videoPath}`} type="video/mp4" />
+         
         </video>
 
         <canvas
@@ -1345,41 +1433,81 @@ if(stream){
       </div>
 
       {stream.output_port&& (
-       <div className={classes.controlsContainer}>
-          <FormControl component="fieldset">
+        <>
+             <Box sx={{ width: '100%', textAlign: 'center' }}>
+  <Typography variant="h6" gutterBottom>
+    {stream.stream_name} : {stream.input_stream}
+  </Typography>
+</Box>
+     <Row>
+      <Col span={12}>  <FormControl component="fieldset">
             <RadioGroup
+            color="#f44336"
               aria-labelledby="demo-radio-buttons-group-label"
               value={drawMode}
               onChange={handleDrawModeChange}
               row
             >
-              <FormControlLabel value="roi" control={<Radio />} label="ROI" />
+              <FormControlLabel value="roi" control={<Radio       classes={{root: classes.radio, checked: classes.checked}}
+/>} label="ROI" />
               <FormControlLabel
                 value="line"
-                control={<Radio />}
+                control={<Radio       classes={{root: classes.radio, checked: classes.checked}}
+                />}
                 label="Trippwaire"
               />
             </RadioGroup>
           </FormControl>
-          {drawMode === "roi" && (
+          </Col>
+          <Col span={12}> 
+          <InputLabel  id="demo-simple-select-label">Link to zone </InputLabel>
+
+<Select
+
+  labelId="direction-label"
+  id="direction-select"
+
+>
+ { drawMode === "roi" && internalZones.map((zone, index) => (<MenuItem value={zone.zone_name}>{zone.zone_name}</MenuItem>))}
+ { drawMode === "line" && gateZones.map((zone, index) => (<MenuItem value={zone.zone_name}>{zone.zone_name}</MenuItem>))}
+
+</Select>
+
+</Col>
+    </Row>
+    <Row>
+      <Col span={12}>       {drawMode === "roi" && (
             <FormGroup>
               <FormControlLabel
                 control={
                   <Checkbox
                     checked={isTimer === "on"}
                     onChange={handleTimerChange}
+                    classes={{root: classes.radio, checked: classes.checked}}
+
                   />
                 }
                 label="Timer"
               />
             </FormGroup>
           )}
-          {drawMode === "line" && (
+          </Col>
+          <Row>      
+    </Row>
+ 
+</Row>
+    <Row>
+    {drawMode === "line" && (
             <>
-              <FormControl>
-                <InputLabel id="demo-simple-select-label">Position</InputLabel>
+          
+        
+       
+        
+      <Col span={8}>    <FormControl style={{width:'80%'}} >
+                <InputLabel  id="demo-simple-select-label">Position</InputLabel>
 
                 <Select
+              
                   labelId="direction-label"
                   id="direction-select"
                   value={drawDirection}
@@ -1388,8 +1516,8 @@ if(stream){
                   <MenuItem value="left">Left</MenuItem>
                   <MenuItem value="right">Right</MenuItem>
                 </Select>
-              </FormControl>
-              <FormControl>
+              </FormControl></Col>
+      <Col span={8}>      <FormControl  style={{width:'80%'}}>
                 <InputLabel>Flow direction</InputLabel>
                 <Select
                   labelId="direction-label"
@@ -1401,26 +1529,33 @@ if(stream){
                   <MenuItem value="in">In</MenuItem>
                   <MenuItem value="out">Out</MenuItem>
                 </Select>
-              </FormControl>
-            </>
-          )}
-          <Button
-            variant="contained"
-            color="primary"
+              </FormControl></Col>
+              </>
+  )}
+    </Row>
+    <br/>
+    <br/>
+
+    <Row>
+      <Col span={6}>   <Button
+                  variant="contained"
+        color="primary"
             onClick={() => drawRectangle(drawDirection)}
             className={classes.button}
           >
             Start Counting
-          </Button>
+          </Button></Col>
+      <Col span={6}> 
           <Button
             variant="contained"
-            color="primary"
             onClick={stopStream}
-            className={classes.button}
+            className={classes.buttonStop}
           >
             Stop Stream
           </Button>
-
+         
+          </Col>
+      <Col span={6}>
           <Button
             variant="contained"
             color="primary"
@@ -1429,10 +1564,20 @@ if(stream){
             className={classes.button}
           >
             Clear
-          </Button>
-        </div>
+          </Button></Col>
+
+    </Row>
+ </>
+        
+   
+        
+      
+
       )}
-      <List className={classes.cameraList}>
+   
+
+     <Row> 
+   <List className={classes.cameraList}>
         {cameras.map((camera, index) => (
           <ListItem
             key={camera.id}
@@ -1449,7 +1594,11 @@ if(stream){
           </ListItem>
         ))}
       </List>
-    </>
+
+      
+      </Row>
+  
+      </>
   );
 };
 

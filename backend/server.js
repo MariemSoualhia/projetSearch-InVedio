@@ -9,6 +9,7 @@ const cameraRoutes = require("./routes/cameraRoutes");
 const userRoutes = require('./routes/userRoutes');
 const videoRoutes = require('./routes/videoRoutesjs');
 const streamRoutes = require('./routes/streamRouttes');
+const zoneRoutes = require('./routes/zoneRoutes'); // Assurez-vous que le chemin est correct
 
 const Video = require('./models/Video');
 const moment = require('moment');
@@ -16,6 +17,9 @@ const path = require('path');
 const setIpAddress = require('set-ip-address');
 const multer = require('multer'); 
 const dotenv = require("dotenv")
+const fs = require('fs');
+
+
 const app = express()
 const port = 3002
 let stream = null
@@ -32,16 +36,56 @@ dotenv.config()
 // Parse application/json
 app.use(bodyParser.json());
 connectDB();
+
 // Utilisation des routes pour les caméras
 app.use("/api/cameras", cameraRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/stream', streamRoutes);
 
+app.use('/api/zone', zoneRoutes); // Préfixe pour les routes de l'API
+
 app.get("/api/test", (req, res) => { 
   res.send(200).json({ test: `ok` })
 })
+// Configurer multer pour les uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = 'uploads/';
+    // Vérifie si le dossier d'upload existe, sinon il le crée
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+  }
+});
 
+const upload = multer({ storage });
+
+// Endpoint pour l'upload de fichiers
+app.post('/upload', upload.single('file'), (req, res) => {
+  if (req.file) {
+    const filePath = path.join('uploads', req.file.filename);
+    res.json({
+      success: true,
+      message: 'File uploaded successfully',
+      filePath: filePath
+    });
+  } else {
+    res.status(400).json({
+      success: false,
+      message: 'File upload failed'
+    });
+  }
+});
+
+// Servir les fichiers statiques du dossier uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 async function createStream(rtspUrl) {
   return new Promise((resolve, reject) => {
     stream = new Stream({
@@ -381,17 +425,7 @@ app.post('/config', async (req, res) => {
     res.status(500).send('Erreur lors de la Configuration Réseau');
   }
 });
-// Configuration de multer pour gérer les fichiers envoyés
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-      cb(null, 'uploads/'); // Dossier où les fichiers seront enregistrés
-  },
-  filename: function (req, file, cb) {
-      cb(null, Date.now() + '-' + file.originalname); // Nom de fichier unique
-  }
-});
 
-const upload = multer({ storage: storage });
 
 // Route pour recevoir l'image et la sauvegarder
 app.post('/upload', upload.single('image'), (req, res) => {
@@ -410,6 +444,8 @@ app.post('/rectangle', (req, res) => {
 
   res.status(200).send('Coordonnées du rectangle reçues avec succès !');
 });
+
+
 app.listen(process.env.PORT, () => {
   console.log(`Server running on port ${process.env.PORT}`)
 })

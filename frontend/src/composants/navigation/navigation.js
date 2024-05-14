@@ -30,6 +30,13 @@ const items = [
     icon: <CameraAltIcon />,
     path: "/camera_config",
   },
+  
+  {
+    label: "Zone Config",
+    key: "zoneConfig",
+    icon: <CameraAltIcon />,
+    path: "/zoneManager",
+  },
   {
     label: "Camera Stream",
     key: "live",

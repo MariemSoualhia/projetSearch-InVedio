@@ -21,6 +21,8 @@ import StreamPage from "./pages/VideoComponent/StreamPage";
 import DetectionPage from "./pages/LivePage/DetectionPage";
 import AllDetection from "./pages/LivePage/AllDetection";
 import ProfilePage from "./pages/ProfilePage/ProfilePage";
+import VideoUpload from "./pages/LivePage/VideoUpload";
+import ZoneManager from "./pages/zoneManager/zoneManager";
 // Fonction pour vérifier si l'utilisateur est connecté
 const isUserAuthenticated = () => {
   const token = localStorage.getItem("token");
@@ -44,6 +46,8 @@ function App() {
             <Route path="/canvasLine" element={<CanvasLine />} />
             <Route path="/canvasWithArea" element={<CanvasWithArea />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/VideoUpload" element={<VideoUpload />} />
+            <Route path="/zoneManager" element={<ZoneManager />} />
 
             {/* Route publique pour la page Login */}
             <Route path="/login" element={<LoginPage />} />
