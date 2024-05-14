@@ -80,9 +80,9 @@ const Navigation = () => {
       <Menu.Item key="profile">
         <Link to="/profile">Profil</Link>
       </Menu.Item>
-      <Menu.Item key="settings">
+      {/* <Menu.Item key="settings">
         <Link to="/settings">Settings</Link>
-      </Menu.Item>
+      </Menu.Item> */}
       <Menu.Item key="logout" onClick={handleLogout}>
         Logout
       </Menu.Item>
