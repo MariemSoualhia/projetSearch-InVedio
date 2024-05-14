@@ -22,6 +22,7 @@ import {
   InputLabel,
   FormControl,
   Grid,
+  CircularProgress,
 } from "@material-ui/core";
 import { Edit, Delete } from "@material-ui/icons";
 import api from "./api";
@@ -183,7 +184,7 @@ const ZoneManager = () => {
   };
 
   if (loading) {
-    return <Typography>Loading zones...</Typography>;
+    return <CircularProgress color="inherit" />;
   }
 
   const indexOfLastItem = page * itemsPerPage;
