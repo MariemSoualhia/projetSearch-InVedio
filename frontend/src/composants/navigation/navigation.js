@@ -13,6 +13,8 @@ import OndemandVideoIcon from "@mui/icons-material/OndemandVideo";
 import VideoSettingsIcon from "@mui/icons-material/VideoSettings";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import LiveTvIcon from "@mui/icons-material/LiveTv";
+import SettingsIcon from "@mui/icons-material/Settings";
+import CropFreeIcon from "@mui/icons-material/CropFree";
 import "./navigation.css";
 
 const { SubMenu } = Menu;
@@ -30,11 +32,11 @@ const items = [
     icon: <CameraAltIcon />,
     path: "/camera_config",
   },
-  
+
   {
     label: "Zone Config",
     key: "zoneConfig",
-    icon: <CameraAltIcon />,
+    icon: <CropFreeIcon />,
     path: "/zoneManager",
   },
   {
@@ -49,6 +51,12 @@ const items = [
     key: "records",
     icon: <VideoSettingsIcon />,
     path: "/videoList",
+  },
+  {
+    label: "Settings",
+    key: "settings",
+    icon: <SettingsIcon />,
+    path: "/settingsPage",
   },
   //{
   //label: "Network Config",

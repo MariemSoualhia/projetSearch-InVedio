@@ -19,9 +19,9 @@ import {
   Radio,
   Checkbox,
   FormGroup,
-  Box
+  Box,
 } from "@material-ui/core";
-import { Col, Row } from 'antd';
+import { Col, Row } from "antd";
 
 import Select from "@material-ui/core/Select";
 import FormControl from "@material-ui/core/FormControl";
@@ -46,16 +46,16 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: "transparent", // Modification pour rendre le canvas transparent
   },
   controlsContainer: {
-    display: 'flex',
-    flexDirection: 'column',
+    display: "flex",
+    flexDirection: "column",
     //alignItems: 'flex-start',
     gap: theme.spacing(2), // Espacement entre les éléments
     padding: theme.spacing(2), // Ajoutez du padding selon vos besoins
-    backgroundColor: '#f0f0f0', // Couleur de fond
+    backgroundColor: "#f0f0f0", // Couleur de fond
     borderRadius: theme.shape.borderRadius, // Ajoutez des bordures arrondies
     boxShadow: theme.shadows[2], // Ajoutez une ombre si nécessaire
   },
-    button: {
+  button: {
     margin: theme.spacing(1),
     borderRadius: theme.spacing(2),
 
@@ -66,15 +66,14 @@ const useStyles = makeStyles((theme) => ({
     borderRadius: theme.spacing(2),
     padding: `${theme.spacing(1)}px ${theme.spacing(3)}px`,
     color: "#fff",
-    backgroundColor:"#f44336",
+    backgroundColor: "#f44336",
   },
   radio: {
-    '&$checked': {
-      color: '#f44336'
-    }
+    "&$checked": {
+      color: "#f44336",
+    },
   },
-  checked: {}
-
+  checked: {},
 }));
 
 const DetectionPage = ({ stream: initialStream, allCameras }) => {
@@ -108,7 +107,7 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
   const [lineCoordinates, setLineCoordinates] = useState({});
   const [connectedToStream, setConnectedToStream] = useState(false);
   const [connections, setConnections] = useState({});
-  const [connectionNow, setConnectionsNow] = useState(); 
+  const [connectionNow, setConnectionsNow] = useState();
   const socketRef = useRef();
   const peersRef = useRef([]);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -117,30 +116,32 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
 
   const [isTimer, setTimer] = useState("off");
   const [link, setLink] = useState();
-  const [videoPath, setVideoPath] = useState('');
+  const [videoPath, setVideoPath] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
-  const [uploadStatus, setUploadStatus] = useState('');
+  const [uploadStatus, setUploadStatus] = useState("");
   const [internalZones, setInternalZones] = useState([]);
   const [gateZones, setGateZones] = useState([]);
 
   useEffect(() => {
     const fetchInternalZones = async () => {
       try {
-        const response = await axios.get('http://localhost:3002/api/zone/internal');
+        const response = await axios.get(
+          "http://localhost:3002/api/zone/internal"
+        );
         setInternalZones(response.data);
-        console.log(response.data)
+        console.log(response.data);
       } catch (error) {
-        console.error('Error fetching internal zones:', error);
+        console.error("Error fetching internal zones:", error);
       }
     };
 
     const fetchGateZones = async () => {
       try {
-        const response = await axios.get('http://localhost:3002/api/zone/gate');
+        const response = await axios.get("http://localhost:3002/api/zone/gate");
         setGateZones(response.data);
-        console.log(response.data)
+        console.log(response.data);
       } catch (error) {
-        console.error('Error fetching gate zones:', error);
+        console.error("Error fetching gate zones:", error);
       }
     };
 
@@ -184,13 +185,9 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
 
     const videoElement = videoRef.current;
     //const playPromise = videoElement.play();
-if(stream){
-
-    FristStream();
- 
-  
-}
-  
+    if (stream) {
+      FristStream();
+    }
   }, []);
 
   useEffect(() => {
@@ -203,29 +200,33 @@ if(stream){
 
   const handleUpload = async () => {
     if (!selectedFile) {
-      setUploadStatus('Please select a file first');
+      setUploadStatus("Please select a file first");
       return;
     }
 
     const formData = new FormData();
-    formData.append('file', selectedFile);
+    formData.append("file", selectedFile);
 
     try {
-      const response = await axios.post('http://localhost:3002/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
+      const response = await axios.post(
+        "http://localhost:3002/upload",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         }
-      });
+      );
 
       if (response.data.success) {
-        setUploadStatus('File uploaded successfully');
+        setUploadStatus("File uploaded successfully");
         setVideoPath(response.data.filePath);
       } else {
-        setUploadStatus('File upload failed');
+        setUploadStatus("File upload failed");
       }
     } catch (error) {
-      console.error('Error uploading file:', error);
-      setUploadStatus('Error uploading file');
+      console.error("Error uploading file:", error);
+      setUploadStatus("Error uploading file");
     }
   };
   const initializeVideo = () => {
@@ -422,10 +423,7 @@ if(stream){
       if (path == "null") return;
       var wsProt = l.protocol == "https:" ? "wss://" : "ws://";
       var wsHost = hostname != undefined ? hostname : l.hostname;
-      var wsPort =
-        port != undefined
-          ? port
-          : stream.output_port
+      var wsPort = port != undefined ? port : stream.output_port;
       var wsPath = path != undefined ? path : "/ws";
       if (wsPort) wsPort = ":" + wsPort;
       var wsUrl = wsProt + wsHost + wsPort + wsPath;
@@ -516,7 +514,7 @@ if(stream){
     console.log("la resultat est", response.data);
     console.log(response.data.port);
     setCurrentStream(response.data.stream);
- 
+
     //const selectedCamera = JSON.parse(localStorage.getItem('selectedCamera'+selectedCamera.name));
     localStorage.setItem(
       "selectedPort" + selectedCamera.name,
@@ -524,18 +522,20 @@ if(stream){
     );
 
     if (response) {
-      const dataStream ={
+      const dataStream = {
         input_stream: cam.rtspUrl,
-        output_port:response.data.port,
-  
-        stream_name:cam.name,
-        streamplay:true,
-  
-      }
-      const response2 = await axios.post("http://127.0.0.1:3002/api/stream/", dataStream);
-      console.log(response2)
+        output_port: response.data.port,
+
+        stream_name: cam.name,
+        streamplay: true,
+      };
+      const response2 = await axios.post(
+        "http://127.0.0.1:3002/api/stream/",
+        dataStream
+      );
+      console.log(response2);
       const updatedStream = { ...initialStream, ...response2.data };
-        setStream(updatedStream);
+      setStream(updatedStream);
       setSelectedPort(response.data.port);
       var connections = {};
       var reportError;
@@ -731,37 +731,32 @@ if(stream){
         connections[url].webrtcConfig = configuration;
         reportError =
           reportErrorCB != undefined ? reportErrorCB : function (text) {};
-         
-          
-          
-          
-          // Mettez à jour les données de connexion dans le state ou où vous en avez besoin
-          setConnectionsNow(connections[url]);
-          const videoData = {
-            src: videoRef.current.src,
-            // Ajoutez d'autres propriétés pertinentes si nécessaire
-          };
-          
-          // Créez l'objet connections[url] avec les données extraites
-          const connectionData = {
-          type : "inbound",
-           videoElement : videoRef.current.src,
-            webrtcConfig : configuration,
-            reportError :
-              reportErrorCB != undefined ? reportErrorCB : function (text) {},
-          };
-          
-          
-          // Mettez à jour les données de connexion dans le state ou où vous en avez besoin
-          setConnectionsNow(connections[url]);
-          
-          // Enregistrez les données de connexion dans le localStorage
-          localStorage.setItem(
-            "connections[" + response.data.port + "]",
-            JSON.stringify(connectionData)
-          );
-        
-    
+
+        // Mettez à jour les données de connexion dans le state ou où vous en avez besoin
+        setConnectionsNow(connections[url]);
+        const videoData = {
+          src: videoRef.current.src,
+          // Ajoutez d'autres propriétés pertinentes si nécessaire
+        };
+
+        // Créez l'objet connections[url] avec les données extraites
+        const connectionData = {
+          type: "inbound",
+          videoElement: videoRef.current.src,
+          webrtcConfig: configuration,
+          reportError:
+            reportErrorCB != undefined ? reportErrorCB : function (text) {},
+        };
+
+        // Mettez à jour les données de connexion dans le state ou où vous en avez besoin
+        setConnectionsNow(connections[url]);
+
+        // Enregistrez les données de connexion dans le localStorage
+        localStorage.setItem(
+          "connections[" + response.data.port + "]",
+          JSON.stringify(connectionData)
+        );
+
         connections[url].websocket = new WebSocket(wsUrl);
         connections[url].websocket.addEventListener("message", onServerMessage);
         //connections[url].websocket.close()
@@ -844,7 +839,7 @@ if(stream){
       const rect = canvasRef.current.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
-    
+
       if (points.length === 0) {
         // Premier clic : enregistrer le point de départ (coin supérieur gauche)
         setPoints([{ x, y }]);
@@ -854,7 +849,10 @@ if(stream){
         const endPoint = { x, y };
         const width = Math.abs(endPoint.x - startPoint.x);
         const height = Math.abs(endPoint.y - startPoint.y);
-        const bottomRight = { x: startPoint.x + width, y: startPoint.y + height };
+        const bottomRight = {
+          x: startPoint.x + width,
+          y: startPoint.y + height,
+        };
         const topRight = { x: bottomRight.x, y: startPoint.y };
         const bottomLeft = { x: startPoint.x, y: bottomRight.y };
         setPoints([...points, topRight, bottomRight, bottomLeft]);
@@ -902,9 +900,7 @@ if(stream){
     return () => {
       closeConnection();
     };
-  }, []); 
-
-
+  }, []);
 
   const handleDirectionChange = (event) => {
     setDrawDirection(event.target.value);
@@ -927,22 +923,26 @@ if(stream){
       input_stream: selectedCamera.rtspUrl,
     };
     console.log(data);
-  
-    const response = await axios.post("http://127.0.0.1:5050/stop_stream", data);
-    const response2 = await axios.put(`http://127.0.0.1:3002/api/stream/stop/${stream._id}`);
-  
+
+    const response = await axios.post(
+      "http://127.0.0.1:5050/stop_stream",
+      data
+    );
+    const response2 = await axios.put(
+      `http://127.0.0.1:3002/api/stream/stop/${stream._id}`
+    );
+
     if (response && response2) {
       console.log(response);
       console.log(response2);
-      window.location.reload()
-  
+      window.location.reload();
+
       // Récupérer les données de connexion du localStorage
-      const connectionData = JSON.parse(localStorage.getItem("connections[" + stream.output_port + ']'));
-  
-     
+      const connectionData = JSON.parse(
+        localStorage.getItem("connections[" + stream.output_port + "]")
+      );
     }
   };
-  
 
   const drawRectangle = (side) => {
     // Récupération des coordonnées de la ligne
@@ -997,10 +997,9 @@ if(stream){
         y2: { x: x4, y: y4 },
       };
     } else {
-
       rectangleData = {
         input_stream: stream.input_stream,
-        port:stream.output_port,
+        port: stream.output_port,
         type_app: drawMode,
         enable_timer: isTimer,
 
@@ -1018,31 +1017,33 @@ if(stream){
       input_stream: stream.rtspUrl,
     };
     // Envoyer les coordonnées du rectangle au backend (exemple avec Axios)
-   axios.post("http://127.0.0.1:5050/stop_stream", data);
-   //connectionNow.websocket.close()
+    axios.post("http://127.0.0.1:5050/stop_stream", data);
+    //connectionNow.websocket.close()
     axios
       .post("http://127.0.0.1:5050/start_counting", rectangleData)
-      
 
       .then((response) => {
         console.log("Coordonnées du rectangle envoyées avec succès !");
         console.log(response.data.port);
-        const dataToSend={
-          port:response.data.port
-        }
-        axios.put(`http://127.0.0.1:3002/api/stream/updatePort/${stream._id}`, dataToSend) .then((resp) => {
-          console.log("Coordonnées du rectangle envoyées avec succès !");
-          
-         const updatedStream = { ...initialStream, ...resp.data };
-         setStream(updatedStream);
-        })
-       
+        const dataToSend = {
+          port: response.data.port,
+        };
+        axios
+          .put(
+            `http://127.0.0.1:3002/api/stream/updatePort/${stream._id}`,
+            dataToSend
+          )
+          .then((resp) => {
+            console.log("Coordonnées du rectangle envoyées avec succès !");
 
-          
+            const updatedStream = { ...initialStream, ...resp.data };
+            setStream(updatedStream);
+          });
+
         setSelectedPort(response.data.port);
 
         clearCanvas();
-        console.log( connectionNow.websocket);
+        console.log(connectionNow.websocket);
 
         var connections = {};
         var reportError;
@@ -1218,10 +1219,7 @@ if(stream){
           if (path == "null") return;
           var wsProt = l.protocol == "https:" ? "wss://" : "ws://";
           var wsHost = hostname != undefined ? hostname : l.hostname;
-          var wsPort =
-            port != undefined
-              ? port
-              : response.data.port
+          var wsPort = port != undefined ? port : response.data.port;
           var wsPath = path != undefined ? path : "/ws";
           if (wsPort) wsPort = ":" + wsPort;
           var wsUrl = wsProt + wsHost + wsPort + wsPath;
@@ -1235,9 +1233,9 @@ if(stream){
           connections[url].webrtcConfig = configuration;
           reportError =
             reportErrorCB != undefined ? reportErrorCB : function (text) {};
-       
+
           setConnectionsNow(connections[url]);
-      
+
           connections[url].websocket = new WebSocket(wsUrl);
           connections[url].websocket.addEventListener(
             "message",
@@ -1355,10 +1353,10 @@ if(stream){
   const drawZone = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-  
+
     // Effacer le contenu précédent du canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
+
     // Dessiner les points
     points.forEach((point) => {
       ctx.beginPath();
@@ -1367,14 +1365,14 @@ if(stream){
       ctx.fill();
       ctx.closePath();
     });
-  
+
     // Vérifier si nous avons exactement quatre points
     if (points.length === 4) {
       const topLeft = points[0];
       const topRight = points[1];
       const bottomRight = points[2];
       const bottomLeft = points[3];
-  
+
       // Dessiner le rectangle
       ctx.beginPath();
       ctx.moveTo(topLeft.x, topLeft.y);
@@ -1382,15 +1380,14 @@ if(stream){
       ctx.lineTo(bottomRight.x, bottomRight.y);
       ctx.lineTo(bottomLeft.x, bottomLeft.y);
       ctx.closePath();
-  
+
       ctx.lineWidth = 2;
       ctx.strokeStyle = "blue";
       ctx.stroke();
     }
-  
+
     console.log(points);
   };
-  
 
   React.useEffect(() => {
     drawZone();
@@ -1402,8 +1399,7 @@ if(stream){
     setLink(event.target.value);
   };
   return (
-    <> 
-
+    <>
       <div className={classes.streamContainer}>
         <video
           id="video-player"
@@ -1418,7 +1414,6 @@ if(stream){
         >
           Your browser does not support video
           <source src={`http://localhost:3002/${videoPath}`} type="video/mp4" />
-         
         </video>
 
         <canvas
@@ -1432,173 +1427,190 @@ if(stream){
         ></canvas>
       </div>
 
-      {stream.output_port&& (
+      {stream.output_port && (
         <>
-             <Box sx={{ width: '100%', textAlign: 'center' }}>
-  <Typography variant="h6" gutterBottom>
-    {stream.stream_name} : {stream.input_stream}
-  </Typography>
-</Box>
-     <Row>
-      <Col span={12}>  <FormControl component="fieldset">
-            <RadioGroup
-            color="#f44336"
-              aria-labelledby="demo-radio-buttons-group-label"
-              value={drawMode}
-              onChange={handleDrawModeChange}
-              row
-            >
-              <FormControlLabel value="roi" control={<Radio       classes={{root: classes.radio, checked: classes.checked}}
-/>} label="ROI" />
-              <FormControlLabel
-                value="line"
-                control={<Radio       classes={{root: classes.radio, checked: classes.checked}}
-                />}
-                label="Trippwaire"
-              />
-            </RadioGroup>
-          </FormControl>
-          </Col>
-          <Col span={12}> 
-          <InputLabel  id="demo-simple-select-label">Link to zone </InputLabel>
-
-<Select
-
-  labelId="direction-label"
-  id="direction-select"
-
->
- { drawMode === "roi" && internalZones.map((zone, index) => (<MenuItem value={zone.zone_name}>{zone.zone_name}</MenuItem>))}
- { drawMode === "line" && gateZones.map((zone, index) => (<MenuItem value={zone.zone_name}>{zone.zone_name}</MenuItem>))}
-
-</Select>
-
-</Col>
-    </Row>
-    <Row>
-      <Col span={12}>       {drawMode === "roi" && (
-            <FormGroup>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={isTimer === "on"}
-                    onChange={handleTimerChange}
-                    classes={{root: classes.radio, checked: classes.checked}}
-
+          <Box sx={{ width: "100%", textAlign: "center" }}>
+            <Typography variant="h6" gutterBottom>
+              {stream.stream_name} : {stream.input_stream}
+            </Typography>
+          </Box>
+          <Row>
+            <Col span={12}>
+              {" "}
+              <FormControl component="fieldset">
+                <RadioGroup
+                  color="#f44336"
+                  aria-labelledby="demo-radio-buttons-group-label"
+                  value={drawMode}
+                  onChange={handleDrawModeChange}
+                  row
+                >
+                  <FormControlLabel
+                    value="roi"
+                    control={
+                      <Radio
+                        classes={{
+                          root: classes.radio,
+                          checked: classes.checked,
+                        }}
+                      />
+                    }
+                    label="ROI"
                   />
-                }
-                label="Timer"
-              />
-            </FormGroup>
-          )}
-          </Col>
-          <Row>      
-    </Row>
- 
-</Row>
-    <Row>
-    {drawMode === "line" && (
-            <>
-          
-        
-       
-        
-      <Col span={8}>    <FormControl style={{width:'80%'}} >
-                <InputLabel  id="demo-simple-select-label">Position</InputLabel>
+                  <FormControlLabel
+                    value="line"
+                    control={
+                      <Radio
+                        classes={{
+                          root: classes.radio,
+                          checked: classes.checked,
+                        }}
+                      />
+                    }
+                    label="Trippwaire"
+                  />
+                </RadioGroup>
+              </FormControl>
+            </Col>
+            <Col span={12}>
+              <InputLabel id="demo-simple-select-label">
+                Link to zone{" "}
+              </InputLabel>
 
-                <Select
-              
-                  labelId="direction-label"
-                  id="direction-select"
-                  value={drawDirection}
-                  onChange={handleDirectionChange}
-                >
-                  <MenuItem value="left">Left</MenuItem>
-                  <MenuItem value="right">Right</MenuItem>
-                </Select>
-              </FormControl></Col>
-      <Col span={8}>      <FormControl  style={{width:'80%'}}>
-                <InputLabel>Flow direction</InputLabel>
-                <Select
-                  labelId="direction-label"
-                  id="direction-select"
-                  value={drawFlowDirection}
-                  onChange={handleFlowDirectionChange}
-                >
-                  <MenuItem value="in_out">In/Out</MenuItem>
-                  <MenuItem value="in">In</MenuItem>
-                  <MenuItem value="out">Out</MenuItem>
-                </Select>
-              </FormControl></Col>
+              <Select labelId="direction-label" id="direction-select">
+                {drawMode === "roi" &&
+                  internalZones.map((zone, index) => (
+                    <MenuItem value={zone.zone_name}>{zone.zone_name}</MenuItem>
+                  ))}
+                {drawMode === "line" &&
+                  gateZones.map((zone, index) => (
+                    <MenuItem value={zone.zone_name}>{zone.zone_name}</MenuItem>
+                  ))}
+              </Select>
+            </Col>
+          </Row>
+          <Row>
+            <Col span={12}>
+              {" "}
+              {drawMode === "roi" && (
+                <FormGroup>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={isTimer === "on"}
+                        onChange={handleTimerChange}
+                        classes={{
+                          root: classes.radio,
+                          checked: classes.checked,
+                        }}
+                      />
+                    }
+                    label="Timer"
+                  />
+                </FormGroup>
+              )}
+            </Col>
+            <Row></Row>
+          </Row>
+          <Row>
+            {drawMode === "line" && (
+              <>
+                <Col span={8}>
+                  {" "}
+                  <FormControl style={{ width: "80%" }}>
+                    <InputLabel id="demo-simple-select-label">
+                      Position
+                    </InputLabel>
+
+                    <Select
+                      labelId="direction-label"
+                      id="direction-select"
+                      value={drawDirection}
+                      onChange={handleDirectionChange}
+                    >
+                      <MenuItem value="left">Left</MenuItem>
+                      <MenuItem value="right">Right</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Col>
+                <Col span={8}>
+                  {" "}
+                  <FormControl style={{ width: "80%" }}>
+                    <InputLabel>Flow direction</InputLabel>
+                    <Select
+                      labelId="direction-label"
+                      id="direction-select"
+                      value={drawFlowDirection}
+                      onChange={handleFlowDirectionChange}
+                    >
+                      <MenuItem value="in_out">In/Out</MenuItem>
+                      <MenuItem value="in">In</MenuItem>
+                      <MenuItem value="out">Out</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Col>
               </>
-  )}
-    </Row>
-    <br/>
-    <br/>
+            )}
+          </Row>
+          <br />
+          <br />
 
-    <Row>
-      <Col span={6}>   <Button
-                  variant="contained"
-        color="primary"
-            onClick={() => drawRectangle(drawDirection)}
-            className={classes.button}
-          >
-            Start Counting
-          </Button></Col>
-      <Col span={6}> 
-          <Button
-            variant="contained"
-            onClick={stopStream}
-            className={classes.buttonStop}
-          >
-            Stop Stream
-          </Button>
-         
-          </Col>
-      <Col span={6}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={drawMode === "line" ? clearCanvas : clearZone}
-            disabled={!isDrawingStart}
-            className={classes.button}
-          >
-            Clear
-          </Button></Col>
-
-    </Row>
- </>
-        
-   
-        
-      
-
+          <Row>
+            <Col span={6}>
+              {" "}
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => drawRectangle(drawDirection)}
+                className={classes.button}
+              >
+                Start Counting
+              </Button>
+            </Col>
+            <Col span={6}>
+              <Button
+                variant="contained"
+                onClick={stopStream}
+                className={classes.buttonStop}
+              >
+                Stop Stream
+              </Button>
+            </Col>
+            <Col span={6}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={drawMode === "line" ? clearCanvas : clearZone}
+                disabled={!isDrawingStart}
+                className={classes.button}
+              >
+                Clear
+              </Button>
+            </Col>
+          </Row>
+        </>
       )}
-   
 
-     <Row> 
-   <List className={classes.cameraList}>
-        {cameras.map((camera, index) => (
-          <ListItem
-            key={camera.id}
-            button
-            onClick={() => handleCameraButtonClick(camera)}
-            className={classes.cameraItem}
-          >
-            <ListItemIcon>
-              <Videocam color="primary" />
-            </ListItemIcon>
-            <ListItemText
-              primary={<Typography variant="body1">{camera.name}</Typography>}
-            />
-          </ListItem>
-        ))}
-      </List>
-
-      
+      <Row>
+        <List className={classes.cameraList}>
+          {cameras.map((camera, index) => (
+            <ListItem
+              key={camera.id}
+              button
+              onClick={() => handleCameraButtonClick(camera)}
+              className={classes.cameraItem}
+            >
+              <ListItemIcon>
+                <Videocam color="primary" />
+              </ListItemIcon>
+              <ListItemText
+                primary={<Typography variant="body1">{camera.name}</Typography>}
+              />
+            </ListItem>
+          ))}
+        </List>
       </Row>
-  
-      </>
+    </>
   );
 };
 

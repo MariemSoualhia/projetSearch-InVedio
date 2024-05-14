@@ -23,6 +23,7 @@ import AllDetection from "./pages/LivePage/AllDetection";
 import ProfilePage from "./pages/ProfilePage/ProfilePage";
 import VideoUpload from "./pages/LivePage/VideoUpload";
 import ZoneManager from "./pages/zoneManager/zoneManager";
+import SettingsPage from "./pages/Settings/SettingsPage";
 // Fonction pour vérifier si l'utilisateur est connecté
 const isUserAuthenticated = () => {
   const token = localStorage.getItem("token");
@@ -48,6 +49,7 @@ function App() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/VideoUpload" element={<VideoUpload />} />
             <Route path="/zoneManager" element={<ZoneManager />} />
+            <Route path="/settingsPage" element={<SettingsPage />} />
 
             {/* Route publique pour la page Login */}
             <Route path="/login" element={<LoginPage />} />
