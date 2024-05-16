@@ -15,8 +15,26 @@ const zoneSchema = new mongoose.Schema({
           areaName:
           {
             type: String,
-          }
- 
+          },
+          CameraID: {
+            type: String,
+          },
+          SessionID: {
+            type: String,
+          },
+          TokenAPI: {
+            type: String,
+          },
+          ForceCreate: {
+            type: Boolean,
+          },
+          MaxOccupancy: {
+            type: Number,
+          },
+          
+
+
+          
         
  
 });

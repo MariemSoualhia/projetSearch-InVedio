@@ -99,6 +99,8 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [isDrawingStart, setIsDrawingStart] = useState(false);
   const [startCoords, setStartCoords] = useState({ x: 0, y: 0 });
+  const [currentCoords, setCurrentCoords] = useState({ x: 0, y: 0 });
+
   const [endCoords, setEndCoords] = useState({ x: 0, y: 0 });
   const [points, setPoints] = useState([]);
   const [drawMode, setDrawMode] = useState("roi");
@@ -121,6 +123,24 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
   const [uploadStatus, setUploadStatus] = useState("");
   const [internalZones, setInternalZones] = useState([]);
   const [gateZones, setGateZones] = useState([]);
+  const [platformSettings, setPlatformSettings] = useState({
+    bassiraId: "",
+    areaName: "",
+    dashboardToken: "",
+  });
+  // Fonction pour récupérer les paramètres depuis l'API
+  const fetchSettings = async () => {
+    try {
+      const response = await axios.get("http://localhost:3002/api/settings");
+      if (Array.isArray(response.data) && response.data.length > 0) {
+        setPlatformSettings(response.data[0]);
+      } else {
+        console.error("Error: No settings found or invalid response format");
+      }
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+    }
+  };
 
   useEffect(() => {
     const fetchInternalZones = async () => {
@@ -171,6 +191,7 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
   }, []); // Ce useEffect s'exécutera une seule fois après le premier rendu
 
   useEffect(() => {
+    fetchSettings();
     // Récupérer la caméra sélectionnée depuis le localStorage, ou null si elle n'existe pas
     const storedCamera = JSON.parse(
       localStorage.getItem("selectedCamera" + selectedCamera.name)
@@ -220,7 +241,13 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
 
       if (response.data.success) {
         setUploadStatus("File uploaded successfully");
-        setVideoPath(response.data.filePath);
+        setVideoPath("File uploaded successfully", response.data.filePath);
+        const dataCam = {
+          rtspUrl: response.data.filePath,
+          name: response.data.filePath,
+        };
+        console.log("File uploaded successfully", response.data.filePath);
+        handleCameraButtonClick(dataCam);
       } else {
         setUploadStatus("File upload failed");
       }
@@ -825,65 +852,84 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
     }
   };
   const startDrawing = (event) => {
-    setIsDrawingStart(true);
-    if (drawMode == "line") {
-      setIsDrawing(true);
-      const canvas = canvasRef.current;
-      const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-
-      const y = event.clientY - rect.top;
-      console.log("la pt est ", event.clientY);
-      setStartCoords({ x, y: canvas.height });
-    } else {
+  
+    if (drawMode === "line") {
+    
+  
+        setIsDrawing(true);
+        setIsDrawing(true);
+        const canvas = canvasRef.current;
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        console.log("la pt est ", event.clientY);
+        setStartCoords({ x, y: canvas.height });
+        setEndCoords({ x, y: 0});
+    } 
+    if (drawMode === "roi") {
       const rect = canvasRef.current.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
-
-      if (points.length === 0) {
-        // Premier clic : enregistrer le point de départ (coin supérieur gauche)
-        setPoints([{ x, y }]);
-      } else if (points.length === 1) {
-        // Deuxième clic : enregistrer le point de fin (coin inférieur droit)
-        const startPoint = points[0];
-        const endPoint = { x, y };
-        const width = Math.abs(endPoint.x - startPoint.x);
-        const height = Math.abs(endPoint.y - startPoint.y);
-        const bottomRight = {
-          x: startPoint.x + width,
-          y: startPoint.y + height,
-        };
-        const topRight = { x: bottomRight.x, y: startPoint.y };
-        const bottomLeft = { x: startPoint.x, y: bottomRight.y };
-        setPoints([...points, topRight, bottomRight, bottomLeft]);
-      } else {
-        // Reset si déjà quatre points enregistrés
-        setPoints([{ x, y }]);
-      }
+      setStartCoords({ x, y });
+      setIsDrawing(true);
+      setIsDrawingStart(true)
+      setPoints([{ x, y }]);
     }
   };
+
   const draw = (event) => {
-    if (drawMode === "line") {
-      if (!isDrawing) return;
-      const canvas = canvasRef.current;
-      const rect = canvas.getBoundingClientRect();
+  
+    if (drawMode === "roi") {
+        if (!isDrawing) return;
 
-      const x = startCoords.x; // Coordonnée x fixe
-      const y = event.clientY - rect.top; // Coordonnée y du curseur
-      setEndCoords({ x, y: 0 });
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+ 
+    setEndCoords({ x, y: 0 });
+      drawZone(x, y);
+    } 
+   
+  
+      if (drawMode === "line") {
+        if (!isDrawing) return;
+        const canvas = canvasRef.current;
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        setEndCoords({ x, y: 0 });
+        setStartCoords({ x, y: canvas.height });
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.beginPath();
+    
+        // Dessine une ligne verticale
+        ctx.moveTo(x, 0); // Commence en haut du canvas
+        ctx.lineTo(x, canvas.height); // Se termine en bas du canvas
+    
+        ctx.lineWidth = 5; // Épaisseur de la ligne
+        ctx.strokeStyle = "red"; // Couleur de la ligne
+        ctx.stroke();
+      }
+    
+    
+  };
 
-      const ctx = canvas.getContext("2d");
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.beginPath();
+  const stopDrawing = () => {
+    if (drawMode === "roi" && isDrawing) {
+      const { x: startX, y: startY } = startCoords;
+      const { x: endX, y: endY } = currentCoords;
 
-      // Dessine une ligne verticale
-      ctx.moveTo(x, 0); // Commence en haut du canvas
-      ctx.lineTo(x, canvas.height); // Se termine en bas du canvas
+      const topRight = { x: endX, y: startY };
+      const bottomRight = { x: endX, y: endY };
+      const bottomLeft = { x: startX, y: endY };
 
-      ctx.lineWidth = 5; // Épaisseur de la ligne
-      ctx.strokeStyle = "red"; // Couleur de la ligne
-      ctx.stroke();
+      setPoints([startCoords, topRight, bottomRight, bottomLeft]);
     }
+    setIsDrawing(false);
+  };
+  const drawLine = (x) => {
+  
   };
 
   // Fonction pour fermer la connexion
@@ -945,45 +991,45 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
   };
 
   const drawRectangle = (side) => {
-    // Récupération des coordonnées de la ligne
-    const { start, end } = lineCoordinates;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
+   // Récupération des coordonnées de la ligne
+   const { start, end } = lineCoordinates;
+   const canvas = canvasRef.current;
+   const ctx = canvas.getContext("2d");
 
-    // Calcul des coordonnées du rectangle
+   // Calcul des coordonnées du rectangle
 
-    let x1, x2, y1, y2;
-    let rectangleData = {};
-    if (side === "left") {
-      x1 = 0;
-      y1 = 0;
-      x2 = 0;
-      y2 = canvas.height;
-    } else if (side === "right") {
-      x1 = canvas.width;
-      y1 = 0;
-      x2 = canvas.width;
-      y2 = canvas.height;
-    } else {
-      // Gérer les cas invalides ou par défaut
-      return;
-    }
-    const x3 = startCoords.x;
-    const y3 = startCoords.y;
-    const x4 = endCoords.x;
-    const y4 = endCoords.y;
+   let x1, x2, y1, y2;
+   let rectangleData = {};
+   if (side === "left") {
+     x1 = 0;
+     y1 = 0;
+     x2 = 0;
+     y2 = canvas.height;
+   } else if (side === "right") {
+     x1 = canvas.width;
+     y1 = 0;
+     x2 = canvas.width;
+     y2 = canvas.height;
+   } else {
+     // Gérer les cas invalides ou par défaut
+     return;
+   }
+   const x3 = startCoords.x;
+   const y3 = startCoords.y;
+   const x4 = endCoords.x;
+   const y4 = endCoords.y;
 
-    // Dessin du rectangle
-    //ctx.clearRect(0, 0, canvas.width, canvas.height); // Effacer le canvas
-    ctx.beginPath();
+   // Dessin du rectangle
+   //ctx.clearRect(0, 0, canvas.width, canvas.height); // Effacer le canvas
+   ctx.beginPath();
 
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.lineTo(x3, y3);
-    ctx.lineTo(x4, y4);
-    ctx.closePath();
-    ctx.strokeStyle = "blue";
-    ctx.stroke();
+   ctx.moveTo(x1, y1);
+   ctx.lineTo(x2, y2);
+   ctx.lineTo(x3, y3);
+   ctx.lineTo(x4, y4);
+   ctx.closePath();
+   ctx.strokeStyle = "blue";
+   ctx.stroke();
     if (drawMode == "line") {
       rectangleData = {
         input_stream: stream.input_stream,
@@ -991,6 +1037,13 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
         type_app: drawMode,
         pos_line: drawDirection,
         flow_dir: drawFlowDirection,
+        CameraID: platformSettings.bassiraId,
+        TokenAPI: platformSettings.dashboardToken,
+        zone_name: link.zone_name,
+        area_name: link.areaName,
+        sessionID: link.SessionID,
+        type_zone: link.type,
+        idZone: link._id,
         x1: { x: x1, y: y1 },
         y1: { x: x2, y: y2 },
         x2: { x: x3, y: y3 },
@@ -1002,7 +1055,14 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
         port: stream.output_port,
         type_app: drawMode,
         enable_timer: isTimer,
-
+        CameraID: platformSettings.bassiraId,
+        flow_dir: "",
+        TokenAPI: platformSettings.dashboardToken,
+        zone_name: link.zone_name,
+        area_name: link.areaName,
+        sessionID: link.SessionID,
+        type_zone: link.type,
+        idZone: link._id,
         x1: points[0],
         y1: points[1],
         x2: points[2],
@@ -1311,20 +1371,14 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
       });
   };
 
-  const stopDrawing = () => {
-    if (drawMode == "line") {
-      setIsDrawing(false);
-    }
-  };
-
   const clearCanvas = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-    console.log(ctx);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     setStartCoords({ x: 0, y: 0 });
-    setEndCoords({ x: 0, y: 0 });
-    setIsDrawingStart(false);
+    setCurrentCoords({ x: 0, y: 0 });
+    setIsDrawing(false);
+    setPoints([]);
   };
 
   const handleDrawMode = (value) => {
@@ -1344,18 +1398,32 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
       setPoints([...points, { x, y }]);
     }
   };
-
   const clearZone = () => {
-    setPoints([]);
-    setIsDrawingStart(false);
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setPoints([]); // Effacer les points utilisés pour dessiner la zone
   };
-
-  const drawZone = () => {
+  const drawZone = (x, y) => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
 
     // Effacer le contenu précédent du canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const { x: startX, y: startY } = startCoords;
+    const width = Math.abs(x - startX);
+    const height = Math.abs(y - startY);
+    const rectX = x < startX ? x : startX;
+    const rectY = y < startY ? y : startY;
+
+    // Dessiner le rectangle
+    ctx.beginPath();
+    ctx.rect(rectX, rectY, width, height);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "blue";
+    ctx.stroke();
+    ctx.closePath();
 
     // Dessiner les points
     points.forEach((point) => {
@@ -1366,55 +1434,40 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
       ctx.closePath();
     });
 
-    // Vérifier si nous avons exactement quatre points
-    if (points.length === 4) {
-      const topLeft = points[0];
-      const topRight = points[1];
-      const bottomRight = points[2];
-      const bottomLeft = points[3];
-
-      // Dessiner le rectangle
-      ctx.beginPath();
-      ctx.moveTo(topLeft.x, topLeft.y);
-      ctx.lineTo(topRight.x, topRight.y);
-      ctx.lineTo(bottomRight.x, bottomRight.y);
-      ctx.lineTo(bottomLeft.x, bottomLeft.y);
-      ctx.closePath();
-
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = "blue";
-      ctx.stroke();
-    }
-
     console.log(points);
   };
 
   React.useEffect(() => {
-    drawZone();
+    drawZone(currentCoords.x, currentCoords.y);
   }, [points]);
   const handleDrawModeChange = (event) => {
     setDrawMode(event.target.value);
   };
   const handleSelectLink = (event) => {
-    setLink(event.target.value);
+    console.log(event);
+    setLink(event);
   };
+
   return (
     <>
       <div className={classes.streamContainer}>
-        <video
-          id="video-player"
-          ref={videoRef}
-          className={classes.stream}
-          width={960}
-          height={544}
-          autoPlay
-          controls
-          playsInline
-          muted
-        >
-          Your browser does not support video
-          <source src={`http://localhost:3002/${videoPath}`} type="video/mp4" />
-        </video>
+  
+          <video
+            id="video-player"
+            ref={videoRef}
+            className={classes.stream}
+            autoPlay
+            controls
+            playsInline
+            muted
+          >
+            Your browser does not support video
+            <source
+              src={`http://localhost:3002/${videoPath}`}
+              type="video/mp4"
+            />
+          </video>
+        
 
         <canvas
           ref={canvasRef}
@@ -1424,10 +1477,10 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
           onMouseDown={startDrawing}
           onMouseMove={draw}
           onMouseUp={stopDrawing}
-        ></canvas>
+        />
       </div>
 
-      {stream.output_port && (
+      {(stream.output_port || videoPath) && (
         <>
           <Box sx={{ width: "100%", textAlign: "center" }}>
             <Typography variant="h6" gutterBottom>
@@ -1476,15 +1529,26 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
               <InputLabel id="demo-simple-select-label">
                 Link to zone{" "}
               </InputLabel>
-
               <Select labelId="direction-label" id="direction-select">
                 {drawMode === "roi" &&
                   internalZones.map((zone, index) => (
-                    <MenuItem value={zone.zone_name}>{zone.zone_name}</MenuItem>
+                    <MenuItem
+                      key={index}
+                      value={zone.zone_name}
+                      onClick={() => handleSelectLink(zone)}
+                    >
+                      {zone.zone_name}
+                    </MenuItem>
                   ))}
                 {drawMode === "line" &&
                   gateZones.map((zone, index) => (
-                    <MenuItem value={zone.zone_name}>{zone.zone_name}</MenuItem>
+                    <MenuItem
+                      key={index}
+                      value={zone.zone_name}
+                      onClick={() => handleSelectLink(zone)}
+                    >
+                      {zone.zone_name}
+                    </MenuItem>
                   ))}
               </Select>
             </Col>
@@ -1577,15 +1641,15 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
               </Button>
             </Col>
             <Col span={6}>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={drawMode === "line" ? clearCanvas : clearZone}
-                disabled={!isDrawingStart}
-                className={classes.button}
-              >
-                Clear
-              </Button>
+            <Button
+  variant="contained"
+  color="primary"
+  onClick={clearCanvas}
+  disabled={!isDrawingStart}
+  className={classes.button}
+>
+Clear
+</Button>
             </Col>
           </Row>
         </>
@@ -1609,6 +1673,10 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
             </ListItem>
           ))}
         </List>
+        <div>
+          <input type="file" onChange={handleFileChange} />
+          <button onClick={handleUpload}>Upload Video</button>
+        </div>
       </Row>
     </>
   );

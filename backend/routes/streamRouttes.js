@@ -13,5 +13,5 @@ router.put("/stop/:_id", streamController.stopStream);
 router.put("/updatePort/:_id", streamController.updatePortStream);
 router.put("/updateStream/:_id", streamController.updateConnectStream);
 // Route pour supprimer une caméra spécifique par son ID
-
+router.delete('/:id', streamController.deleteStreamById);
 module.exports = router;

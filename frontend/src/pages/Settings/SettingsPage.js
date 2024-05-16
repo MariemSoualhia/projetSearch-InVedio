@@ -13,7 +13,7 @@ import {
   Snackbar,
 } from "@material-ui/core";
 import MuiAlert from "@material-ui/lab/Alert";
-
+import LinearProgress from '@mui/material/LinearProgress';
 const SettingsPage = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [platformSettings, setPlatformSettings] = useState({
@@ -22,12 +22,15 @@ const SettingsPage = () => {
     dashboardToken: "",
   });
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-
+  const [successMessage, setSuccessMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
   // Récupération des paramètres initiaux au chargement
   useEffect(() => {
     const storedDarkMode = JSON.parse(localStorage.getItem("darkMode"));
     const storedSettings = JSON.parse(localStorage.getItem("platformSettings"));
-
+  
+  
     if (storedDarkMode !== null) {
       setDarkMode(storedDarkMode);
     }
@@ -53,8 +56,9 @@ const SettingsPage = () => {
     }
   };
 
-  // Fonction pour créer ou mettre à jour les paramètres
-  const saveSettings = () => {
+
+  const saveSettings = async () => {
+    setLoading(true)
     if (platformSettings._id) {
       // Si les paramètres existent déjà, effectuez une mise à jour
       axios
@@ -62,14 +66,32 @@ const SettingsPage = () => {
           `http://localhost:3002/api/settings/${platformSettings._id}`,
           platformSettings
         )
-        .then(() => {
+        .then((rep) => {
           console.log("Settings updated successfully");
+          const token = 'vpbW2slErC8qKJaVrnyMNDd8HFu85pPErcGnFW8D';
+          console.log(rep)
+          //getTokenAPI(token);
+          if (rep.data.success==true){
+           
+            setSuccessMessage("Dashbord connected")
+            setLoading(false)
+            setError(false)
+          }else{
+            setSuccessMessage("Dashbord not connected")
+            setLoading(false)
+            setError(true)
+          }
+          
           setSnackbarOpen(true);
           fetchSettings(); // Rafraîchir les paramètres affichés après la mise à jour
         })
         .catch((error) => {
           console.error("Error updating settings:", error);
+          setSuccessMessage("Connexion erreur")
         });
+      
+// Appel de la fonction avec le token
+
     } else {
       // Si les paramètres n'existent pas, créez-les
       axios
@@ -111,28 +133,11 @@ const SettingsPage = () => {
       <Typography variant="h3" gutterBottom>
         Settings
       </Typography>
-      <Grid container alignItems="center">
-        <Grid item xs={6}>
-          <Typography variant="subtitle1">Dark Mode</Typography>
-        </Grid>
-        <Grid item xs={6} style={{ textAlign: "right" }}>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={darkMode}
-                onChange={toggleDarkMode}
-                name="darkModeSwitch"
-                color="primary"
-              />
-            }
-            label=""
-          />
-        </Grid>
-      </Grid>
+
       <Card style={{ marginTop: "20px" }}>
         <CardContent>
           <Typography variant="h5" component="h2">
-            Platform Settings
+            Dashboard Settings
           </Typography>
           <form>
             <TextField
@@ -162,14 +167,23 @@ const SettingsPage = () => {
               onChange={handleInputChange}
               style={{ marginBottom: "10px" }}
             />
-            <Button
+             <Grid container spacing={2}>
+        <Grid item xs={12} sm={6}>
+        <Button
               variant="contained"
               color="primary"
               onClick={saveSettings}
               style={{ marginTop: "10px" }}
             >
-              Save Settings
+              Connect to dashboard
             </Button>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+        {loading&&<LinearProgress />}
+        </Grid>
+        </Grid>
+            
+            
           </form>
         </CardContent>
       </Card>
@@ -183,9 +197,9 @@ const SettingsPage = () => {
           elevation={6}
           variant="filled"
           onClose={handleCloseSnackbar}
-          severity="success"
+          severity={!error ? "success" : "error"}
         >
-          Settings saved
+          {successMessage}
         </MuiAlert>
       </Snackbar>
     </Container>

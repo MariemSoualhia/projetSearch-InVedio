@@ -18,7 +18,9 @@ const setIpAddress = require("set-ip-address");
 const multer = require("multer");
 const dotenv = require("dotenv");
 const fs = require("fs");
+const axios = require("axios")
 
+const Settings = require("./models/Settings");
 const app = express();
 const port = 3002;
 let stream = null;
@@ -69,7 +71,7 @@ const upload = multer({ storage });
 // Endpoint pour l'upload de fichiers
 app.post("/upload", upload.single("file"), (req, res) => {
   if (req.file) {
-    const filePath = path.join("uploads", req.file.filename);
+    const filePath = path.resolve(req.file.path);
     res.json({
       success: true,
       message: "File uploaded successfully",
@@ -422,6 +424,72 @@ app.post("/rectangle", (req, res) => {
 
   res.status(200).send("Coordonnées du rectangle reçues avec succès !");
 });
+
+async function createDevice() {
+  // Lecture du fichier JSON
+ 
+      try {
+          const file = await Settings.find();
+         
+          console.log(file[0])
+          const requestData = {
+            TokenAPI: file[0].dashboardToken,
+            BassiraName: 'Bassira',
+            BassiraID: file[0].bassiraId,
+            BassiraStatus: 'on'
+        };
+
+        // Envoi de la requête PATCH
+        axios.post('https://dashboard.datadoit.io/api/bassira/create', requestData)
+            .then((response) => {
+                console.log(response.data);
+            })
+            .catch((error) => {
+                console.error('Erreur lors de la requête POST :', error);
+            });
+      } catch (error) {
+          console.error('Erreur lors de la conversion du JSON :', error);
+      }
+  
+}
+async function statusDevice() {
+  // Lecture du fichier JSON
+ 
+      try {
+          const file = await Settings.find();
+         
+          console.log(file[0])
+          const requestData = {
+            TokenAPI: file[0].dashboardToken,
+            BassiraName: 'Bassira',
+            BassiraID: file[0].bassiraId,
+            BassiraStatus: 'on'
+        };
+
+        // Envoi de la requête PATCH
+        axios.patch('https://dashboard.datadoit.io/api/bassira/update', requestData)
+            .then((response) => {
+                console.log(response.data);
+            })
+            .catch((error) => {
+                console.error('Erreur lors de la requête PATCH :', error);
+            });
+      } catch (error) {
+          console.error('Erreur lors de la conversion du JSON :', error);
+      }
+  
+}
+
+// Définition de la fonction pour exécuter statusDevice toutes les 5 minutes
+function statusDeviceScheduler() {
+  setInterval(() => {
+    statusDevice();
+}, 60000); // 60000 millisecondes = 1 minute
+
+}
+createDevice()
+// Appel de la fonction de planification
+statusDeviceScheduler();
 
 app.listen(process.env.PORT, () => {
   console.log(`Server running on port ${process.env.PORT}`);

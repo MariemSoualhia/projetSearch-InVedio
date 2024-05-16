@@ -79,6 +79,8 @@ const ZoneManager = () => {
     zone_name: "",
     type: "",
     areaName: "",
+    CameraID: "",
+    TokenAPI: "",
   });
   const [editZone, setEditZone] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -115,6 +117,10 @@ const ZoneManager = () => {
         setNewZone((prevZone) => ({
           ...prevZone,
           areaName: response.data[0].areaName,
+          CameraID:response.data[0].bassiraId,
+          TokenAPI:response.data[0].dashboardToken,
+
+
         }));
       } else {
         console.error("Error: No settings found or invalid response format");

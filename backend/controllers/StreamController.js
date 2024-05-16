@@ -99,6 +99,18 @@ const updateConnectStream = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+const deleteStreamById = async (req, res) => {
+  try {
+    const deletedZone = await Stream.findByIdAndDelete(req.params.id);
+    if (!deletedZone) {
+      return res.status(404).json({ message: 'Stream not found' });
+    }
+    res.status(200).json({ message: 'Stream deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 module.exports = {
   getAllStreams,
   createStream,
@@ -106,5 +118,6 @@ module.exports = {
   getAllStreamsPlay,
   stopStream,
   updatePortStream,
-  updateConnectStream
+  updateConnectStream,
+  deleteStreamById
 };

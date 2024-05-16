@@ -1,12 +1,47 @@
 const Zone = require('../models/Zone'); // Assurez-vous que le chemin est correct
+const axios = require("axios")
 
 // Créer une nouvelle zone
 exports.createZone = async (req, res) => {
   try {
-    const { zone_name, type, areaName } = req.body;
+    const { zone_name, type, areaName, CameraID, TokenAPI } = req.body;
     const newZone = new Zone({ zone_name, type, areaName });
     await newZone.save();
-    res.status(201).json(newZone);
+    const zoneID = newZone._id.toString();
+    const data = {
+      "AreaName": areaName,
+      "CameraName": zone_name,
+      "CameraNameID":zoneID,
+      "CameraType":type,
+      "CameraID": CameraID,
+      "TokenAPI": TokenAPI,
+      "ForceCreate": false,
+      "MaxOccupancy":50
+      }
+ // Appel de l'API en utilisant axios
+ const response = await axios.post('https://dashboard.datadoit.io/api/camera/create', data);
+ console.log('response of create ', response.data);
+
+ // Traiter la réponse
+ const msg = response.data.message;
+ if (msg === 'TokenAPI Not valid') {
+   console.log(msg);
+ } else if (msg === 'The application already exists with status on' || msg === 'Application create' || msg === 'Application create with new SessionID' || msg === 'Application create with new AreaID and SessionID' || msg === 'The application already exists. If you want to create another one with the same parameters, please send ForceCreate as true' || msg === '') {
+   console.log(response.data.result);
+   const SessionID = response.data.result.SessionID;
+   const TokenAPI = response.data.result.TokenAPI;
+   const CameraID = response.data.result.CameraID;
+   const AreaName = response.data.result.AreaName;
+   const updatedZone = await Zone.findByIdAndUpdate(
+    zoneID,
+    { SessionID, TokenAPI, CameraID },
+    { new: true, runValidators: true }
+  );
+  console.log(updatedZone)
+ }
+
+ // Répondre à la requête
+ res.status(200).json({ success: true });
   } catch (error) {
     if (error.code === 11000) { // Code d'erreur pour les doublons
       return res.status(400).json({ message: 'Zone name must be unique' });
