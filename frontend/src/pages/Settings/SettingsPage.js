@@ -13,7 +13,7 @@ import {
   Snackbar,
 } from "@material-ui/core";
 import MuiAlert from "@material-ui/lab/Alert";
-import LinearProgress from '@mui/material/LinearProgress';
+import LinearProgress from "@mui/material/LinearProgress";
 const SettingsPage = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [platformSettings, setPlatformSettings] = useState({
@@ -29,8 +29,7 @@ const SettingsPage = () => {
   useEffect(() => {
     const storedDarkMode = JSON.parse(localStorage.getItem("darkMode"));
     const storedSettings = JSON.parse(localStorage.getItem("platformSettings"));
-  
-  
+
     if (storedDarkMode !== null) {
       setDarkMode(storedDarkMode);
     }
@@ -56,9 +55,8 @@ const SettingsPage = () => {
     }
   };
 
-
   const saveSettings = async () => {
-    setLoading(true)
+    setLoading(true);
     if (platformSettings._id) {
       // Si les paramètres existent déjà, effectuez une mise à jour
       axios
@@ -68,30 +66,28 @@ const SettingsPage = () => {
         )
         .then((rep) => {
           console.log("Settings updated successfully");
-          const token = 'vpbW2slErC8qKJaVrnyMNDd8HFu85pPErcGnFW8D';
-          console.log(rep)
+          const token = "vpbW2slErC8qKJaVrnyMNDd8HFu85pPErcGnFW8D";
+          console.log(rep);
           //getTokenAPI(token);
-          if (rep.data.success==true){
-           
-            setSuccessMessage("Dashbord connected")
-            setLoading(false)
-            setError(false)
-          }else{
-            setSuccessMessage("Dashbord not connected")
-            setLoading(false)
-            setError(true)
+          if (rep.data.success == true) {
+            setSuccessMessage("Dashbord connected");
+            setLoading(false);
+            setError(false);
+          } else {
+            setSuccessMessage("Dashbord not connected");
+            setLoading(false);
+            setError(true);
           }
-          
+
           setSnackbarOpen(true);
           fetchSettings(); // Rafraîchir les paramètres affichés après la mise à jour
         })
         .catch((error) => {
           console.error("Error updating settings:", error);
-          setSuccessMessage("Connexion erreur")
+          setSuccessMessage("Connexion erreur");
         });
-      
-// Appel de la fonction avec le token
 
+      // Appel de la fonction avec le token
     } else {
       // Si les paramètres n'existent pas, créez-les
       axios
@@ -111,7 +107,13 @@ const SettingsPage = () => {
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode;
     setDarkMode(newDarkMode);
-    localStorage.setItem("darkMode", JSON.stringify(newDarkMode)); // Stockage du mode sombre
+    console.log(newDarkMode);
+    if (newDarkMode) {
+      localStorage.setItem("theme", "dark");
+    } else {
+      localStorage.setItem("theme", "light");
+    }
+    // Stockage du mode sombre
   };
 
   // Fonction pour gérer les changements d'entrée
@@ -167,25 +169,32 @@ const SettingsPage = () => {
               onChange={handleInputChange}
               style={{ marginBottom: "10px" }}
             />
-             <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
-        <Button
-              variant="contained"
-              color="primary"
-              onClick={saveSettings}
-              style={{ marginTop: "10px" }}
-            >
-              Connect to dashboard
-            </Button>
-        </Grid>
-        <Grid item xs={12} sm={6}>
-        {loading&&<LinearProgress />}
-        </Grid>
-        </Grid>
-            
-            
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={saveSettings}
+                  style={{ marginTop: "10px" }}
+                >
+                  Connect to dashboard
+                </Button>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                {loading && <LinearProgress />}
+              </Grid>
+            </Grid>
           </form>
         </CardContent>
+      </Card>
+      <Card style={{ marginTop: "20px", padding: "20px" }}>
+        <Typography variant="h5" component="h2">
+          Theme Settings
+        </Typography>
+        <FormControlLabel
+          control={<Switch checked={darkMode} onChange={toggleDarkMode} />}
+          label="Dark Mode"
+        />
       </Card>
       <Snackbar
         open={snackbarOpen}

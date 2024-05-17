@@ -852,85 +852,100 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
     }
   };
   const startDrawing = (event) => {
-  
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
     if (drawMode === "line") {
-    
-  
-        setIsDrawing(true);
-        setIsDrawing(true);
-        const canvas = canvasRef.current;
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-        console.log("la pt est ", event.clientY);
-        setStartCoords({ x, y: canvas.height });
-        setEndCoords({ x, y: 0});
-    } 
-    if (drawMode === "roi") {
-      const rect = canvasRef.current.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
+      setIsDrawing(true);
+      setStartCoords({ x, y: canvas.height });
+      setCurrentCoords({ x, y: 0 });
+    } else if (drawMode === "roi") {
       setStartCoords({ x, y });
       setIsDrawing(true);
-      setIsDrawingStart(true)
       setPoints([{ x, y }]);
     }
   };
 
   const draw = (event) => {
-  
-    if (drawMode === "roi") {
-        if (!isDrawing) return;
+    if (!isDrawing) return;
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
- 
-    setEndCoords({ x, y: 0 });
+
+    if (drawMode === "roi") {
+      setCurrentCoords({ x, y });
       drawZone(x, y);
-    } 
-   
-  
-      if (drawMode === "line") {
-        if (!isDrawing) return;
-        const canvas = canvasRef.current;
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        setEndCoords({ x, y: 0 });
-        setStartCoords({ x, y: canvas.height });
-        const ctx = canvas.getContext("2d");
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.beginPath();
-    
-        // Dessine une ligne verticale
-        ctx.moveTo(x, 0); // Commence en haut du canvas
-        ctx.lineTo(x, canvas.height); // Se termine en bas du canvas
-    
-        ctx.lineWidth = 5; // Épaisseur de la ligne
-        ctx.strokeStyle = "red"; // Couleur de la ligne
-        ctx.stroke();
-      }
-    
-    
+      console.log(points);
+    } else if (drawMode === "line") {
+      setCurrentCoords({ x, y: 0 });
+      drawLine(x);
+    }
   };
 
   const stopDrawing = () => {
-    if (drawMode === "roi" && isDrawing) {
-      const { x: startX, y: startY } = startCoords;
-      const { x: endX, y: endY } = currentCoords;
-
-      const topRight = { x: endX, y: startY };
-      const bottomRight = { x: endX, y: endY };
-      const bottomLeft = { x: startX, y: endY };
-
-      setPoints([startCoords, topRight, bottomRight, bottomLeft]);
-    }
     setIsDrawing(false);
+    if (drawMode === "roi") {
+      setPoints((prevPoints) => [...prevPoints, currentCoords]);
+    }
   };
+
+  const drawZone = (x, y) => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+
+    // Effacer le contenu précédent du canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const { x: startX, y: startY } = startCoords;
+    const width = Math.abs(x - startX);
+    const height = Math.abs(y - startY);
+    const rectX = x < startX ? x : startX;
+    const rectY = y < startY ? y : startY;
+
+    // Dessiner le rectangle
+    ctx.beginPath();
+    ctx.rect(rectX, rectY, width, height);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "blue";
+    ctx.stroke();
+    ctx.closePath();
+
+    // Dessiner les points
+    points.forEach((point) => {
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 5, 0, Math.PI * 2); // Dessiner un cercle de rayon 5
+      ctx.fillStyle = "blue";
+      ctx.fill();
+      ctx.closePath();
+    });
+  };
+
   const drawLine = (x) => {
-  
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.beginPath();
+
+    // Dessine une ligne verticale
+    ctx.moveTo(x, 0); // Commence en haut du canvas
+    ctx.lineTo(x, canvas.height); // Se termine en bas du canvas
+
+    ctx.lineWidth = 5; // Épaisseur de la ligne
+    ctx.strokeStyle = "red"; // Couleur de la ligne
+    ctx.stroke();
   };
+
+  React.useEffect(() => {
+    if (drawMode === "roi" && points.length > 1) {
+      const { x, y } = currentCoords;
+      drawZone(x, y);
+    }
+  }, [points, currentCoords]);
 
   // Fonction pour fermer la connexion
   const closeConnection = () => {
@@ -991,45 +1006,45 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
   };
 
   const drawRectangle = (side) => {
-   // Récupération des coordonnées de la ligne
-   const { start, end } = lineCoordinates;
-   const canvas = canvasRef.current;
-   const ctx = canvas.getContext("2d");
+    // Récupération des coordonnées de la ligne
+    const { start, end } = lineCoordinates;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
 
-   // Calcul des coordonnées du rectangle
+    // Calcul des coordonnées du rectangle
 
-   let x1, x2, y1, y2;
-   let rectangleData = {};
-   if (side === "left") {
-     x1 = 0;
-     y1 = 0;
-     x2 = 0;
-     y2 = canvas.height;
-   } else if (side === "right") {
-     x1 = canvas.width;
-     y1 = 0;
-     x2 = canvas.width;
-     y2 = canvas.height;
-   } else {
-     // Gérer les cas invalides ou par défaut
-     return;
-   }
-   const x3 = startCoords.x;
-   const y3 = startCoords.y;
-   const x4 = endCoords.x;
-   const y4 = endCoords.y;
+    let x1, x2, y1, y2;
+    let rectangleData = {};
+    if (side === "left") {
+      x1 = 0;
+      y1 = 0;
+      x2 = 0;
+      y2 = canvas.height;
+    } else if (side === "right") {
+      x1 = canvas.width;
+      y1 = 0;
+      x2 = canvas.width;
+      y2 = canvas.height;
+    } else {
+      // Gérer les cas invalides ou par défaut
+      return;
+    }
+    const x3 = startCoords.x;
+    const y3 = startCoords.y;
+    const x4 = endCoords.x;
+    const y4 = endCoords.y;
 
-   // Dessin du rectangle
-   //ctx.clearRect(0, 0, canvas.width, canvas.height); // Effacer le canvas
-   ctx.beginPath();
+    // Dessin du rectangle
+    //ctx.clearRect(0, 0, canvas.width, canvas.height); // Effacer le canvas
+    ctx.beginPath();
 
-   ctx.moveTo(x1, y1);
-   ctx.lineTo(x2, y2);
-   ctx.lineTo(x3, y3);
-   ctx.lineTo(x4, y4);
-   ctx.closePath();
-   ctx.strokeStyle = "blue";
-   ctx.stroke();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.lineTo(x3, y3);
+    ctx.lineTo(x4, y4);
+    ctx.closePath();
+    ctx.strokeStyle = "blue";
+    ctx.stroke();
     if (drawMode == "line") {
       rectangleData = {
         input_stream: stream.input_stream,
@@ -1404,42 +1419,7 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     setPoints([]); // Effacer les points utilisés pour dessiner la zone
   };
-  const drawZone = (x, y) => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
 
-    // Effacer le contenu précédent du canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    const { x: startX, y: startY } = startCoords;
-    const width = Math.abs(x - startX);
-    const height = Math.abs(y - startY);
-    const rectX = x < startX ? x : startX;
-    const rectY = y < startY ? y : startY;
-
-    // Dessiner le rectangle
-    ctx.beginPath();
-    ctx.rect(rectX, rectY, width, height);
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "blue";
-    ctx.stroke();
-    ctx.closePath();
-
-    // Dessiner les points
-    points.forEach((point) => {
-      ctx.beginPath();
-      ctx.arc(point.x, point.y, 5, 0, Math.PI * 2); // Dessiner un cercle de rayon 5
-      ctx.fillStyle = "blue";
-      ctx.fill();
-      ctx.closePath();
-    });
-
-    console.log(points);
-  };
-
-  React.useEffect(() => {
-    drawZone(currentCoords.x, currentCoords.y);
-  }, [points]);
   const handleDrawModeChange = (event) => {
     setDrawMode(event.target.value);
   };
@@ -1451,23 +1431,18 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
   return (
     <>
       <div className={classes.streamContainer}>
-  
-          <video
-            id="video-player"
-            ref={videoRef}
-            className={classes.stream}
-            autoPlay
-            controls
-            playsInline
-            muted
-          >
-            Your browser does not support video
-            <source
-              src={`http://localhost:3002/${videoPath}`}
-              type="video/mp4"
-            />
-          </video>
-        
+        <video
+          id="video-player"
+          ref={videoRef}
+          className={classes.stream}
+          autoPlay
+          controls
+          playsInline
+          muted
+        >
+          Your browser does not support video
+          <source src={`http://localhost:3002/${videoPath}`} type="video/mp4" />
+        </video>
 
         <canvas
           ref={canvasRef}
@@ -1641,15 +1616,15 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
               </Button>
             </Col>
             <Col span={6}>
-            <Button
-  variant="contained"
-  color="primary"
-  onClick={clearCanvas}
-  disabled={!isDrawingStart}
-  className={classes.button}
->
-Clear
-</Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={clearCanvas}
+                disabled={!isDrawingStart}
+                className={classes.button}
+              >
+                Clear
+              </Button>
             </Col>
           </Row>
         </>
