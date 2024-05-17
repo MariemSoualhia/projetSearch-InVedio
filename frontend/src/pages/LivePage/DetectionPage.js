@@ -309,6 +309,7 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
 
       connections[url].webrtcPeer.setRemoteDescription(sdp).catch(reportError);
 
+
       if (connections[url].type == "inbound") {
         connections[url].webrtcPeer
           .createAnswer()
@@ -371,6 +372,7 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
         connections[url].videoElement.srcObject = event.streams[0];
         //connections[url].videoElement.play();
       }
+
     }
 
     function onIceCandidate(event) {
@@ -467,6 +469,39 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
 
       connections[url].websocket = new WebSocket(wsUrl);
       connections[url].websocket.addEventListener("message", onServerMessage);
+      connections[url].websocket.addEventListener("close", function(event) {
+        console.log("Connection closed with code:", event.code, "and reason:", event.reason);
+        if (stream.input_stream){
+          const data = {
+            input_stream: stream.input_stream,
+          };
+          console.log(data);
+      
+         
+        axios.put(
+            `http://127.0.0.1:3002/api/stream/stop/${stream._id}`
+          );
+        }
+      
+    
+    
+      });
+      
+      connections[url].websocket.addEventListener("error", function(error) {
+        console.error("WebSocket error:", error);
+        if (stream.input_stream){
+          const data = {
+            input_stream: stream.input_stream,
+          };
+          console.log(data);
+      
+         
+        axios.put(
+            `http://127.0.0.1:3002/api/stream/stop/${stream._id}`
+          );
+        }
+      });
+      
     }
 
     function sendStream(hostname, port, path, configuration, reportErrorCB) {
@@ -875,21 +910,18 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
   };
 
   const draw = (event) => {
+    if (!isDrawing) return;
+  
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    setCurrentCoords({ x, y });
+  
     if (drawMode === "roi") {
-      if (!isDrawing) return;
-
-      const canvas = canvasRef.current;
-      const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-
-      setEndCoords({ x, y: 0 });
       drawZone(x, y);
-    }
-
-    if (drawMode === "line") {
-      if (!isDrawing) return;
-      const canvas = canvasRef.current;
+    } else if (drawMode === "line") {
+      // existing line drawing logic
       const rect = canvas.getBoundingClientRect();
       const x = event.clientX - rect.left;
       setEndCoords({ x, y: 0 });
@@ -905,9 +937,11 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
       ctx.lineWidth = 5; // Épaisseur de la ligne
       ctx.strokeStyle = "red"; // Couleur de la ligne
       ctx.stroke();
+    
     }
   };
-
+  
+  
   const stopDrawing = () => {
     if (drawMode === "roi" && isDrawing) {
       const { x: startX, y: startY } = startCoords;
@@ -1010,17 +1044,8 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
     const x4 = endCoords.x;
     const y4 = endCoords.y;
 
-    // Dessin du rectangle
-    //ctx.clearRect(0, 0, canvas.width, canvas.height); // Effacer le canvas
-    ctx.beginPath();
-
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.lineTo(x3, y3);
-    ctx.lineTo(x4, y4);
-    ctx.closePath();
-    ctx.strokeStyle = "blue";
-    ctx.stroke();
+ 
+  
     if (drawMode == "line") {
       rectangleData = {
         input_stream: stream.input_stream,
@@ -1398,16 +1423,16 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
   const drawZone = (x, y) => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-
+    
     // Effacer le contenu précédent du canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+  
     const { x: startX, y: startY } = startCoords;
     const width = Math.abs(x - startX);
     const height = Math.abs(y - startY);
     const rectX = x < startX ? x : startX;
     const rectY = y < startY ? y : startY;
-
+  
     // Dessiner le rectangle
     ctx.beginPath();
     ctx.rect(rectX, rectY, width, height);
@@ -1415,7 +1440,7 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
     ctx.strokeStyle = "blue";
     ctx.stroke();
     ctx.closePath();
-
+  
     // Dessiner les points
     points.forEach((point) => {
       ctx.beginPath();
@@ -1424,7 +1449,7 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
       ctx.fill();
       ctx.closePath();
     });
-
+  
     console.log(points);
   };
 
@@ -1515,13 +1540,14 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
               <InputLabel id="demo-simple-select-label">
                 Link to zone{" "}
               </InputLabel>
-              <Select labelId="direction-label" id="direction-select">
+              <Select labelId="direction-label" id="direction-select"  required>
                 {drawMode === "roi" &&
                   internalZones.map((zone, index) => (
                     <MenuItem
                       key={index}
                       value={zone.zone_name}
                       onClick={() => handleSelectLink(zone)}
+                      
                     >
                       {zone.zone_name}
                     </MenuItem>
@@ -1613,6 +1639,7 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
                 color="primary"
                 onClick={() => drawRectangle(drawDirection)}
                 className={classes.button}
+                disabled={!link} // D
               >
                 Start Counting
               </Button>
