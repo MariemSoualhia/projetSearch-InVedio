@@ -1,62 +1,83 @@
+/* Define CSS variables for light and dark themes */
+body.light {
+  --background-color: #e1ccff;
+  --border-color: #ccc;
+  --text-color: #333;
+  --hover-text-color: #9E58FF;
+  --selected-text-color: #9E58FF;
+  --icon-color: #9E58FF;
+  --icon-selected-color: #9E58FF;
+}
+
+body.dark {
+  --background-color: #1c1c1c;
+  --border-color: #333;
+  --text-color: #fff;
+  --hover-text-color: #9E58FF;
+  --selected-text-color: #9E58FF;
+  --icon-color: #fff;
+  --icon-selected-color: #9E58FF;
+}
+
 .menu-horizontal {
-  background-color: #3f51b5; /* Couleur de fond de la barre de navigation */
-  border-bottom: 1px solid #ffffff; /* Bordure inférieure blanche */
+  background-color: var(--background-color); /* Use CSS variable for background color */
+  border-bottom: 1px solid var(--border-color); /* Use CSS variable for border color */
 }
 
 .menu-horizontal .ant-menu-item a {
-  color: #ffffff; /* Couleur du texte des éléments de menu */
-  font-family: 'Arial', sans-serif; /* Police de caractères */
+  color: var(--text-color); /* Use CSS variable for text color */
+  font-family: 'Arial', sans-serif; /* Font family */
 }
 
 .menu-horizontal .ant-menu-item a:hover {
-  color: #ffeb3b; /* Couleur du texte des éléments de menu au survol */
-  background-color: transparent; /* Fond transparent au survol */
+  color: var(--hover-text-color); /* Use CSS variable for hover text color */
+  background-color: transparent; /* Transparent background on hover */
 }
 
 .menu-horizontal .ant-menu-item-selected a {
-  color: #ffeb3b; /* Couleur du texte de l'élément de menu sélectionné */
-  background-color: transparent; /* Fond transparent pour l'élément sélectionné */
+  color: var(--selected-text-color); /* Use CSS variable for selected text color */
+  background-color: transparent; /* Transparent background for selected item */
 }
 
 .menu-horizontal .ant-menu-item-icon {
-  color: #ffffff; /* Couleur des icônes des éléments de menu */
+  color: var(--icon-color); /* Use CSS variable for icon color */
 }
 
 .menu-horizontal .ant-menu-item-selected .ant-menu-item-icon {
-  color: #ffeb3b; /* Couleur de l'icône de l'élément de menu sélectionné */
+  color: var(--icon-selected-color); /* Use CSS variable for selected icon color */
 }
 
 .menu-horizontal .logo-text {
-  color: #ffffff; /* Couleur du texte du logo */
+  color: var(--text-color); /* Use CSS variable for logo text color */
 }
 
 .menu-horizontal .logo-text:hover {
-  color: #ffeb3b; /* Couleur du texte du logo au survol */
+  color: var(--hover-text-color); /* Use CSS variable for hover logo text color */
 }
 
 .menu-horizontal .logout-item {
-  margin-left: auto; /* Déplace l'élément de déconnexion vers la droite */
-  color: #ffffff; /* Couleur du texte de l'élément de déconnexion */
+  margin-left: auto; /* Move logout item to the right */
+  color: var(--text-color); /* Use CSS variable for logout item text color */
 }
 
 .menu-horizontal .logout-item:hover {
-  color: #ffeb3b; /* Couleur du texte de l'élément de déconnexion au survol */
+  color: var(--hover-text-color); /* Use CSS variable for hover logout item text color */
 }
+
 .logo-container {
-  display: flex; /* Utilisez Flexbox pour aligner les éléments horizontalement */
-  align-items: center; /* Centrez verticalement les éléments */
-  padding: 0 20px; /* Ajoutez un peu de marge intérieure pour l'espace autour du logo */
+  display: flex; /* Use Flexbox for horizontal alignment */
+  align-items: center; /* Center elements vertically */
+  padding: 0 20px; /* Add padding around the logo */
 }
 
 .logo-img {
-  width: 40px; /* Largeur du logo */
-  height: auto; /* Hauteur automatique pour maintenir les proportions */
-  margin-right: 10px; /* Marge à droite pour séparer le logo du texte */
+  width: 40px; /* Logo width */
+  height: auto; /* Maintain aspect ratio */
+  margin-right: 10px; /* Margin right to separate logo from text */
 }
 
 .logo-text {
-  color: #ffffff; /* Couleur du texte du logo */
-  font-size: 18px; /* Taille de la police du texte */
-  font-weight: bold; /* Gras pour le texte du logo */
+  color: var(--text-color); /* Use CSS variable for logo text color */
+  font-size: 18px; /* Font size for logo text */
+  font-weight: bold; /* Bold font weight for logo text */
 }
-

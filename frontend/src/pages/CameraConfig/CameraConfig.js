@@ -15,15 +15,21 @@ import {
   DialogContent,
   DialogActions,
   CircularProgress,
-
-
 } from "@material-ui/core";
-import { Select, MenuItem, InputLabel ,FormControl,  ThemeProvider,
-  createTheme, CssBaseline} from '@mui/material';
+import {
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
+  ThemeProvider,
+  createTheme,
+  CssBaseline,
+  Pagination,
+} from "@mui/material";
 import { makeStyles } from "@material-ui/core/styles";
 import DeleteIcon from "@material-ui/icons/Delete";
 import EditIcon from "@material-ui/icons/Edit";
-import Pagination from "@material-ui/lab/Pagination";
+import "./CameraConfig.css";
 import axios from "axios";
 
 const useStyles = makeStyles((theme) => ({
@@ -35,33 +41,63 @@ const useStyles = makeStyles((theme) => ({
     maxWidth: "600px",
     margin: "auto",
     padding: theme.spacing(4),
-    border: "2px solid #ccc",
+    border: "2px solid var(--border-color)",
     borderRadius: "8px",
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "var(--background-color)",
+    [theme.breakpoints.down("sm")]: {
+      padding: theme.spacing(2),
+    },
   },
   textField: {
     marginBottom: theme.spacing(2),
+    "& .MuiOutlinedInput-root": {
+      "& fieldset": {
+        borderColor: "var(--input-border-color)",
+        backgroundColor: "var(--input-background-color)",
+      },
+      "&:hover fieldset": {
+        borderColor: "var(--input-border-color)",
+      },
+      "&.Mui-focused fieldset": {
+        borderColor: "var(--input-border-color)",
+      },
+      "& input": {
+        color: "var(--input-text-color)",
+      },
+    },
+    "& .MuiInputLabel-root": {
+      color: "var(--label-color)",
+    },
   },
   button: {
     marginRight: theme.spacing(1),
   },
   cameraList: {
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "var(--background-color)",
     borderRadius: "8px",
-    border: "2px solid #ccc",
+    border: "2px solid var(--border-color)",
     padding: theme.spacing(2),
   },
   listItem: {
     marginBottom: theme.spacing(1),
-    backgroundColor: "#fff",
+    backgroundColor: "var(--input-background-color)",
     borderRadius: "4px",
     boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+    color: "var(--text-color)",
   },
+
   listItemText: {
-    fontWeight: "bold",
+    primary: {
+      fontWeight: "bold",
+      color: "var(--text-color)",
+    },
+    secondary: {
+      fontWeight: "bold",
+      color: "var(--text-color)",
+    },
   },
   editButton: {
-    color: "#2196f3",
+    color: "var(--icon-color)",
   },
   deleteButton: {
     color: "#f44336",
@@ -70,12 +106,26 @@ const useStyles = makeStyles((theme) => ({
     marginTop: theme.spacing(2),
     display: "flex",
     justifyContent: "center",
+    "& .MuiPaginationItem-root": {
+      color: "#9E58FF",
+    },
   },
   pageTitle: {
     fontSize: "24px",
     fontWeight: "bold",
     marginBottom: theme.spacing(3),
-    color: "#333", // Changez la couleur selon vos besoins
+    color: "var(--text-color)",
+  },
+  inputLabel: {
+    color: "var(--label-color)",
+  },
+  dialogTitle: {
+    backgroundColor: "var(--background-color)",
+    color: "var(--text-color)",
+  },
+  dialogContent: {
+    backgroundColor: "var(--background-color)",
+    color: "var(--text-color)",
   },
 }));
 
@@ -89,17 +139,22 @@ const CameraConfig = () => {
     password: "",
     resolution: "",
   });
-  const [listAddress, setListAddress] = useState( []);
+  const [listAddress, setListAddress] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [selectedAddress, setSelectedAddress] = useState('');
+  const [darkMode, setDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem("theme");
+    return savedTheme === "dark";
+  });
+
   const itemsPerPage = 5;
 
   useEffect(() => {
     fetchCameras();
-    fetchCamerasAddress()
+    fetchCamerasAddress();
   }, []);
+
   useEffect(() => {
     const storedAddresses = localStorage.getItem("addresses");
     if (storedAddresses) {
@@ -108,6 +163,11 @@ const CameraConfig = () => {
       fetchCamerasAddress();
     }
   }, []);
+
+  useEffect(() => {
+    document.body.className = darkMode ? "dark" : "light";
+    localStorage.setItem("theme", darkMode ? "dark" : "light");
+  }, [darkMode]);
 
   const fetchCameras = async () => {
     try {
@@ -120,9 +180,7 @@ const CameraConfig = () => {
 
   const fetchCamerasAddress = async () => {
     try {
-
       const response = await axios.get("http://127.0.0.1:5000/scan_ips");
-      console.log(response)
       setListAddress(response.data.list_ips);
       localStorage.setItem("addresses", JSON.stringify(response.data.list_ips));
     } catch (error) {
@@ -140,7 +198,6 @@ const CameraConfig = () => {
 
   const handleAddCamera = async () => {
     setLoading(true);
-    console.log(formData)
     try {
       await axios.post("http://localhost:3002/api/cameras", formData);
       fetchCameras();
@@ -178,12 +235,11 @@ const CameraConfig = () => {
     });
     setOpenDialog(true);
   };
-  const handleAddressChange = (event) => {
-    console.log(event.target.value)
-    //setSelectedAddress(event.target.value);
-    setFormData({ ...formData, address: event.target.value });
 
+  const handleAddressChange = (event) => {
+    setFormData({ ...formData, address: event.target.value });
   };
+
   const handleUpdateCamera = async () => {
     try {
       await axios.put(
@@ -223,49 +279,147 @@ const CameraConfig = () => {
     (page - 1) * itemsPerPage,
     page * itemsPerPage
   );
-    // Définition du thème sombre
-    const darkTheme = createTheme({
-      palette: {
-        mode: 'dark',
-      },
-    });
-    const lightTheme = createTheme({
-      palette: {
-        mode: 'light',
-      
-      },
-    });
-  
-    useEffect(() => {
-      const storedDarkMode = localStorage.getItem('darkMode');
-      const isDarkMode = storedDarkMode === 'true';
-      if (isDarkMode) {
-        document.body.classList.add('dark-mode');
-      } else {
-        document.body.classList.remove('dark-mode');
-      }
-    }, []);
-    const handleDarkModeToggle = () => {
-      const storedDarkMode = localStorage.getItem('darkMode');
-      const newDarkMode = storedDarkMode !== 'true';
-      localStorage.setItem('darkMode', newDarkMode.toString());
-      if (newDarkMode) {
-        document.body.classList.add('dark-mode');
-      } else {
-        document.body.classList.remove('dark-mode');
-      }
-    };
+
+  const theme = createTheme({
+    palette: {
+      mode: darkMode ? "dark" : "light",
+    },
+  });
+
+  const handleThemeToggle = () => {
+    setDarkMode(!darkMode);
+  };
+
   return (
-    <ThemeProvider theme={localStorage.getItem('darkMode') === 'true' ? darkTheme : lightTheme}>
-    <CssBaseline />
-    <Container className={classes.root}>
-      <Typography variant="h3" gutterBottom className={classes.pageTitle}>
-        Camera Configuration
-      </Typography>
-   
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
-          <form className={classes.formContainer}>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Container className={classes.root}>
+        <Button onClick={handleThemeToggle}>
+          Toggle to {darkMode ? "Light" : "Dark"} Mode
+        </Button>
+        <Typography variant="h3" gutterBottom className={classes.pageTitle}>
+          Camera Configuration
+        </Typography>
+
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <form className={classes.formContainer}>
+              <TextField
+                label="Camera Name"
+                variant="outlined"
+                fullWidth
+                className={classes.textField}
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                color="secondary"
+              />
+              <FormControl fullWidth variant="outlined">
+                <InputLabel
+                  id="address-select-label"
+                  className={classes.inputLabel}
+                >
+                  IP Address
+                </InputLabel>
+                <Select
+                  labelId="address-select-label"
+                  id="address-select"
+                  value={formData.address}
+                  onChange={handleAddressChange}
+                  label="IP Address"
+                  color="secondary"
+                >
+                  {listAddress.map((address, index) => (
+                    <MenuItem key={index} value={address}>
+                      {address}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <br />
+              <br />
+              <TextField
+                label="Username"
+                variant="outlined"
+                fullWidth
+                className={classes.textField}
+                name="username"
+                value={formData.username}
+                onChange={handleInputChange}
+                color="secondary"
+              />
+
+              <TextField
+                label="Password"
+                variant="outlined"
+                fullWidth
+                className={classes.textField}
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                color="secondary"
+              />
+
+              {loading ? (
+                <CircularProgress color="secondary" />
+              ) : (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  className={classes.button}
+                  onClick={handleAddCamera}
+                >
+                  Add Camera
+                </Button>
+              )}
+            </form>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <List className={classes.cameraList}>
+              {paginatedCameras.map((camera) => (
+                <ListItem key={camera._id} className={classes.listItem}>
+                  <ListItemText
+                    primary={camera.name}
+                    secondary={`IP Address: ${camera.address}, Username: ${camera.username}, RTSP: ${camera.rtspUrl}`}
+                    classes={{
+                      primary: classes.listItemText.primary,
+                      secondary: classes.listItem,
+                    }}
+                  />
+                  <ListItemSecondaryAction>
+                    <IconButton
+                      edge="end"
+                      aria-label="edit"
+                      onClick={() => handleEditCamera(camera)}
+                      className={classes.editButton}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      edge="end"
+                      aria-label="delete"
+                      onClick={() => handleDeleteCamera(camera._id)}
+                      className={classes.deleteButton}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </ListItemSecondaryAction>
+                </ListItem>
+              ))}
+            </List>
+            <div className={classes.pagination}>
+              <Pagination
+                count={Math.ceil(cameras.length / itemsPerPage)}
+                page={page}
+                onChange={handlePageChange}
+                classes={{ ul: classes.pagination }}
+              />
+            </div>
+          </Grid>
+        </Grid>
+        <Dialog open={openDialog} onClose={handleCloseDialog}>
+          <DialogTitle className={classes.dialogTitle}>Edit Camera</DialogTitle>
+          <DialogContent className={classes.dialogContent}>
             <TextField
               label="Camera Name"
               variant="outlined"
@@ -274,25 +428,32 @@ const CameraConfig = () => {
               name="name"
               value={formData.name}
               onChange={handleInputChange}
+              color="secondary"
             />
-      <FormControl fullWidth variant="outlined">
-            <InputLabel id="address-select-label">IP Address</InputLabel>
-            <Select
-              labelId="address-select-label"
-              id="address-select"
-              value={formData.address}
-              onChange={handleAddressChange}
-              label="IP Address"
-            >
-              {listAddress.map((address, index) => (
-                <MenuItem key={index} value={address}>
-                  {address}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <br/>
-          <br/>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel
+                id="address-select-label"
+                className={classes.inputLabel}
+              >
+                IP Address
+              </InputLabel>
+              <Select
+                labelId="address-select-label"
+                id="address-select"
+                value={formData.address}
+                onChange={handleAddressChange}
+                label="IP Address"
+                color="secondary"
+              >
+                {listAddress.map((address, index) => (
+                  <MenuItem key={index} value={address}>
+                    {address}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <br />
+            <br />
             <TextField
               label="Username"
               variant="outlined"
@@ -301,8 +462,8 @@ const CameraConfig = () => {
               name="username"
               value={formData.username}
               onChange={handleInputChange}
+              color="secondary"
             />
-  
             <TextField
               label="Password"
               variant="outlined"
@@ -311,124 +472,19 @@ const CameraConfig = () => {
               name="password"
               value={formData.password}
               onChange={handleInputChange}
+              color="secondary"
             />
-  
-            {loading ? (
-              <CircularProgress />
-            ) : (
-              <Button
-                variant="contained"
-                color="primary"
-                className={classes.button}
-                onClick={handleAddCamera}
-              >
-                Add Camera
-              </Button>
-            )}
-          </form>
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <List className={classes.cameraList}>
-            {paginatedCameras.map((camera) => (
-              <ListItem key={camera._id} className={classes.listItem}>
-                <ListItemText
-                  primary={camera.name}
-                  secondary={`IP Address: ${camera.address}, Username: ${camera.username}, RTSP: ${camera.rtspUrl}`}
-                  classes={{ primary: classes.listItemText }}
-                />
-                
-                <ListItemSecondaryAction>
-                  <IconButton
-                    edge="end"
-                    aria-label="edit"
-                    onClick={() => handleEditCamera(camera)}
-                    className={classes.editButton}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    edge="end"
-                    aria-label="delete"
-                    onClick={() => handleDeleteCamera(camera._id)}
-                    className={classes.deleteButton}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </ListItemSecondaryAction>
-              </ListItem>
-            ))}
-          </List>
-          <div className={classes.pagination}>
-            <Pagination
-              count={Math.ceil(cameras.length / itemsPerPage)}
-              page={page}
-              onChange={handlePageChange}
-              color="primary"
-            />
-          </div>
-        </Grid>
-      </Grid>
-      <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>Edit Camera</DialogTitle>
-        <DialogContent>
-          <TextField
-            label="Camera Name"
-            variant="outlined"
-            fullWidth
-            className={classes.textField}
-            name="name"
-            value={formData.name}
-            onChange={handleInputChange}
-          />
-      <FormControl fullWidth variant="outlined">
-            <InputLabel id="address-select-label">IP Address</InputLabel>
-            <Select
-              labelId="address-select-label"
-              id="address-select"
-              value={selectedAddress}
-              onChange={handleAddressChange}
-              label="IP Address"
-            >
-              {listAddress.map((address, index) => (
-                <MenuItem key={index} value={address}>
-                  {address}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <br/>
-          <br/>
-          <TextField
-            label="Username"
-            variant="outlined"
-            fullWidth
-            className={classes.textField}
-            name="username"
-            value={formData.username}
-            onChange={handleInputChange}
-          />
-          <TextField
-            label="Password"
-            variant="outlined"
-            fullWidth
-            className={classes.textField}
-            name="password"
-            value={formData.password}
-            onChange={handleInputChange}
-          />
-   
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={handleUpdateCamera} color="primary">
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-    </Container>
+          </DialogContent>
+          <DialogActions className={classes.dialogContent}>
+            <Button onClick={handleCloseDialog} color="primary">
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateCamera} color="primary">
+              Save
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Container>
     </ThemeProvider>
   );
 };

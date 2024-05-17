@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Menu, Dropdown } from "antd";
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { Menu, Dropdown, Switch } from "antd";
+import { Link, useNavigate } from "react-router-dom";
 import {
   AppstoreOutlined,
   VideoCameraOutlined,
@@ -23,58 +22,70 @@ const items = [
   {
     label: "All streams",
     key: "streams",
-    icon: <LiveTvIcon />,
+    icon: <LiveTvIcon style={{ color: "var(--icon-color)" }} />,
     path: "/liveAll",
   },
   {
     label: "Camera Config",
     key: "cameraConfig",
-    icon: <CameraAltIcon />,
+    icon: <CameraAltIcon style={{ color: "var(--icon-color)" }} />,
     path: "/camera_config",
   },
-
   {
     label: "Zone Config",
     key: "zoneConfig",
-    icon: <CropFreeIcon />,
+    icon: <CropFreeIcon style={{ color: "var(--icon-color)" }} />,
     path: "/zoneManager",
   },
   {
     label: "Camera Stream",
     key: "live",
-    icon: <SwitchVideoIcon />,
+    icon: <SwitchVideoIcon style={{ color: "var(--icon-color)" }} />,
     path: "/videoComponent",
   },
-
   {
     label: "List of Records",
     key: "records",
-    icon: <VideoSettingsIcon />,
+    icon: <VideoSettingsIcon style={{ color: "var(--icon-color)" }} />,
     path: "/videoList",
   },
   {
     label: "Settings",
     key: "settings",
-    icon: <SettingsIcon />,
+    icon: <SettingsIcon style={{ color: "var(--icon-color)" }} />,
     path: "/settingsPage",
   },
-  //{
-  //label: "Network Config",
-  //key: "network",
-  //icon: <AppstoreOutlined />,
-  //path: "/networkConfig",
-  //},
+  // {
+  //   label: "Network Config",
+  //   key: "network",
+  //   icon: <AppstoreOutlined />,
+  //   path: "/networkConfig",
+  // },
 ];
 
 const Navigation = () => {
   const navigate = useNavigate();
+  const [theme, setTheme] = useState("light");
+
+  useEffect(() => {
+    document.body.className = theme;
+  }, [theme]);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
-
     console.log("Déconnexion...");
     navigate("/");
     window.location.reload();
   };
+
+  const toggleTheme = () => {
+    setTheme((prevTheme) => {
+      const newTheme = prevTheme === "light" ? "dark" : "light";
+      localStorage.setItem("theme", newTheme);
+      return newTheme;
+    });
+  };
+
   const menu = (
     <Menu>
       <Menu.Item key="profile">
@@ -88,8 +99,9 @@ const Navigation = () => {
       </Menu.Item>
     </Menu>
   );
+
   return (
-    <Menu mode="horizontal" className="menu-horizontal">
+    <Menu mode="horizontal" className={`menu-horizontal ${theme}`}>
       <Menu.Item key="logo" className="logo-container">
         <Link to="/" className="logo-container">
           <img
@@ -105,16 +117,20 @@ const Navigation = () => {
           <Link to={item.path}>{item.label}</Link>
         </Menu.Item>
       ))}
-      {/* <Menu.Item
-        key="logout"
-        icon={<LogoutOutlined />}
-        onClick={handleLogout}
-        className="logout-item"
-      >
-        Logout
+      {/* <Menu.Item key="theme" className="theme-switch">
+        <Switch
+          checked={theme === "dark"}
+          onChange={toggleTheme}
+          checkedChildren="Dark"
+          unCheckedChildren="Light"
+        />
       </Menu.Item> */}
       <Dropdown overlay={menu} placement="bottomRight" className="logout-item">
-        <Menu.Item key="user" icon={<UserOutlined />} className="user-item" />
+        <Menu.Item
+          key="user"
+          icon={<UserOutlined style={{ color: "var(--icon-color)" }} />}
+          className="user-item"
+        />
       </Dropdown>
     </Menu>
   );

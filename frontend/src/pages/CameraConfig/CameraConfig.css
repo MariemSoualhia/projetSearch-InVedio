@@ -1,0 +1,46 @@
+body.light {
+
+  --input-text-color: #000;
+  --input-border-color: #000;
+  --title-text-color: #000;
+  --text-color:#000;
+  
+ 
+}
+
+body.dark {
+ 
+  --input-text-color: #fff;
+  --input-border-color: #fff;
+  --title-text-color: #fff;
+  --text-color:#fff;
+ 
+}
+
+
+.input-root {
+  border-color: var(--input-border-color);
+  background-color: var(--input-background-color);
+  color: var(--input-text-color);
+}
+
+.dialog-content {
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+.dialog-title {
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+.list-root {
+  background-color: var(--background-color);
+  border-color: var(--border-color);
+}
+
+.list-item {
+  background-color: var(--input-background-color);
+  color: var(--text-color);
+  border-color: var(--input-border-color);
+}
