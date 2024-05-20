@@ -24,6 +24,7 @@ import ProfilePage from "./pages/ProfilePage/ProfilePage";
 import VideoUpload from "./pages/LivePage/VideoUpload";
 import ZoneManager from "./pages/zoneManager/zoneManager";
 import SettingsPage from "./pages/Settings/SettingsPage";
+import CameraPage from "./pages/LivePage/CameraPage";
 // Fonction pour vérifier si l'utilisateur est connecté
 const isUserAuthenticated = () => {
   const token = localStorage.getItem("token");
@@ -37,7 +38,7 @@ function App() {
         <Layout>
           <Routes>
             {/* Routes protégées */}
-            <Route path="/" element={<MultipleStreamsPage />} />
+            <Route path="/" element={<CameraPage />} />
             <Route path="/live" element={<LivePage />} />
             <Route path="/liveAll" element={<MultipleStreamsPage />} />
             <Route path="/camera_config" element={<CameraConfig />} />
