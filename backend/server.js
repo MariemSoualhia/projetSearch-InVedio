@@ -18,7 +18,7 @@ const setIpAddress = require("set-ip-address");
 const multer = require("multer");
 const dotenv = require("dotenv");
 const fs = require("fs");
-const axios = require("axios")
+const axios = require("axios");
 
 const Settings = require("./models/Settings");
 const app = express();
@@ -41,6 +41,7 @@ connectDB();
 // Utilisation des routes pour les caméras
 app.use("/api/cameras", cameraRoutes);
 app.use("/api/user", userRoutes);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/videos", videoRoutes);
 app.use("/api/stream", streamRoutes);
 app.use("/api/settings", settingsRoutes);
@@ -427,67 +428,66 @@ app.post("/rectangle", (req, res) => {
 
 async function createDevice() {
   // Lecture du fichier JSON
- 
-      try {
-          const file = await Settings.find();
-         
-          console.log(file[0])
-          const requestData = {
-            TokenAPI: file[0].dashboardToken,
-            BassiraName: 'Bassira',
-            BassiraID: file[0].bassiraId,
-            BassiraStatus: 'on'
-        };
 
-        // Envoi de la requête PATCH
-        axios.post('https://dashboard.datadoit.io/api/bassira/create', requestData)
-            .then((response) => {
-                console.log(response.data);
-            })
-            .catch((error) => {
-                console.error('Erreur lors de la requête POST :', error);
-            });
-      } catch (error) {
-          console.error('Erreur lors de la conversion du JSON :', error);
-      }
-  
+  try {
+    const file = await Settings.find();
+
+    console.log(file[0]);
+    const requestData = {
+      TokenAPI: file[0].dashboardToken,
+      BassiraName: "Bassira",
+      BassiraID: file[0].bassiraId,
+      BassiraStatus: "on",
+    };
+
+    // Envoi de la requête PATCH
+    axios
+      .post("https://dashboard.datadoit.io/api/bassira/create", requestData)
+      .then((response) => {
+        console.log(response.data);
+      })
+      .catch((error) => {
+        console.error("Erreur lors de la requête POST :", error);
+      });
+  } catch (error) {
+    console.error("Erreur lors de la conversion du JSON :", error);
+  }
 }
 async function statusDevice() {
   // Lecture du fichier JSON
- 
-      try {
-          const file = await Settings.find();
-         
-          console.log(file[0])
-          const requestData = {
-            TokenAPI: file[0].dashboardToken,
-            BassiraName: 'Bassira',
-            BassiraID: file[0].bassiraId,
-            BassiraStatus: 'on'
-        };
 
-        // Envoi de la requête PATCH
-        axios.patch('https://dashboard.datadoit.io/api/bassira/update', requestData)
-            .then((response) => {
-                console.log(response.data);
-            })
-            .catch((error) => {
-                console.error('Erreur lors de la requête PATCH :', error);
-            });
-      } catch (error) {
-          console.error('Erreur lors de la conversion du JSON :', error);
-      }
-  
+  try {
+    const file = await Settings.find();
+
+    console.log(file[0]);
+    const requestData = {
+      TokenAPI: file[0].dashboardToken,
+      BassiraName: "Bassira",
+      BassiraID: file[0].bassiraId,
+      BassiraStatus: "on",
+    };
+
+    // Envoi de la requête PATCH
+    axios
+      .patch("https://dashboard.datadoit.io/api/bassira/update", requestData)
+      .then((response) => {
+        console.log(response.data);
+      })
+      .catch((error) => {
+        console.error("Erreur lors de la requête PATCH :", error);
+      });
+  } catch (error) {
+    console.error("Erreur lors de la conversion du JSON :", error);
+  }
 }
 
 // Définition de la fonction pour exécuter statusDevice toutes les 5 minutes
 function statusDeviceScheduler() {
   setInterval(() => {
     statusDevice();
-}, 60000); // 60000 millisecondes = 1 minute
-
+  }, 60000); // 60000 millisecondes = 1 minute
 }
-createDevice()
+//createDevice()
 // Appel de la fonction de planification
 statusDeviceScheduler();
 

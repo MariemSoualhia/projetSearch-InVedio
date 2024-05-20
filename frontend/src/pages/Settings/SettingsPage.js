@@ -11,10 +11,88 @@ import {
   TextField,
   Button,
   Snackbar,
+  CssBaseline,
 } from "@material-ui/core";
-import MuiAlert from "@material-ui/lab/Alert";
-import LinearProgress from "@mui/material/LinearProgress";
+import { Alert, LinearProgress } from "@mui/material";
+import { createTheme, ThemeProvider } from "@material-ui/core/styles";
+import { makeStyles } from "@material-ui/core/styles";
+
+const useStyles = makeStyles((theme) => ({
+  root: {
+    textAlign: "center",
+    paddingTop: theme.spacing(4),
+  },
+  form: {
+    maxWidth: "600px",
+    margin: "auto",
+    padding: theme.spacing(4),
+    border: `2px solid var(--border-color)`,
+    borderRadius: "8px",
+    backgroundColor: "var(--background-color)",
+  },
+  textField: {
+    marginBottom: theme.spacing(2),
+    "& .MuiOutlinedInput-root": {
+      "& fieldset": {
+        borderColor: "var(--input-border-color)",
+        backgroundColor: "var(--input-background-color)",
+      },
+      "&:hover fieldset": {
+        borderColor: "var(--input-border-color)",
+      },
+      "&.Mui-focused fieldset": {
+        borderColor: "var(--input-border-color)",
+      },
+      "& input": {
+        color: "var(--input-text-color)",
+      },
+    },
+    "& .MuiInputLabel-root": {
+      color: "var(--label-color)",
+    },
+  },
+  button: {
+    marginRight: theme.spacing(1),
+  },
+  tableContainer: {
+    marginTop: theme.spacing(2),
+    backgroundColor: "var(--background-color)",
+    borderRadius: "8px",
+    border: `2px solid var(--border-color)`,
+    padding: theme.spacing(2),
+  },
+  pageTitle: {
+    fontSize: "24px",
+    fontWeight: "bold",
+    marginBottom: theme.spacing(3),
+    color: "var(--text-color)",
+  },
+  tableHeader: {
+    fontWeight: "bold",
+  },
+  pagination: {
+    marginTop: theme.spacing(2),
+    display: "flex",
+    justifyContent: "center",
+    "& .MuiPaginationItem-root": {
+      color: "#9E58FF",
+    },
+  },
+  dialogTitle: {
+    backgroundColor: "var(--background-color)",
+    color: "var(--text-color)",
+  },
+  dialogContent: {
+    backgroundColor: "var(--background-color)",
+    color: "var(--text-color)",
+  },
+  dialogActions: {
+    backgroundColor: "var(--background-color)",
+    color: "var(--text-color)",
+  },
+}));
 const SettingsPage = () => {
+  const classes = useStyles();
   const [darkMode, setDarkMode] = useState(false);
   const [platformSettings, setPlatformSettings] = useState({
     bassiraId: "",
@@ -25,6 +103,11 @@ const SettingsPage = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+
+  useEffect(() => {
+    document.body.className = darkMode ? "dark" : "light";
+    localStorage.setItem("theme", darkMode ? "dark" : "light");
+  }, [darkMode]);
   // Récupération des paramètres initiaux au chargement
   useEffect(() => {
     const storedDarkMode = JSON.parse(localStorage.getItem("darkMode"));
@@ -66,16 +149,11 @@ const SettingsPage = () => {
         )
         .then((rep) => {
           console.log("Settings updated successfully");
-          const token = "vpbW2slErC8qKJaVrnyMNDd8HFu85pPErcGnFW8D";
-          console.log(rep);
-          //getTokenAPI(token);
-          if (rep.data.success == true) {
-            setSuccessMessage("Dashbord connected");
-            setLoading(false);
+          if (rep.data.success === true) {
+            setSuccessMessage("Dashboard connected");
             setError(false);
           } else {
-            setSuccessMessage("Dashbord not connected");
-            setLoading(false);
+            setSuccessMessage("Dashboard not connected");
             setError(true);
           }
 
@@ -84,7 +162,12 @@ const SettingsPage = () => {
         })
         .catch((error) => {
           console.error("Error updating settings:", error);
-          setSuccessMessage("Connexion erreur");
+          setSuccessMessage("Connection error");
+          setError(true);
+          setSnackbarOpen(true);
+        })
+        .finally(() => {
+          setLoading(false);
         });
 
       // Appel de la fonction avec le token
@@ -94,11 +177,18 @@ const SettingsPage = () => {
         .post("http://localhost:3002/api/settings", platformSettings)
         .then(() => {
           console.log("Settings created successfully");
+          setSuccessMessage("Settings created successfully");
           setSnackbarOpen(true);
           fetchSettings(); // Rafraîchir les paramètres affichés après la création
         })
         .catch((error) => {
           console.error("Error creating settings:", error);
+          setSuccessMessage("Error creating settings");
+          setError(true);
+          setSnackbarOpen(true);
+        })
+        .finally(() => {
+          setLoading(false);
         });
     }
   };
@@ -107,8 +197,8 @@ const SettingsPage = () => {
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode;
     setDarkMode(newDarkMode);
-    console.log(newDarkMode);
-    if (newDarkMode) {
+    localStorage.setItem("darkMode", JSON.stringify(newDarkMode));
+    if (newDarkMode == true) {
       localStorage.setItem("theme", "dark");
     } else {
       localStorage.setItem("theme", "light");
@@ -130,88 +220,108 @@ const SettingsPage = () => {
     setSnackbarOpen(false);
   };
 
-  return (
-    <Container>
-      <Typography variant="h3" gutterBottom>
-        Settings
-      </Typography>
+  // Dark and light theme configurations
+  const lightTheme = createTheme({
+    palette: {
+      type: "light",
+    },
+  });
 
-      <Card style={{ marginTop: "20px" }}>
-        <CardContent>
-          <Typography variant="h5" component="h2">
-            Dashboard Settings
-          </Typography>
-          <form>
-            <TextField
-              label="Bassira ID"
-              variant="outlined"
-              fullWidth
-              name="bassiraId"
-              value={platformSettings.bassiraId || ""}
-              onChange={handleInputChange}
-              style={{ marginBottom: "10px" }}
-            />
-            <TextField
-              label="Area Name"
-              variant="outlined"
-              fullWidth
-              name="areaName"
-              value={platformSettings.areaName || ""}
-              onChange={handleInputChange}
-              style={{ marginBottom: "10px" }}
-            />
-            <TextField
-              label="Dashboard Token"
-              variant="outlined"
-              fullWidth
-              name="dashboardToken"
-              value={platformSettings.dashboardToken || ""}
-              onChange={handleInputChange}
-              style={{ marginBottom: "10px" }}
-            />
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={saveSettings}
-                  style={{ marginTop: "10px" }}
-                >
-                  Connect to dashboard
-                </Button>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                {loading && <LinearProgress />}
-              </Grid>
-            </Grid>
-          </form>
-        </CardContent>
-      </Card>
-      <Card style={{ marginTop: "20px", padding: "20px" }}>
-        <Typography variant="h5" component="h2">
-          Theme Settings
+  const darkTheme = createTheme({
+    palette: {
+      type: "dark",
+    },
+  });
+
+  return (
+    <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
+      <CssBaseline />
+      <Container className={classes.root}>
+        <Typography variant="h3" gutterBottom>
+          Settings
         </Typography>
-        <FormControlLabel
-          control={<Switch checked={darkMode} onChange={toggleDarkMode} />}
-          label="Dark Mode"
-        />
-      </Card>
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={3000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      >
-        <MuiAlert
-          elevation={6}
-          variant="filled"
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6}>
+            <Card>
+              <CardContent>
+                <Typography variant="h5" component="h2" gutterBottom>
+                  Dashboard Settings
+                </Typography>
+                <form>
+                  <TextField
+                    label="Bassira ID"
+                    variant="outlined"
+                    fullWidth
+                    name="bassiraId"
+                    value={platformSettings.bassiraId || ""}
+                    onChange={handleInputChange}
+                    style={{ marginBottom: "20px" }}
+                  />
+                  <TextField
+                    label="Area Name"
+                    variant="outlined"
+                    fullWidth
+                    name="areaName"
+                    value={platformSettings.areaName || ""}
+                    onChange={handleInputChange}
+                    style={{ marginBottom: "20px" }}
+                  />
+                  <TextField
+                    label="Dashboard Token"
+                    variant="outlined"
+                    fullWidth
+                    name="dashboardToken"
+                    value={platformSettings.dashboardToken || ""}
+                    onChange={handleInputChange}
+                    style={{ marginBottom: "20px" }}
+                  />
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={saveSettings}
+                    style={{ marginTop: "20px" }}
+                    fullWidth
+                  >
+                    Connect to dashboard
+                  </Button>
+                  {loading && <LinearProgress style={{ marginTop: "10px" }} />}
+                </form>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Card>
+              <CardContent>
+                <Typography variant="h5" component="h2" gutterBottom>
+                  Theme Settings
+                </Typography>
+                <FormControlLabel
+                  control={
+                    <Switch checked={darkMode} onChange={toggleDarkMode} />
+                  }
+                  label="Dark Mode"
+                />
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={3000}
           onClose={handleCloseSnackbar}
-          severity={!error ? "success" : "error"}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         >
-          {successMessage}
-        </MuiAlert>
-      </Snackbar>
-    </Container>
+          <Alert
+            elevation={6}
+            variant="filled"
+            onClose={handleCloseSnackbar}
+            severity={!error ? "success" : "error"}
+          >
+            {successMessage}
+          </Alert>
+        </Snackbar>
+      </Container>
+    </ThemeProvider>
   );
 };
 

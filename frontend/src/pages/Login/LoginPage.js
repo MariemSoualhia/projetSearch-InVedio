@@ -13,6 +13,9 @@ import {
   Typography,
   ThemeProvider,
   createTheme,
+  CircularProgress,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { useNavigate } from "react-router-dom";
@@ -22,6 +25,13 @@ const LoginPage = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem("theme");
+    return savedTheme === "dark";
   });
 
   const handleChange = (event) => {
@@ -33,6 +43,7 @@ const LoginPage = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setLoading(true);
 
     try {
       const response = await fetch("http://localhost:3002/api/user/signin", {
@@ -47,42 +58,54 @@ const LoginPage = () => {
         const errorData = await response.json();
         throw new Error(errorData.message);
       }
-      console.log(response.data);
+
       const responseData = await response.json();
       const token = responseData.token;
       const user = JSON.stringify(responseData.user);
-      // Stocker le token dans le localStorage
+
       localStorage.setItem("token", token);
       localStorage.setItem("currentuser", user);
 
-      console.log("Token JWT stocké dans le localStorage:", token);
       navigate("/liveAll");
       window.location.reload();
-
-      // Ajouter ici la redirection vers une nouvelle page, par exemple
-      // history.push('/dashboard');
     } catch (error) {
-      console.error("Erreur lors de la connexion:", error.message);
-      // Ajouter ici la logique pour afficher un message d'erreur à l'utilisateur
+      setErrorMessage(error.message);
+      setOpenSnackbar(true);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Définition du thème sombre
-  const darkTheme = createTheme({
+  const theme = createTheme({
     palette: {
-      mode: "dark",
+      mode: darkMode ? "dark" : "light",
     },
   });
 
+  const handleThemeToggle = () => {
+    setDarkMode(!darkMode);
+    localStorage.setItem("theme", darkMode ? "dark" : "light");
+  };
+
+  const handleCloseSnackbar = () => {
+    setOpenSnackbar(false);
+  };
+
   return (
-    <ThemeProvider theme={darkTheme}>
+    <ThemeProvider theme={theme}>
       <CssBaseline />
       <Container component="main" maxWidth="lg">
         <Box
           sx={{
             marginTop: 8,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
           }}
         >
+          <Button onClick={handleThemeToggle} sx={{ mb: 2 }}>
+            Toggle to {darkMode ? "Light" : "Dark"} Mode
+          </Button>
           <Grid container>
             <Grid
               item
@@ -146,6 +169,12 @@ const LoginPage = () => {
                     autoFocus
                     value={formData.email}
                     onChange={handleChange}
+                    InputProps={{
+                      style: { color: darkMode ? "#fff" : "#000" },
+                    }}
+                    InputLabelProps={{
+                      style: { color: darkMode ? "#fff" : "#000" },
+                    }}
                   />
                   <TextField
                     margin="normal"
@@ -158,24 +187,48 @@ const LoginPage = () => {
                     autoComplete="current-password"
                     value={formData.password}
                     onChange={handleChange}
+                    InputProps={{
+                      style: { color: darkMode ? "#fff" : "#000" },
+                    }}
+                    InputLabelProps={{
+                      style: { color: darkMode ? "#fff" : "#000" },
+                    }}
                   />
                   <FormControlLabel
                     control={<Checkbox value="remember" color="primary" />}
                     label="Remember me"
+                    sx={{ color: darkMode ? "#fff" : "#000" }}
                   />
-                  <Button
-                    type="submit"
-                    fullWidth
-                    variant="contained"
-                    sx={{
-                      mt: 3,
-                      mb: 2,
-                      backgroundColor: "#9e58ff",
-                      color: "#fff",
-                    }}
-                  >
-                    Sign In
-                  </Button>
+                  <Box sx={{ position: "relative", mt: 3, mb: 2 }}>
+                    <Button
+                      type="submit"
+                      fullWidth
+                      variant="contained"
+                      sx={{
+                        backgroundColor: "#9e58ff",
+                        color: "#fff",
+                        ":hover": {
+                          backgroundColor: "#8e4ce0",
+                        },
+                      }}
+                      disabled={loading}
+                    >
+                      Sign In
+                    </Button>
+                    {loading && (
+                      <CircularProgress
+                        size={24}
+                        sx={{
+                          color: "#9e58ff",
+                          position: "absolute",
+                          top: "50%",
+                          left: "50%",
+                          marginTop: "-12px",
+                          marginLeft: "-12px",
+                        }}
+                      />
+                    )}
+                  </Box>
                   <Grid container>
                     <Grid item xs>
                       <Link href="#" variant="body2" sx={{ color: "#9e58ff" }}>
@@ -194,6 +247,19 @@ const LoginPage = () => {
             </Grid>
           </Grid>
         </Box>
+        <Snackbar
+          open={openSnackbar}
+          autoHideDuration={6000}
+          onClose={handleCloseSnackbar}
+        >
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity="error"
+            sx={{ width: "100%" }}
+          >
+            {errorMessage}
+          </Alert>
+        </Snackbar>
       </Container>
     </ThemeProvider>
   );

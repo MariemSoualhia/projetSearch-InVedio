@@ -15,8 +15,6 @@ import {
   DialogContent,
   DialogActions,
   CircularProgress,
-} from "@material-ui/core";
-import {
   Select,
   MenuItem,
   InputLabel,
@@ -41,7 +39,7 @@ const useStyles = makeStyles((theme) => ({
     maxWidth: "600px",
     margin: "auto",
     padding: theme.spacing(4),
-    border: "2px solid var(--border-color)",
+    border: `2px solid var(--border-color)`,
     borderRadius: "8px",
     backgroundColor: "var(--background-color)",
     [theme.breakpoints.down("sm")]: {
@@ -75,7 +73,7 @@ const useStyles = makeStyles((theme) => ({
   cameraList: {
     backgroundColor: "var(--background-color)",
     borderRadius: "8px",
-    border: "2px solid var(--border-color)",
+    border: `2px solid var(--border-color)`,
     padding: theme.spacing(2),
   },
   listItem: {
@@ -85,14 +83,12 @@ const useStyles = makeStyles((theme) => ({
     boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
     color: "var(--text-color)",
   },
-
   listItemText: {
-    primary: {
+    "& .MuiListItemText-primary": {
       fontWeight: "bold",
       color: "var(--text-color)",
     },
-    secondary: {
-      fontWeight: "bold",
+    "& .MuiListItemText-secondary": {
       color: "var(--text-color)",
     },
   },
@@ -124,6 +120,10 @@ const useStyles = makeStyles((theme) => ({
     color: "var(--text-color)",
   },
   dialogContent: {
+    backgroundColor: "var(--background-color)",
+    color: "var(--text-color)",
+  },
+  dialogActions: {
     backgroundColor: "var(--background-color)",
     color: "var(--text-color)",
   },
@@ -383,7 +383,7 @@ const CameraConfig = () => {
                     secondary={`IP Address: ${camera.address}, Username: ${camera.username}, RTSP: ${camera.rtspUrl}`}
                     classes={{
                       primary: classes.listItemText.primary,
-                      secondary: classes.listItem,
+                      secondary: classes.listItemText.secondary,
                     }}
                   />
                   <ListItemSecondaryAction>
@@ -475,7 +475,7 @@ const CameraConfig = () => {
               color="secondary"
             />
           </DialogContent>
-          <DialogActions className={classes.dialogContent}>
+          <DialogActions className={classes.dialogActions}>
             <Button onClick={handleCloseDialog} color="primary">
               Cancel
             </Button>

@@ -5,7 +5,7 @@ import { API_API_URL } from "../../config/serverApiConfig";
 import { makeStyles } from "@material-ui/core/styles";
 import { Grid, Button, Typography } from "@material-ui/core";
 import { IconButton } from "@material-ui/core";
-import moment from 'moment';
+import moment from "moment";
 import { PlayArrow, Stop, FiberManualRecord } from "@material-ui/icons";
 const useStyles = makeStyles((theme) => ({
   streamContainer: {
@@ -65,7 +65,9 @@ const MultipleStreamsPage = () => {
       if (cameras && cameras.length > 0) {
         setCameras((prevCameras) =>
           prevCameras.map((camera) =>
-            camera.rtspUrl === rtspUrl ? { ...camera, isStreaming: true } : camera
+            camera.rtspUrl === rtspUrl
+              ? { ...camera, isStreaming: true }
+              : camera
           )
         );
       }
@@ -73,7 +75,7 @@ const MultipleStreamsPage = () => {
       console.error("Error starting stream:", error);
     }
   };
-  
+
   const stopStreamHandler = (port) => {
     stopStream(port);
     const targetCamera = cameras.find((camera) => camera.port === port);
@@ -85,24 +87,26 @@ const MultipleStreamsPage = () => {
             camera.port === port ? { ...camera, isStreaming: false } : camera
           )
         );
-        window.location.reload()
+        window.location.reload();
       }
     }
   };
-  
 
   const startRecording = async (rtspUrl, port, cameraName) => {
     try {
       // Envoyer une requête POST pour démarrer l'enregistrement
       let dateTime = moment();
-      let nameRecord = cameraName + dateTime.format('YYYY-MM-DD_HH:mm:ss');
-      const response = await axios.post(API_API_URL + "/api/startAllRecording", {
-        url: rtspUrl,
-        port:port,
-        recordingDuration: 3600, // Durée de l'enregistrement (en secondes)
-        name: nameRecord, // Nom de la vidéo
-        cameraName: cameraName, 
-      });
+      let nameRecord = cameraName + dateTime.format("YYYY-MM-DD_HH:mm:ss");
+      const response = await axios.post(
+        API_API_URL + "/api/startAllRecording",
+        {
+          url: rtspUrl,
+          port: port,
+          recordingDuration: 3600, // Durée de l'enregistrement (en secondes)
+          name: nameRecord, // Nom de la vidéo
+          cameraName: cameraName,
+        }
+      );
       console.log(response);
     } catch (error) {
       console.error("Error starting recording:", error);
@@ -118,7 +122,6 @@ const MultipleStreamsPage = () => {
         { params: { port: port } }
       );
       console.log(response);
-     
     } catch (error) {
       console.error("Error stopping recording:", error);
     }
@@ -156,7 +159,9 @@ const StreamComponent = ({
   const [isRecording, setIsRecording] = useState(false);
 
   useEffect(() => {
-    setIsRecording(localStorage.getItem(`isRecording-${camera.rtspUrl}`) === "true");
+    setIsRecording(
+      localStorage.getItem(`isRecording-${camera.rtspUrl}`) === "true"
+    );
   }, []);
 
   const handleStartStream = () => {
@@ -188,7 +193,7 @@ const StreamComponent = ({
       handleStartStream();
     }
   };
-  
+
   const handleRecordAction = () => {
     if (isRecording) {
       handleStopRecording();
@@ -196,12 +201,10 @@ const StreamComponent = ({
       handleStartRecording();
     }
   };
-  
 
   return (
-   
     <div className={classes.streamContainer} style={{ position: "relative" }}>
-<canvas id={`canvas-${camera.rtspUrl}`} width={532} height={324}></canvas>
+      <canvas id={`canvas-${camera.rtspUrl}`} width={532} height={324}></canvas>
       <p
         style={{
           position: "absolute",
@@ -210,24 +213,35 @@ const StreamComponent = ({
           color: "#1A237E",
         }}
       >{`${camera.name} - ${new Date().toLocaleString()}`}</p>
-      
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-  <IconButton onClick={handleStreamAction} disabled={isRecording} className={classes.button} style={{ color: isStreaming ? "#ff0000" : "#1A237E" }}>
-    {isStreaming ? <Stop /> : <PlayArrow />}
-    <span style={{ marginLeft: "5px", fontSize: "0.6em" }}>Stream</span>
-  </IconButton>
 
-  <IconButton onClick={handleRecordAction} disabled={!isStreaming} className={classes.button} style={{ color: isRecording ? "#ff0000" : "#1A237E" }}>
-    <FiberManualRecord />
-    <span style={{ marginLeft: "5px", fontSize: "0.6em" }}>Record</span>
-  </IconButton>
-</div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <IconButton
+          onClick={handleStreamAction}
+          disabled={isRecording}
+          className={classes.button}
+          style={{ color: isStreaming ? "#ff0000" : "#1A237E" }}
+        >
+          {isStreaming ? <Stop /> : <PlayArrow />}
+          <span style={{ marginLeft: "5px", fontSize: "0.6em" }}>Stream</span>
+        </IconButton>
 
-
-
-
+        <IconButton
+          onClick={handleRecordAction}
+          disabled={!isStreaming}
+          className={classes.button}
+          style={{ color: isRecording ? "#ff0000" : "#1A237E" }}
+        >
+          <FiberManualRecord />
+          <span style={{ marginLeft: "5px", fontSize: "0.6em" }}>Record</span>
+        </IconButton>
+      </div>
     </div>
-
   );
 };
 
