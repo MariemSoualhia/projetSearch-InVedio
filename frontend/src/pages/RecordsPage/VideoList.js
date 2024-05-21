@@ -175,7 +175,7 @@ const VideoList = () => {
       const writable = await handle.createWritable();
       await writable.write(blob);
       await writable.close();
-      setSucces("download video")
+      setSucces("download video");
     } catch (error) {
       console.error("Error downloading video:", error);
       setError("Failed to download video.");
@@ -201,30 +201,72 @@ const VideoList = () => {
 
   const handleShare = async (accessToken) => {
     try {
+      // Fetch the video URL from your server
       const response = await axios.get(
         `http://127.0.0.1:3002/api/videos/${videoToShare}/url`
       );
-      console.log(response.data);
+      console.log("Video URL response:", response.data);
       const videoUrl = response.data.url;
-      const videoBlob = await fetch(videoUrl).then((res) => res.blob());
-      console.log(videoBlob);
+
+      // Check if the video URL is accessible
+      const headResponse = await fetch(videoUrl, { method: "HEAD" });
+      if (!headResponse.ok) {
+        throw new Error(`Failed to fetch video: ${headResponse.statusText}`);
+      }
+      console.log("Video HEAD response:", headResponse);
+
+      // Fetch the video blob from the URL
+      const videoResponse = await fetch(videoUrl);
+      if (!videoResponse.ok) {
+        throw new Error(`Failed to fetch video: ${videoResponse.statusText}`);
+      }
+      const videoBlob = await videoResponse.blob();
+      console.log("Video blob:", videoBlob);
+
+      // Check the size of the blob
+      if (videoBlob.size < 1024) {
+        throw new Error(
+          "The video blob is too small, indicating an issue with fetching the video content."
+        );
+      }
+
       const fileMetadata = {
         name: "Shared Video",
-        mimeType: "video/mp4",
+        mimeType: videoBlob.type, // Use the correct MIME type from the blob
       };
 
-      const upload = await window.gapi.client.drive.files.create({
-        resource: fileMetadata,
-        media: {
-          body: videoBlob,
-        },
-        fields: "id",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      // Load the Google Drive API client
+      await window.gapi.client.load("drive", "v3");
 
-      const driveShareUrl = `https://drive.google.com/file/d/${upload.result.id}/view`;
+      // Initialize the Google API client with the access token
+      window.gapi.client.setToken({ access_token: accessToken });
+
+      // Create FormData to handle the file upload
+      const formData = new FormData();
+      formData.append(
+        "metadata",
+        new Blob([JSON.stringify(fileMetadata)], { type: "application/json" })
+      );
+      formData.append("file", videoBlob);
+
+      // Create the file on Google Drive using fetch
+      const uploadResponse = await fetch(
+        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+        {
+          method: "POST",
+          headers: new Headers({
+            Authorization: `Bearer ${accessToken}`,
+          }),
+          body: formData,
+        }
+      );
+
+      const uploadResult = await uploadResponse.json();
+      if (!uploadResult.id) {
+        throw new Error("Failed to upload video to Google Drive");
+      }
+
+      const driveShareUrl = `https://drive.google.com/file/d/${uploadResult.id}/view`;
       window.open(driveShareUrl, "_blank");
 
       setShowShareModal(false);
@@ -253,13 +295,12 @@ const VideoList = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Container>
-       
         <Typography variant="h4" gutterBottom className={classes.title}>
           Video List
         </Typography>
 
         {error && <Alert severity="error">{error}</Alert>}
-        {succes&& <Alert severity="success">{succes}</Alert>}
+        {succes && <Alert severity="success">{succes}</Alert>}
         <TextField
           label="Search"
           variant="outlined"

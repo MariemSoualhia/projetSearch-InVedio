@@ -303,14 +303,7 @@ const CameraPage = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Container className={classes.root}>
-        <Button onClick={handleThemeToggle} className={classes.button}>
-          Toggle to {darkMode ? "Light" : "Dark"} Mode
-        </Button>
-        <Typography variant="h3" gutterBottom className={classes.pageTitle}>
-          Camera Management
-        </Typography>
-
+      <Container>
         <Button
           variant="contained"
           color="primary"
