@@ -204,26 +204,14 @@ app.get("/streamAll", async (req, res) => {
   }
 });
 
-app.post("/api/start-recording", (req, res) => {
-  const { url, name, cameraName } = req.body;
+function startNewRecording(url, name, cameraName) {
+  rec = new Recorder({
+    url: url,
+    folder: dirname,
+    name: "video.mp4",
+  });
 
-  function startContinuousRecording() {
-    rec = new Recorder({
-      url: url,
-      folder: dirname,
-      name: "video.mp4",
-    });
-
-    rec.startRecording();
-
-    rec.stopRecording((output) => {
-      // Restart recording once the current recording is done
-      console.log("Recording completed, starting a new recording...");
-      startContinuousRecording();
-    });
-  }
-
-  startContinuousRecording();
+  rec.startRecording();
 
   const videoData = {
     path: rec.getFilename(rec.getMediaTypePath()),
@@ -232,22 +220,27 @@ app.post("/api/start-recording", (req, res) => {
   };
 
   const video = new Video(videoData);
-  video
-    .save()
-    .then((savedVideo) => {
-      console.log("Vidéo enregistrée dans la base de données :", savedVideo);
-      res.json({ message: "Recording Started", video: savedVideo });
-    })
-    .catch((error) => {
-      console.error(
-        "Erreur lors de l'enregistrement de la vidéo dans la base de données :",
-        error
-      );
-      res.status(500).json({
-        error:
-          "Erreur lors de l'enregistrement de la vidéo dans la base de données",
-      });
-    });
+  video.save().then((savedVideo) => {
+    console.log("Vidéo enregistrée dans la base de données :", savedVideo);
+  }).catch((error) => {
+    console.error("Erreur lors de l'enregistrement de la vidéo dans la base de données :", error);
+  });
+
+  rec.stopRecording(() => {
+    startNewRecording(url, name, cameraName);
+  });
+}
+
+app.post("/api/start-recording", (req, res) => {
+  const { url, name, cameraName } = req.body;
+
+  if (rec) {
+    res.status(400).json({ error: "Recording is already in progress" });
+    return;
+  }
+
+  startNewRecording(url, name, cameraName);
+  res.json({ message: "Recording Started" });
 });
 
 app.post("/api/stop-recording", (req, res) => {
@@ -277,9 +270,7 @@ async function createRecord(url, port, name, cameraName) {
 
       rec.startRecording();
 
-      rec.stopRecording((output) => {
-        // Restart recording once the current recording is done
-        console.log("Recording completed, starting a new recording...");
+      rec.stopRecording(() => {
         startContinuousRecording();
       });
 
@@ -350,7 +341,7 @@ app.post("/api/stopAllRecording", async (req, res) => {
     res.json({ message: "Recording stopped" });
   } catch (error) {
     console.error("Error stopping recording:", error);
-    res.status(500).json({ error: "Error stopping recording" });
+    res.status 500).json({ error: "Error stopping recording" });
   }
 });
 
