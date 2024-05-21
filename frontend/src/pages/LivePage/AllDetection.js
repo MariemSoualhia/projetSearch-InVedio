@@ -2,13 +2,7 @@ import React, { useState, useEffect } from "react";
 import DetectionPage from "./DetectionPage";
 import axios from "axios";
 import { API_API_URL } from "../../config/serverApiConfig";
-import {
-  Grid,
-  Button,
-  Typography,
-  CircularProgress,
-  Box,
-} from "@material-ui/core";
+import { Grid, Button, Typography, CircularProgress } from "@material-ui/core";
 import QueuePlayNextIcon from "@mui/icons-material/QueuePlayNext";
 
 const AllDetection = () => {
@@ -104,17 +98,7 @@ const AllDetection = () => {
         </Grid>
         <Grid container spacing={2}>
           {noStreams ? (
-            <Box
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              height="50vh"
-              width="100%"
-            >
-              <Typography variant="h6" color="textSecondary">
-                No streams available
-              </Typography>
-            </Box>
+            <Typography variant="h6">No streams available</Typography>
           ) : (
             components.map((component) => component.stream)
           )}
