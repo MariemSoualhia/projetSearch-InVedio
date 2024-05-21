@@ -18,6 +18,7 @@ import {
   MenuItem,
   Select,
   Alert,
+  Snackbar,
   CircularProgress,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -46,8 +47,10 @@ const VideoList = () => {
   const [sharePlatform, setSharePlatform] = useState("");
   const [gapiLoaded, setGapiLoaded] = useState(false);
   const [error, setError] = useState("");
-  const [succes, setSucces] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
   const videosPerPage = 6;
 
   const [darkMode, setDarkMode] = useState(() => {
@@ -175,7 +178,8 @@ const VideoList = () => {
       const writable = await handle.createWritable();
       await writable.write(blob);
       await writable.close();
-      setSucces("download video");
+      setSuccess("Video downloaded successfully.");
+      setSnackbarOpen(true);
     } catch (error) {
       console.error("Error downloading video:", error);
       setError("Failed to download video.");
@@ -201,6 +205,7 @@ const VideoList = () => {
 
   const handleShare = async (accessToken) => {
     try {
+      setLoading(true);
       // Fetch the video URL from your server
       const response = await axios.get(
         `http://127.0.0.1:3002/api/videos/${videoToShare}/url`
@@ -272,10 +277,18 @@ const VideoList = () => {
       setShowShareModal(false);
       setVideoToShare(null);
       setSharePlatform("");
+      setSuccessMessage("Video shared successfully!");
+      setSnackbarOpen(true);
     } catch (error) {
       console.error("Error sharing video:", error);
       setError("Failed to share video.");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
   };
 
   const startIndex = (page - 1) * videosPerPage;
@@ -300,7 +313,7 @@ const VideoList = () => {
         </Typography>
 
         {error && <Alert severity="error">{error}</Alert>}
-        {succes && <Alert severity="success">{succes}</Alert>}
+        {success && <Alert severity="success">{success}</Alert>}
         <TextField
           label="Search"
           variant="outlined"
@@ -313,56 +326,48 @@ const VideoList = () => {
         />
 
         <Grid container spacing={3}>
-          {loading ? (
-            <CircularProgress />
-          ) : (
-            videos.slice(startIndex, endIndex).map((video) => (
-              <Grid item key={video._id} xs={12} sm={6} md={4}>
-                <Paper elevation={3} className={classes.videoCard}>
-                  <Typography variant="h6" className={classes.videoTitle}>
-                    {video.name}
-                  </Typography>
-                  <Typography variant="body2" className={classes.cameraInfo}>
-                    <strong>Camera:</strong> {video.cameraName}
-                  </Typography>
-                  <VideoPlayer
-                    videoId={video._id}
-                    width="100%"
-                    height="300px"
-                  />
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "center",
-                      marginTop: 2,
-                    }}
+          {videos.slice(startIndex, endIndex).map((video) => (
+            <Grid item key={video._id} xs={12} sm={6} md={4}>
+              <Paper elevation={3} className={classes.videoCard}>
+                <Typography variant="h6" className={classes.videoTitle}>
+                  {video.name}
+                </Typography>
+                <Typography variant="body2" className={classes.cameraInfo}>
+                  <strong>Camera:</strong> {video.cameraName}
+                </Typography>
+                <VideoPlayer videoId={video._id} width="100%" height="300px" />
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    marginTop: 2,
+                  }}
+                >
+                  <IconButton
+                    aria-label="delete"
+                    className={classes.deleteButton}
+                    onClick={() => handleShowDeleteModal(video._id)}
                   >
-                    <IconButton
-                      aria-label="delete"
-                      className={classes.deleteButton}
-                      onClick={() => handleShowDeleteModal(video._id)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                    <IconButton
-                      aria-label="download"
-                      className={classes.downloadButton}
-                      onClick={() => handleDownload(video._id, video.name)}
-                    >
-                      <DownloadIcon />
-                    </IconButton>
-                    <IconButton
-                      aria-label="share"
-                      className={classes.shareButton}
-                      onClick={() => handleShowShareModal(video._id)}
-                    >
-                      <ShareIcon />
-                    </IconButton>
-                  </Box>
-                </Paper>
-              </Grid>
-            ))
-          )}
+                    <DeleteIcon />
+                  </IconButton>
+                  <IconButton
+                    aria-label="download"
+                    className={classes.downloadButton}
+                    onClick={() => handleDownload(video._id, video.name)}
+                  >
+                    <DownloadIcon />
+                  </IconButton>
+                  <IconButton
+                    aria-label="share"
+                    className={classes.shareButton}
+                    onClick={() => handleShowShareModal(video._id)}
+                  >
+                    <ShareIcon />
+                  </IconButton>
+                </Box>
+              </Paper>
+            </Grid>
+          ))}
         </Grid>
         <Box sx={{ display: "flex", justifyContent: "center", marginTop: 3 }}>
           <Pagination
@@ -433,43 +438,68 @@ const VideoList = () => {
               maxWidth: 400,
             }}
           >
-            <Typography variant="h6" gutterBottom>
-              Share Video
-            </Typography>
-            <Select
-              value={sharePlatform}
-              onChange={(e) => setSharePlatform(e.target.value)}
-              displayEmpty
-              fullWidth
-            >
-              <MenuItem value="" disabled>
-                Select a platform
-              </MenuItem>
-              <MenuItem value="GoogleDrive">Google Drive</MenuItem>
-              {/* Add more platforms here */}
-            </Select>
-            <Box
-              sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}
-            >
-              <Button
-                variant="outlined"
-                color="secondary"
-                onClick={handleCloseShareModal}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleGoogleDriveAuth}
-                sx={{ marginLeft: 1 }}
-                disabled={!sharePlatform}
-              >
-                Share
-              </Button>
-            </Box>
+            {loading ? (
+              <CircularProgress />
+            ) : (
+              <>
+                <Typography variant="h6" gutterBottom>
+                  Share Video
+                </Typography>
+                <Select
+                  value={sharePlatform}
+                  onChange={(e) => setSharePlatform(e.target.value)}
+                  displayEmpty
+                  fullWidth
+                >
+                  <MenuItem value="" disabled>
+                    Select a platform
+                  </MenuItem>
+                  <MenuItem value="GoogleDrive">Google Drive</MenuItem>
+                  {/* Add more platforms here */}
+                </Select>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    marginTop: 2,
+                  }}
+                >
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    onClick={handleCloseShareModal}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleGoogleDriveAuth}
+                    sx={{ marginLeft: 1 }}
+                    disabled={!sharePlatform}
+                  >
+                    Share
+                  </Button>
+                </Box>
+              </>
+            )}
           </Box>
         </Modal>
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={3000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        >
+          <Alert
+            elevation={6}
+            variant="filled"
+            onClose={handleCloseSnackbar}
+            severity="success"
+          >
+            {successMessage}
+          </Alert>
+        </Snackbar>
       </Container>
     </ThemeProvider>
   );
