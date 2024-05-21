@@ -207,13 +207,23 @@ app.get("/streamAll", async (req, res) => {
 app.post("/api/start-recording", (req, res) => {
   const { url, name, cameraName } = req.body;
 
-  rec = new Recorder({
-    url: url,
-    folder: dirname,
-    name: "video.mp4",
-  });
+  function startContinuousRecording() {
+    rec = new Recorder({
+      url: url,
+      folder: dirname,
+      name: "video.mp4",
+    });
 
-  rec.startRecording();
+    rec.startRecording();
+    rec.on("done", () => {
+      // Restart recording once the current recording is done
+      console.log("Recording completed, starting a new recording...");
+      startContinuousRecording();
+    });
+  }
+
+  startContinuousRecording();
+
   const videoData = {
     path: rec.getFilename(rec.getMediaTypePath()),
     name: name,
@@ -258,40 +268,53 @@ let allRecords = [];
 
 async function createRecord(url, port, name, cameraName) {
   return new Promise((resolve, reject) => {
-    const rec = new Recorder({
-      url: url,
-      folder: dirname,
-      name: "video.mp4",
-    });
-
-    rec.startRecording();
-    const newRecord = {
-      rec: rec,
-      port: port,
-      url: url,
-      videoData: {
-        path: rec.getFilename(rec.getMediaTypePath()),
-        name: name,
-        cameraName: cameraName,
-      },
-    };
-
-    allRecords.push(newRecord);
-    console.log("all records", allRecords);
-    const video = new Video(newRecord.videoData);
-    video
-      .save()
-      .then((savedVideo) => {
-        console.log("Vidéo enregistrée dans la base de données :", savedVideo);
-        resolve(savedVideo);
-      })
-      .catch((error) => {
-        console.error(
-          "Erreur lors de l'enregistrement de la vidéo dans la base de données :",
-          error
-        );
-        reject(error);
+    function startContinuousRecording() {
+      const rec = new Recorder({
+        url: url,
+        folder: dirname,
+        name: "video.mp4",
       });
+
+      rec.startRecording();
+      rec.on("done", () => {
+        // Restart recording once the current recording is done
+        console.log("Recording completed, starting a new recording...");
+        startContinuousRecording();
+      });
+
+      const newRecord = {
+        rec: rec,
+        port: port,
+        url: url,
+        videoData: {
+          path: rec.getFilename(rec.getMediaTypePath()),
+          name: name,
+          cameraName: cameraName,
+        },
+      };
+
+      allRecords.push(newRecord);
+      console.log("all records", allRecords);
+      const video = new Video(newRecord.videoData);
+      video
+        .save()
+        .then((savedVideo) => {
+          console.log(
+            "Vidéo enregistrée dans la base de données :",
+            savedVideo
+          );
+          resolve(savedVideo);
+        })
+        .catch((error) => {
+          console.error(
+            "Erreur lors de l'enregistrement de la vidéo dans la base de données :",
+            error
+          );
+          reject(error);
+        });
+    }
+
+    startContinuousRecording();
   });
 }
 
