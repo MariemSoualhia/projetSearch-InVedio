@@ -2,32 +2,39 @@ import React, { useState, useEffect } from "react";
 import DetectionPage from "./DetectionPage";
 import axios from "axios";
 import { API_API_URL } from "../../config/serverApiConfig";
-import { Grid, Button, Typography, CircularProgress } from "@material-ui/core";
+import {
+  Grid,
+  Button,
+  Typography,
+  CircularProgress,
+  Box,
+} from "@material-ui/core";
 import QueuePlayNextIcon from "@mui/icons-material/QueuePlayNext";
 
 const AllDetection = () => {
   const [components, setComponents] = useState([]);
   const [cameras, setCameras] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [noStreams, setNoStreams] = useState(false);
 
   const fetchCameras = async () => {
     try {
-      const response = await axios.get(API_API_URL + "/api/cameras");
+      const response = await axios.get(`${API_API_URL}/api/cameras`);
       console.log("Cameras:", response.data);
       setCameras(response.data);
-      setLoading(false);
     } catch (error) {
       console.error("Error fetching cameras:", error);
+    } finally {
       setLoading(false);
     }
   };
 
   const fetchStreams = async () => {
     try {
-      const response = await axios.get(API_API_URL + "/api/stream/play");
+      const response = await axios.get(`${API_API_URL}/api/stream/play`);
       console.log("Streams:", response.data);
       if (response.data.length === 0) {
-        // Handle no streams case
+        setNoStreams(true);
       } else {
         setComponents(
           response.data.map((stream, index) => ({
@@ -96,7 +103,21 @@ const AllDetection = () => {
           )}
         </Grid>
         <Grid container spacing={2}>
-          {components.map((component) => component.stream)}
+          {noStreams ? (
+            <Box
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              height="50vh"
+              width="100%"
+            >
+              <Typography variant="h6" color="textSecondary">
+                No streams available
+              </Typography>
+            </Box>
+          ) : (
+            components.map((component) => component.stream)
+          )}
         </Grid>
       </Grid>
     </>
