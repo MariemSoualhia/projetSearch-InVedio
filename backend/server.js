@@ -27,6 +27,7 @@ let stream = null;
 let rec = null;
 let recordedFilePath;
 const dirname = path.join(__dirname, "videos");
+
 app.use(
   cors({
     origin: "http://localhost:3000",
@@ -102,6 +103,7 @@ async function createStream(rtspUrl) {
         "-r": 30,
       },
     });
+    resolve(stream);
   });
 }
 
@@ -111,7 +113,7 @@ app.get("/stream", async (req, res) => {
 
   try {
     if (!stream || currentRtspStreamUrl !== newRtspStreamUrl) {
-      if (stream || newRtspStreamUrl === "stop") {
+      if (stream) {
         stream.stop();
       }
       await createStream(newRtspStreamUrl);
@@ -120,6 +122,7 @@ app.get("/stream", async (req, res) => {
         console.log(data);
       });
     }
+    res.status(200).json({ message: "Stream started successfully" });
   } catch (error) {
     console.error("Erreur lors de la création du stream :", error);
     res.status(500).json({ error: "Erreur lors de la création du stream." });
@@ -130,7 +133,7 @@ let allStreams = [];
 
 async function createStreamByPort(rtspUrl, port) {
   return new Promise((resolve, reject) => {
-    stream = new Stream({
+    const stream = new Stream({
       name: "Camera Stream",
       streamUrl: rtspUrl,
       wsPort: port,
@@ -152,6 +155,7 @@ async function createStreamByPort(rtspUrl, port) {
       stream: stream,
     };
     allStreams.push(newStreamData);
+    resolve(stream);
   });
 }
 
@@ -180,7 +184,6 @@ app.get("/stopStream", async (req, res) => {
 app.get("/streamAll", async (req, res) => {
   const newRtspStreamUrl = req.query.rtsp;
   const port = req.query.port;
-  let currentRtspStream = null;
 
   try {
     const index = allStreams.findIndex((stream) => stream.port === port);
@@ -194,6 +197,7 @@ app.get("/streamAll", async (req, res) => {
     newStream.on("data", (data) => {
       console.log(data);
     });
+    res.status(200).json({ message: "Stream started successfully" });
   } catch (error) {
     console.error("Erreur lors de la création du stream :", error);
     res.status(500).json({ error: "Erreur lors de la création du stream." });
@@ -252,7 +256,7 @@ app.post("/api/stop-recording", (req, res) => {
 
 let allRecords = [];
 
-async function createRecord(url, port, recordingDuration, name, cameraName) {
+async function createRecord(url, port, name, cameraName) {
   return new Promise((resolve, reject) => {
     const rec = new Recorder({
       url: url,
@@ -303,16 +307,10 @@ const stopRecordByPort = (port) => {
 };
 
 app.post("/api/startAllRecording", async (req, res) => {
-  const { url, port, recordingDuration, name, cameraName } = req.body;
+  const { url, port, name, cameraName } = req.body;
 
   try {
-    const savedVideo = await createRecord(
-      url,
-      port,
-      recordingDuration,
-      name,
-      cameraName
-    );
+    const savedVideo = await createRecord(url, port, name, cameraName);
     res.json({ message: "Recording Started", video: savedVideo });
   } catch (error) {
     console.error("Error starting recording:", error);
