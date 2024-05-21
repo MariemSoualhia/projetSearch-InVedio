@@ -15,88 +15,38 @@ import {
   createTheme,
   CssBaseline,
   Container,
+  MenuItem,
+  Select,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
+import ShareIcon from "@mui/icons-material/Share";
 import { makeStyles } from "@material-ui/core/styles";
 
 const useStyles = makeStyles((theme) => ({
-  root: {
-    margin: "0 auto",
-    padding: theme.spacing(4),
-    border: "1px solid var(--border-color)",
-    borderRadius: theme.spacing(2),
-    backgroundColor: "var(--background-color)",
-  },
-  title: {
-    marginBottom: theme.spacing(2),
-    fontWeight: "bold",
-    fontSize: "1.5rem",
-    color: "var(--text-color)",
-    borderBottom: `2px solid var(--text-color)`,
-    paddingBottom: theme.spacing(1),
-  },
-  videoCard: {
-    padding: theme.spacing(2),
-    marginBottom: theme.spacing(3),
-    backgroundColor: "var(--input-background-color)",
-    borderRadius: theme.spacing(1),
-  },
-  videoTitle: {
-    marginBottom: theme.spacing(1.5),
-    color: "var(--text-color)",
-    fontWeight: "bold",
-    fontSize: "1.2rem",
-    textAlign: "center",
-  },
-  cameraInfo: {
-    marginBottom: theme.spacing(1),
-    textAlign: "center",
-    color: "var(--text-color)",
-  },
-  deleteButton: {
-    color: theme.palette.error.main,
-  },
-  downloadButton: {
-    color: theme.palette.success.main,
-  },
-  searchField: {
-    marginBottom: theme.spacing(2),
-    "& .MuiOutlinedInput-root": {
-      "& fieldset": {
-        borderColor: "var(--input-border-color)",
-      },
-      "&:hover fieldset": {
-        borderColor: "var(--input-border-color)",
-      },
-      "&.Mui-focused fieldset": {
-        borderColor: "var(--input-border-color)",
-      },
-      "& input": {
-        color: "var(--input-text-color)",
-      },
-    },
-    "& .MuiInputLabel-root": {
-      color: "var(--label-color)",
-    },
-  },
-  pagination: {
-    display: "flex",
-    justifyContent: "center",
-    marginTop: theme.spacing(3),
-    "& .MuiPaginationItem-root": {
-      color: "#9E58FF",
-    },
-  },
+  // ... your existing styles
 }));
+
+const CLIENT_ID =
+  "1006175347970-bgkml5qrl8296b1ndi4630m6satmq7qg.apps.googleusercontent.com";
+const API_KEY = "AIzaSyB1u_yZ4ebhUsm-LXjtib-U7CTLTf_sq-s";
+const SCOPES = "https://www.googleapis.com/auth/drive.file";
 
 const VideoList = () => {
   const classes = useStyles();
   const [videos, setVideos] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [videoToDelete, setVideoToDelete] = useState(null);
+  const [videoToShare, setVideoToShare] = useState(null);
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sharePlatform, setSharePlatform] = useState("");
+  const [gapiLoaded, setGapiLoaded] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const videosPerPage = 6;
 
   const [darkMode, setDarkMode] = useState(() => {
@@ -113,7 +63,42 @@ const VideoList = () => {
     localStorage.setItem("theme", darkMode ? "dark" : "light");
   }, [darkMode]);
 
+  useEffect(() => {
+    const loadGapi = () => {
+      if (window.gapi) {
+        window.gapi.load("client", initClient);
+      } else {
+        console.error("Google API client library not found.");
+        setError("Google API client library not found.");
+      }
+    };
+
+    if (window.gapi) {
+      loadGapi();
+    } else {
+      window.addEventListener("gapi-load", loadGapi);
+    }
+
+    return () => window.removeEventListener("gapi-load", loadGapi);
+  }, []);
+
+  const initClient = async () => {
+    try {
+      await window.gapi.client.init({
+        apiKey: API_KEY,
+        discoveryDocs: [
+          "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest",
+        ],
+      });
+      setGapiLoaded(true);
+    } catch (error) {
+      console.error("Error initializing GAPI client:", error);
+      setError("Failed to initialize Google API client.");
+    }
+  };
+
   const fetchVideos = async () => {
+    setLoading(true);
     try {
       const response = await axios.get("http://127.0.0.1:3002/api/videos/", {
         params: { search: searchTerm },
@@ -121,7 +106,9 @@ const VideoList = () => {
       setVideos(response.data);
     } catch (error) {
       console.error("Error fetching videos:", error);
+      setError("Failed to fetch videos.");
     }
+    setLoading(false);
   };
 
   const handleDelete = async (videoId) => {
@@ -130,6 +117,7 @@ const VideoList = () => {
       fetchVideos();
     } catch (error) {
       console.error("Error deleting video:", error);
+      setError("Failed to delete video.");
     }
   };
 
@@ -143,6 +131,17 @@ const VideoList = () => {
     setShowDeleteModal(true);
   };
 
+  const handleCloseShareModal = () => {
+    setShowShareModal(false);
+    setVideoToShare(null);
+    setSharePlatform("");
+  };
+
+  const handleShowShareModal = (videoId) => {
+    setVideoToShare(videoId);
+    setShowShareModal(true);
+  };
+
   const handlePageChange = (event, value) => {
     setPage(value);
   };
@@ -151,7 +150,7 @@ const VideoList = () => {
     setSearchTerm(event.target.value);
   };
 
-  const handleDownload = async (videoId) => {
+  const handleDownload = async (videoId, videoName) => {
     try {
       const response = await axios.get(
         `http://127.0.0.1:3002/api/videos/${videoId}/download`,
@@ -160,14 +159,78 @@ const VideoList = () => {
         }
       );
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `${videoId}.mp4`);
-      document.body.appendChild(link);
-      link.click();
+      const blob = new Blob([response.data], { type: "video/mp4" });
+      const handle = await window.showSaveFilePicker({
+        suggestedName: `${videoName}.mp4`,
+        types: [
+          {
+            accept: {
+              "video/mp4": [".mp4"],
+            },
+          },
+        ],
+      });
+
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
     } catch (error) {
       console.error("Error downloading video:", error);
+      setError("Failed to download video.");
+    }
+  };
+
+  const handleGoogleDriveAuth = () => {
+    const tokenClient = window.google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: (response) => {
+        if (response.error) {
+          console.error("Error during Google Drive authentication:", response);
+          setError("Failed to authenticate with Google Drive.");
+          return;
+        }
+        handleShare(response.access_token);
+      },
+    });
+
+    tokenClient.requestAccessToken({ prompt: "consent" });
+  };
+
+  const handleShare = async (accessToken) => {
+    try {
+      const response = await axios.get(
+        `http://127.0.0.1:3002/api/videos/${videoToShare}/url`
+      );
+      console.log(response.data);
+      const videoUrl = response.data.url;
+      const videoBlob = await fetch(videoUrl).then((res) => res.blob());
+      console.log(videoBlob);
+      const fileMetadata = {
+        name: "Shared Video",
+        mimeType: "video/mp4",
+      };
+
+      const upload = await window.gapi.client.drive.files.create({
+        resource: fileMetadata,
+        media: {
+          body: videoBlob,
+        },
+        fields: "id",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const driveShareUrl = `https://drive.google.com/file/d/${upload.result.id}/view`;
+      window.open(driveShareUrl, "_blank");
+
+      setShowShareModal(false);
+      setVideoToShare(null);
+      setSharePlatform("");
+    } catch (error) {
+      console.error("Error sharing video:", error);
+      setError("Failed to share video.");
     }
   };
 
@@ -195,6 +258,8 @@ const VideoList = () => {
           Video List
         </Typography>
 
+        {error && <Alert severity="error">{error}</Alert>}
+
         <TextField
           label="Search"
           variant="outlined"
@@ -207,41 +272,56 @@ const VideoList = () => {
         />
 
         <Grid container spacing={3}>
-          {videos.slice(startIndex, endIndex).map((video) => (
-            <Grid item key={video._id} xs={12} sm={6} md={4}>
-              <Paper elevation={3} className={classes.videoCard}>
-                <Typography variant="h6" className={classes.videoTitle}>
-                  {video.name}
-                </Typography>
-                <Typography variant="body2" className={classes.cameraInfo}>
-                  <strong>Camera:</strong> {video.cameraName}
-                </Typography>
-                <VideoPlayer videoId={video._id} width="100%" height="300px" />
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "center",
-                    marginTop: 2,
-                  }}
-                >
-                  <IconButton
-                    aria-label="delete"
-                    className={classes.deleteButton}
-                    onClick={() => handleShowDeleteModal(video._id)}
+          {loading ? (
+            <CircularProgress />
+          ) : (
+            videos.slice(startIndex, endIndex).map((video) => (
+              <Grid item key={video._id} xs={12} sm={6} md={4}>
+                <Paper elevation={3} className={classes.videoCard}>
+                  <Typography variant="h6" className={classes.videoTitle}>
+                    {video.name}
+                  </Typography>
+                  <Typography variant="body2" className={classes.cameraInfo}>
+                    <strong>Camera:</strong> {video.cameraName}
+                  </Typography>
+                  <VideoPlayer
+                    videoId={video._id}
+                    width="100%"
+                    height="300px"
+                  />
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      marginTop: 2,
+                    }}
                   >
-                    <DeleteIcon />
-                  </IconButton>
-                  <IconButton
-                    aria-label="download"
-                    className={classes.downloadButton}
-                    onClick={() => handleDownload(video._id)}
-                  >
-                    <DownloadIcon />
-                  </IconButton>
-                </Box>
-              </Paper>
-            </Grid>
-          ))}
+                    <IconButton
+                      aria-label="delete"
+                      className={classes.deleteButton}
+                      onClick={() => handleShowDeleteModal(video._id)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                    <IconButton
+                      aria-label="download"
+                      className={classes.downloadButton}
+                      onClick={() => handleDownload(video._id, video.name)}
+                    >
+                      <DownloadIcon />
+                    </IconButton>
+                    <IconButton
+                      aria-label="share"
+                      className={classes.shareButton}
+                      onClick={() => handleShowShareModal(video._id)}
+                    >
+                      <ShareIcon />
+                    </IconButton>
+                  </Box>
+                </Paper>
+              </Grid>
+            ))
+          )}
         </Grid>
         <Box sx={{ display: "flex", justifyContent: "center", marginTop: 3 }}>
           <Pagination
@@ -293,6 +373,58 @@ const VideoList = () => {
                 sx={{ marginLeft: 1 }}
               >
                 Delete
+              </Button>
+            </Box>
+          </Box>
+        </Modal>
+
+        <Modal open={showShareModal} onClose={handleCloseShareModal}>
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              bgcolor: "background.paper",
+              boxShadow: 24,
+              p: 4,
+              minWidth: 300,
+              maxWidth: 400,
+            }}
+          >
+            <Typography variant="h6" gutterBottom>
+              Share Video
+            </Typography>
+            <Select
+              value={sharePlatform}
+              onChange={(e) => setSharePlatform(e.target.value)}
+              displayEmpty
+              fullWidth
+            >
+              <MenuItem value="" disabled>
+                Select a platform
+              </MenuItem>
+              <MenuItem value="GoogleDrive">Google Drive</MenuItem>
+              {/* Add more platforms here */}
+            </Select>
+            <Box
+              sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}
+            >
+              <Button
+                variant="outlined"
+                color="secondary"
+                onClick={handleCloseShareModal}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleGoogleDriveAuth}
+                sx={{ marginLeft: 1 }}
+                disabled={!sharePlatform}
+              >
+                Share
               </Button>
             </Box>
           </Box>

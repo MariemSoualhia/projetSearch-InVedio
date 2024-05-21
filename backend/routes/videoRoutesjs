@@ -1,7 +1,9 @@
 const express = require("express");
 const videoController = require("../controllers/videoController");
+const Video = require("../models/Video");
+const path = require("path");
 const router = express.Router();
-
+const fs = require("fs");
 // Route pour récupérer tous les vidéos enregistrés
 router.get("/", videoController.getAllVideos);
 
@@ -13,5 +15,69 @@ router.delete("/:_id", videoController.deleteVideoById);
 
 // Route pour télécharger une vidéo
 router.get("/:id/download", videoController.downloadVideo);
+// Endpoint to get video file URL
+// Endpoint to get video file URL
+router.get("/:videoId/url", async (req, res) => {
+  try {
+    // Fetch video details from the database
+    const video = await Video.findById(req.params.videoId);
+
+    if (!video) {
+      return res.status(404).json({ error: "Video not found" });
+    }
+
+    // Construct the URL to access the video file
+    const shareUrl = `http://127.0.0.1:3002/api/videos/serve/${video._id}`;
+
+    res.json({ url: shareUrl });
+  } catch (error) {
+    console.error("Error retrieving share URL:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// Endpoint to serve the video file
+router.get("/serve/:id", async (req, res) => {
+  try {
+    // Fetch video details from the database
+    const video = await Video.findById(req.params.id);
+
+    if (!video) {
+      return res.status(404).send("Video not found");
+    }
+
+    const filePath = path.resolve(video.path); // Resolve the absolute path to the video file
+    const stat = fs.statSync(filePath);
+    const fileSize = stat.size;
+    const range = req.headers.range;
+
+    if (range) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+      const chunksize = end - start + 1;
+      const file = fs.createReadStream(filePath, { start, end });
+      const head = {
+        "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+        "Accept-Ranges": "bytes",
+        "Content-Length": chunksize,
+        "Content-Type": "video/mp4",
+      };
+      res.writeHead(206, head);
+      file.pipe(res);
+    } else {
+      const head = {
+        "Content-Length": fileSize,
+        "Content-Type": "video/mp4",
+      };
+      res.writeHead(200, head);
+      fs.createReadStream(filePath).pipe(res);
+    }
+  } catch (error) {
+    console.error("Error serving video:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
 
 module.exports = router;

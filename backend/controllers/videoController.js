@@ -1,38 +1,37 @@
+const express = require("express");
 const mongoose = require("mongoose");
 const Video = require("../models/Video");
 const fs = require("fs");
 const path = require("path");
 
-// Récupérer toutes les vidéos
+// Function to retrieve all videos
 const getAllVideos = async (req, res) => {
   try {
-    let query = {}; // Requête de recherche vide par défaut
+    let query = {}; // Default empty search query
 
-    // Vérifier si un terme de recherche est fourni dans les paramètres de requête
+    // Check if a search term is provided in the request parameters
     if (req.query.search) {
-      // Utiliser une expression régulière pour rechercher le terme dans le nom du vidéo
-      query.name = { $regex: req.query.search, $options: "i" }; // 'i' pour l'insensibilité à la casse
+      // Use a regular expression to search for the term in the video name
+      query.name = { $regex: req.query.search, $options: "i" }; // 'i' for case insensitivity
     }
 
-    const videos = await Video.find(query); // Récupérer les vidéos correspondant à la requête
-    res.json(videos); // Renvoyer les vidéos en tant que réponse JSON
+    const videos = await Video.find(query); // Retrieve videos matching the query
+    res.json(videos); // Send the videos as JSON response
   } catch (error) {
-    console.error("Erreur lors de la récupération des vidéos :", error);
-    res
-      .status(500)
-      .json({
-        error:
-          "Erreur lors de la récupération des vidéos depuis la base de données",
-      });
+    console.error("Error retrieving videos:", error);
+    res.status(500).json({
+      error: "Error retrieving videos from the database",
+    });
   }
 };
+// Route pour obtenir l'URL de partage d'une vidéo par son ID
 
-// Servir la vidéo en streaming
+// Function to serve video streaming
 const getVideo = async (req, res) => {
   const videoId = req.params.id;
 
   try {
-    // Récupérer les informations sur la vidéo depuis la base de données
+    // Retrieve video information from the database
     const video = await Video.findById(videoId);
 
     if (!video) {
@@ -73,7 +72,7 @@ const getVideo = async (req, res) => {
   }
 };
 
-// Supprimer une vidéo par son ID
+// Function to delete a video by its ID
 const deleteVideoById = async (req, res) => {
   try {
     const { _id } = req.params;
@@ -83,13 +82,13 @@ const deleteVideoById = async (req, res) => {
       return res.status(404).json({ Message: "Video not found" });
     }
 
-    // Vérifie si le fichier existe
+    // Check if the file exists
     if (fs.existsSync(video.path)) {
-      // Suppression du fichier
+      // Delete the file
       fs.unlinkSync(video.path);
     }
 
-    // Suppression de l'enregistrement vidéo dans la base de données
+    // Delete the video record from the database
     await Video.deleteOne({ _id });
 
     return res.status(200).json({ Message: "Video deleted successfully" });
@@ -99,7 +98,7 @@ const deleteVideoById = async (req, res) => {
   }
 };
 
-// Télécharger une vidéo par son ID
+// Function to download a video by its ID
 const downloadVideo = async (req, res) => {
   const videoId = req.params.id;
 
@@ -110,12 +109,15 @@ const downloadVideo = async (req, res) => {
     }
 
     const filePath = video.path;
-    res.download(filePath, video.name + path.extname(filePath), (err) => {
-      if (err) {
-        console.error("Error downloading video:", err);
-        res.status(500).send("Internal Server Error");
-      }
-    });
+    const fileName = video.name + path.extname(filePath);
+
+    // Set appropriate headers to trigger download dialog in the browser
+    res.setHeader("Content-disposition", "attachment; filename=" + fileName);
+    res.setHeader("Content-type", "video/mp4");
+
+    // Stream the file to the client
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
   } catch (error) {
     console.error("Error downloading video:", error);
     res.status(500).send("Internal Server Error");
