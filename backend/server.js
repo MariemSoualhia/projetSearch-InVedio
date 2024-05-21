@@ -215,7 +215,8 @@ app.post("/api/start-recording", (req, res) => {
     });
 
     rec.startRecording();
-    rec.on("done", () => {
+
+    rec.stopRecording((output) => {
       // Restart recording once the current recording is done
       console.log("Recording completed, starting a new recording...");
       startContinuousRecording();
@@ -258,7 +259,6 @@ app.post("/api/stop-recording", (req, res) => {
     });
     rec = null;
     console.log("Recording stopped");
-    res.json({ message: "Recording stopped" });
   } else {
     res.status(400).json({ error: "No recording in progress" });
   }
@@ -276,7 +276,8 @@ async function createRecord(url, port, name, cameraName) {
       });
 
       rec.startRecording();
-      rec.on("done", () => {
+
+      rec.stopRecording((output) => {
         // Restart recording once the current recording is done
         console.log("Recording completed, starting a new recording...");
         startContinuousRecording();
