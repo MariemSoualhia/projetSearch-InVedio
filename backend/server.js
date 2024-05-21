@@ -220,11 +220,17 @@ function startNewRecording(url, name, cameraName) {
   };
 
   const video = new Video(videoData);
-  video.save().then((savedVideo) => {
-    console.log("Vidéo enregistrée dans la base de données :", savedVideo);
-  }).catch((error) => {
-    console.error("Erreur lors de l'enregistrement de la vidéo dans la base de données :", error);
-  });
+  video
+    .save()
+    .then((savedVideo) => {
+      console.log("Vidéo enregistrée dans la base de données :", savedVideo);
+    })
+    .catch((error) => {
+      console.error(
+        "Erreur lors de l'enregistrement de la vidéo dans la base de données :",
+        error
+      );
+    });
 
   rec.stopRecording(() => {
     startNewRecording(url, name, cameraName);
@@ -341,7 +347,7 @@ app.post("/api/stopAllRecording", async (req, res) => {
     res.json({ message: "Recording stopped" });
   } catch (error) {
     console.error("Error stopping recording:", error);
-    res.status 500).json({ error: "Error stopping recording" });
+    res.status(500).json({ error: "Error stopping recording" });
   }
 });
 
