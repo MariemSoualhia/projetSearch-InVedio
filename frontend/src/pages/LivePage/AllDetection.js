@@ -33,16 +33,8 @@ const AllDetection = () => {
       const response = await axios.get(API_API_URL + "/api/stream/play");
       console.log("Streams:", response.data);
       if (response.data.length === 0) {
-        setComponents([
-          {
-            id: "default-stream",
-            stream: (
-              <Grid item xs={6} key="default-stream">
-                <DetectionPage allCameras={cameras} stream={{}} />
-              </Grid>
-            ),
-          },
-        ]);
+       
+
       } else {
         setComponents(
           response.data.map((stream, index) => ({
@@ -72,7 +64,7 @@ const AllDetection = () => {
         id: `stream-${prevComponents.length}`,
         stream: (
           <Grid item xs={6} key={`stream-${prevComponents.length}`}>
-            <DetectionPage allCameras={cameras} stream={camera} />
+            <DetectionPage camera={camera} allCameras={cameras} stream={camera} />
           </Grid>
         ),
       },

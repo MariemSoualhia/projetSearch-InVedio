@@ -76,7 +76,7 @@ const useStyles = makeStyles((theme) => ({
   checked: {},
 }));
 
-const DetectionPage = ({ stream: initialStream, allCameras }) => {
+const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
   const classes = useStyles();
   const [selectedCamera, setSelectedCamera] = useState({
     name: "",
@@ -552,6 +552,7 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
     );
   };
   const handleCameraButtonClick = async (cam) => {
+    console.log("camera is", cam);
     setSelectedCamera(cam);
     localStorage.setItem("selectedCamera" + cam.name, JSON.stringify(cam));
     setSelectedCameraList((prevList) => [...prevList, cam]);
@@ -1479,6 +1480,16 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
           onMouseUp={stopDrawing}
         />
       </div>
+      {!stream.output_port && (
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => handleCameraButtonClick(camera)}
+          className={classes.button}
+        >
+          Play
+        </Button>
+      )}
 
       {(stream.output_port || videoPath) && (
         <>

@@ -46,6 +46,7 @@ const VideoList = () => {
   const [sharePlatform, setSharePlatform] = useState("");
   const [gapiLoaded, setGapiLoaded] = useState(false);
   const [error, setError] = useState("");
+  const [succes, setSucces] = useState("");
   const [loading, setLoading] = useState(false);
   const videosPerPage = 6;
 
@@ -174,6 +175,7 @@ const VideoList = () => {
       const writable = await handle.createWritable();
       await writable.write(blob);
       await writable.close();
+      setSucces("download video")
     } catch (error) {
       console.error("Error downloading video:", error);
       setError("Failed to download video.");
@@ -251,15 +253,13 @@ const VideoList = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Container>
-        <Button onClick={handleThemeToggle}>
-          Toggle to {darkMode ? "Light" : "Dark"} Mode
-        </Button>
+       
         <Typography variant="h4" gutterBottom className={classes.title}>
           Video List
         </Typography>
 
         {error && <Alert severity="error">{error}</Alert>}
-
+        {succes&& <Alert severity="success">{succes}</Alert>}
         <TextField
           label="Search"
           variant="outlined"
