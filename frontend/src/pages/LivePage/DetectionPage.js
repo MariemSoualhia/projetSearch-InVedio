@@ -309,7 +309,6 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
 
       connections[url].webrtcPeer.setRemoteDescription(sdp).catch(reportError);
 
-
       if (connections[url].type == "inbound") {
         connections[url].webrtcPeer
           .createAnswer()
@@ -372,7 +371,6 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
         connections[url].videoElement.srcObject = event.streams[0];
         //connections[url].videoElement.play();
       }
-
     }
 
     function onIceCandidate(event) {
@@ -469,39 +467,34 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
 
       connections[url].websocket = new WebSocket(wsUrl);
       connections[url].websocket.addEventListener("message", onServerMessage);
-      connections[url].websocket.addEventListener("close", function(event) {
-        console.log("Connection closed with code:", event.code, "and reason:", event.reason);
-        if (stream.input_stream){
+      connections[url].websocket.addEventListener("close", function (event) {
+        console.log(
+          "Connection closed with code:",
+          event.code,
+          "and reason:",
+          event.reason
+        );
+        if (stream.input_stream) {
           const data = {
             input_stream: stream.input_stream,
           };
           console.log(data);
-      
-         
-        axios.put(
-            `http://127.0.0.1:3002/api/stream/stop/${stream._id}`
-          );
+
+          axios.put(`http://127.0.0.1:3002/api/stream/stop/${stream._id}`);
         }
-      
-    
-    
       });
-      
-      connections[url].websocket.addEventListener("error", function(error) {
+
+      connections[url].websocket.addEventListener("error", function (error) {
         console.error("WebSocket error:", error);
-        if (stream.input_stream){
+        if (stream.input_stream) {
           const data = {
             input_stream: stream.input_stream,
           };
           console.log(data);
-      
-         
-        axios.put(
-            `http://127.0.0.1:3002/api/stream/stop/${stream._id}`
-          );
+
+          axios.put(`http://127.0.0.1:3002/api/stream/stop/${stream._id}`);
         }
       });
-      
     }
 
     function sendStream(hostname, port, path, configuration, reportErrorCB) {
@@ -911,13 +904,13 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
 
   const draw = (event) => {
     if (!isDrawing) return;
-  
+
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
     setCurrentCoords({ x, y });
-  
+
     if (drawMode === "roi") {
       drawZone(x, y);
     } else if (drawMode === "line") {
@@ -937,11 +930,9 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
       ctx.lineWidth = 5; // Épaisseur de la ligne
       ctx.strokeStyle = "red"; // Couleur de la ligne
       ctx.stroke();
-    
     }
   };
-  
-  
+
   const stopDrawing = () => {
     if (drawMode === "roi" && isDrawing) {
       const { x: startX, y: startY } = startCoords;
@@ -1044,8 +1035,6 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
     const x4 = endCoords.x;
     const y4 = endCoords.y;
 
- 
-  
     if (drawMode == "line") {
       rectangleData = {
         input_stream: stream.input_stream,
@@ -1423,16 +1412,16 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
   const drawZone = (x, y) => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-    
+
     // Effacer le contenu précédent du canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
+
     const { x: startX, y: startY } = startCoords;
     const width = Math.abs(x - startX);
     const height = Math.abs(y - startY);
     const rectX = x < startX ? x : startX;
     const rectY = y < startY ? y : startY;
-  
+
     // Dessiner le rectangle
     ctx.beginPath();
     ctx.rect(rectX, rectY, width, height);
@@ -1440,7 +1429,7 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
     ctx.strokeStyle = "blue";
     ctx.stroke();
     ctx.closePath();
-  
+
     // Dessiner les points
     points.forEach((point) => {
       ctx.beginPath();
@@ -1449,7 +1438,7 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
       ctx.fill();
       ctx.closePath();
     });
-  
+
     console.log(points);
   };
 
@@ -1540,14 +1529,13 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
               <InputLabel id="demo-simple-select-label">
                 Link to zone{" "}
               </InputLabel>
-              <Select labelId="direction-label" id="direction-select"  required>
+              <Select labelId="direction-label" id="direction-select" required>
                 {drawMode === "roi" &&
                   internalZones.map((zone, index) => (
                     <MenuItem
                       key={index}
                       value={zone.zone_name}
                       onClick={() => handleSelectLink(zone)}
-                      
                     >
                       {zone.zone_name}
                     </MenuItem>
@@ -1667,30 +1655,6 @@ const DetectionPage = ({ stream: initialStream, allCameras }) => {
           </Row>
         </>
       )}
-
-      <Row>
-        <List className={classes.cameraList}>
-          {cameras.map((camera, index) => (
-            <ListItem
-              key={camera.id}
-              button
-              onClick={() => handleCameraButtonClick(camera)}
-              className={classes.cameraItem}
-            >
-              <ListItemIcon>
-                <Videocam color="primary" />
-              </ListItemIcon>
-              <ListItemText
-                primary={<Typography variant="body1">{camera.name}</Typography>}
-              />
-            </ListItem>
-          ))}
-        </List>
-        <div>
-          <input type="file" onChange={handleFileChange} />
-          <button onClick={handleUpload}>Upload Video</button>
-        </div>
-      </Row>
     </>
   );
 };
