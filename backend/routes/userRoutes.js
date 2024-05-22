@@ -237,8 +237,8 @@ router.put(
 const transporter = nodemailer.createTransport({
   service: "Gmail",
   auth: {
-    user: "soualhiamariem@gmail.com",
-    pass: "mariem@soualhia@53",
+    user: "siwargarrouri57@gmail.com",
+    pass: "qecfduhhdhkqpxgd",
   },
 });
 
