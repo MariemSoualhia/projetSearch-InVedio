@@ -20,17 +20,18 @@ const { SubMenu } = Menu;
 
 const items = [
   {
+    label: "Settings",
+    key: "settings",
+    icon: <SettingsIcon style={{ color: "var(--icon-color)" }} />,
+    path: "/settingsPage",
+  },
+  {
     label: "All streams",
     key: "streams",
     icon: <LiveTvIcon style={{ color: "var(--icon-color)" }} />,
     path: "/liveAll",
   },
-  {
-    label: "Camera Config",
-    key: "cameraConfig",
-    icon: <CameraAltIcon style={{ color: "var(--icon-color)" }} />,
-    path: "/camera_config",
-  },
+
   {
     label: "Zone Config",
     key: "zoneConfig",
@@ -38,7 +39,7 @@ const items = [
     path: "/zoneManager",
   },
   {
-    label: "Camera Stream",
+    label: "Stream Counting",
     key: "live",
     icon: <SwitchVideoIcon style={{ color: "var(--icon-color)" }} />,
     path: "/videoComponent",
@@ -49,12 +50,7 @@ const items = [
     icon: <VideoSettingsIcon style={{ color: "var(--icon-color)" }} />,
     path: "/videoList",
   },
-  {
-    label: "Settings",
-    key: "settings",
-    icon: <SettingsIcon style={{ color: "var(--icon-color)" }} />,
-    path: "/settingsPage",
-  },
+
   // {
   //   label: "Network Config",
   //   key: "network",

@@ -39,8 +39,8 @@ function App() {
           <Routes>
             {/* Routes protégées */}
             <Route path="/" element={<CameraPage />} />
-            <Route path="/live" element={<LivePage />} />
-            <Route path="/liveAll" element={<MultipleStreamsPage />} />
+            <Route path="/live" element={<CameraPage />} />
+            <Route path="/liveAll" element={<CameraPage />} />
             <Route path="/camera_config" element={<CameraConfig />} />
             <Route path="/videoList" element={<VideoList />} />
             <Route path="/networkConfig" element={<NetworkConfigPage />} />
