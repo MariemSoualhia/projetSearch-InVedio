@@ -16,6 +16,11 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { useNavigate } from "react-router-dom";
@@ -29,6 +34,9 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotMessage, setForgotMessage] = useState("");
   const [darkMode, setDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem("theme");
     return savedTheme === "dark";
@@ -39,6 +47,40 @@ const LoginPage = () => {
       ...formData,
       [event.target.name]: event.target.value,
     });
+  };
+
+  const handleForgotPasswordChange = (event) => {
+    setForgotEmail(event.target.value);
+  };
+
+  const handleForgotPasswordSubmit = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        "http://localhost:3002/api/user/forgot-password",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: forgotEmail }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+      }
+
+      setForgotMessage("Recovery email sent. Please check your inbox.");
+      setOpenSnackbar(true);
+      setOpenDialog(false);
+    } catch (error) {
+      setErrorMessage(error.message);
+      setOpenSnackbar(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (event) => {
@@ -84,11 +126,19 @@ const LoginPage = () => {
 
   const handleThemeToggle = () => {
     setDarkMode(!darkMode);
-    localStorage.setItem("theme", darkMode ? "dark" : "light");
+    localStorage.setItem("theme", darkMode ? "light" : "dark");
   };
 
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
+  };
+
+  const handleOpenDialog = () => {
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
   };
 
   return (
@@ -103,9 +153,6 @@ const LoginPage = () => {
             alignItems: "center",
           }}
         >
-          <Button onClick={handleThemeToggle} sx={{ mb: 2 }}>
-            Toggle to {darkMode ? "Light" : "Dark"} Mode
-          </Button>
           <Grid container>
             <Grid
               item
@@ -231,7 +278,12 @@ const LoginPage = () => {
                   </Box>
                   <Grid container>
                     <Grid item xs>
-                      <Link href="#" variant="body2" sx={{ color: "#9e58ff" }}>
+                      <Link
+                        href="#"
+                        variant="body2"
+                        sx={{ color: "#9e58ff" }}
+                        onClick={handleOpenDialog}
+                      >
                         <LockOutlinedIcon sx={{ mr: 1 }} />
                         Forgot password?
                       </Link>
@@ -254,12 +306,37 @@ const LoginPage = () => {
         >
           <Alert
             onClose={handleCloseSnackbar}
-            severity="error"
+            severity={forgotMessage ? "success" : "error"}
             sx={{ width: "100%" }}
           >
-            {errorMessage}
+            {forgotMessage || errorMessage}
           </Alert>
         </Snackbar>
+
+        <Dialog open={openDialog} onClose={handleCloseDialog}>
+          <DialogTitle>Forgot Password</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Please enter your email address. We will send you an email to
+              reset your password.
+            </DialogContentText>
+            <TextField
+              autoFocus
+              margin="dense"
+              id="forgotEmail"
+              label="Email Address"
+              type="email"
+              fullWidth
+              variant="standard"
+              value={forgotEmail}
+              onChange={handleForgotPasswordChange}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>Cancel</Button>
+            <Button onClick={handleForgotPasswordSubmit}>Submit</Button>
+          </DialogActions>
+        </Dialog>
       </Container>
     </ThemeProvider>
   );

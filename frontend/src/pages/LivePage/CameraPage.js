@@ -341,6 +341,8 @@ const CameraPage = () => {
               onChange={handleInputChange}
               color="secondary"
             />
+            <br></br>
+            <br></br>
             <FormControl fullWidth variant="outlined">
               <InputLabel
                 id="address-select-label"
@@ -348,6 +350,8 @@ const CameraPage = () => {
               >
                 IP Address
               </InputLabel>
+              <br></br>
+              <br></br>
               <Select
                 labelId="address-select-label"
                 id="address-select"
@@ -375,6 +379,8 @@ const CameraPage = () => {
               onChange={handleInputChange}
               color="secondary"
             />
+            <br></br>
+            <br></br>
             <TextField
               label="Password"
               variant="outlined"

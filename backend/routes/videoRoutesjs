@@ -4,6 +4,7 @@ const Video = require("../models/Video");
 const path = require("path");
 const router = express.Router();
 const fs = require("fs");
+const ffmpeg = require("fluent-ffmpeg");
 // Route pour récupérer tous les vidéos enregistrés
 router.get("/", videoController.getAllVideos);
 
@@ -79,5 +80,72 @@ router.get("/serve/:id", async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
+router.get("/:id/search", async (req, res) => {
+  const videoId = req.params.id;
+  const searchTerm = req.query.term;
 
+  try {
+    const video = await Video.findById(videoId);
+
+    if (!video) {
+      return res.status(404).json({ error: "Video not found" });
+    }
+
+    // Implement your search logic here
+    // This example assumes you have a method to search within the video's transcript
+    const results = await searchVideoTranscript(video.path, searchTerm);
+
+    res.json({ results });
+  } catch (error) {
+    console.error("Error searching video:", error);
+    res.status(500).json({ error: "Error searching video" });
+  }
+});
+
+async function searchVideoTranscript(videoPath, term) {
+  // Placeholder logic for searching video transcript
+  // In a real implementation, you might use a speech-to-text service to generate transcripts
+  // and then search within those transcripts
+  return [
+    { timestamp: 30, text: "Example match at 30 seconds" },
+    { timestamp: 90, text: "Example match at 90 seconds" },
+  ];
+}
+// Endpoint to generate thumbnails
+router.get("/:videoId/thumbnails", async (req, res) => {
+  const videoId = req.params.videoId;
+  const videoPath = path.join(__dirname, `../videos/${videoId}.mp4`); // Adjust this path based on your setup
+  const thumbnailDir = path.join(__dirname, `../thumbnails/${videoId}`);
+
+  if (!fs.existsSync(thumbnailDir)) {
+    fs.mkdirSync(thumbnailDir, { recursive: true });
+  }
+
+  ffmpeg(videoPath)
+    .on("filenames", function (filenames) {
+      console.log("Will generate " + filenames.join(", "));
+    })
+    .on("end", function () {
+      console.log("Thumbnails generated");
+      fs.readdir(thumbnailDir, (err, files) => {
+        if (err) {
+          return res.status(500).send(err);
+        }
+        const thumbnails = files.map(
+          (file) => `/thumbnails/${videoId}/${file}`
+        );
+        res.json({ thumbnails });
+      });
+    })
+    .on("error", function (err) {
+      console.log("An error occurred: " + err.message);
+      res.status(500).send(err.message);
+    })
+    .screenshots({
+      count: 10,
+      folder: thumbnailDir,
+      size: "320x240",
+      filename: "thumbnail-%i.png",
+    });
+});
 module.exports = router;

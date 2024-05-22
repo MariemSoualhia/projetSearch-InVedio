@@ -11,8 +11,10 @@ import {
 
 const VideoPlayer = ({ videoId }) => {
   const videoRef = useRef(null);
+  const previewRef = useRef(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+  const [highlightTime, setHighlightTime] = useState(null);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -38,6 +40,21 @@ const VideoPlayer = ({ videoId }) => {
     if (videoRef.current) {
       videoRef.current.currentTime = timestamp;
       videoRef.current.play();
+    }
+    setHighlightTime(timestamp);
+    if (previewRef.current) {
+      previewRef.current.currentTime = timestamp;
+    }
+  };
+
+  const handlePreviewTimeUpdate = () => {
+    if (previewRef.current) {
+      const currentTime = previewRef.current.currentTime;
+      if (currentTime >= highlightTime && currentTime < highlightTime + 5) {
+        previewRef.current.style.border = "5px solid red";
+      } else {
+        previewRef.current.style.border = "none";
+      }
     }
   };
 
@@ -71,6 +88,22 @@ const VideoPlayer = ({ videoId }) => {
           ))}
         </List>
       )}
+      {/* <Typography variant="h6" gutterBottom>
+        Preview:
+      </Typography>
+      <video
+        ref={previewRef}
+        width="100%"
+        height="150px"
+        controls
+        onTimeUpdate={handlePreviewTimeUpdate}
+      >
+        <source
+          src={`http://localhost:3002/api/videos/${videoId}`}
+          type="video/mp4"
+        />
+        Your browser does not support the video tag.
+      </video> */}
     </Box>
   );
 };
