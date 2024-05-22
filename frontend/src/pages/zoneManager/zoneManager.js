@@ -5,6 +5,7 @@ import {
   TextField,
   Button,
   Table,
+  Card,
   TableBody,
   TableCell,
   TableContainer,
@@ -45,7 +46,7 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(4),
     border: `2px solid var(--border-color)`,
     borderRadius: "8px",
-    backgroundColor: "var(--background-color)",
+
   },
   textField: {
     marginBottom: theme.spacing(2),
@@ -96,15 +97,15 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   dialogTitle: {
-    backgroundColor: "var(--background-color)",
+    //backgroundColor: "var(--background-color)",
     color: "var(--text-color)",
   },
   dialogContent: {
-    backgroundColor: "var(--background-color)",
+    //backgroundColor: "var(--background-color)",
     color: "var(--text-color)",
   },
   dialogActions: {
-    backgroundColor: "var(--background-color)",
+    //backgroundColor: "var(--background-color)",
     color: "var(--text-color)",
   },
 }));
@@ -288,6 +289,7 @@ const ZoneManager = () => {
 
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6}>
+          <Card>
             <form
               onSubmit={handleSubmit}
               className={classes.form}
@@ -339,6 +341,7 @@ const ZoneManager = () => {
                 Add Zone
               </Button>
             </form>
+            </Card>
           </Grid>
           <Grid item xs={12} sm={6}>
             <TableContainer
@@ -399,9 +402,7 @@ const ZoneManager = () => {
           <Dialog open={openDialog} onClose={closeEditDialog}>
             <DialogTitle className={classes.dialogTitle}>Edit Zone</DialogTitle>
             <DialogContent className={classes.dialogContent}>
-              <DialogContentText>
-                Please update the fields below.
-              </DialogContentText>
+              
               <TextField
                 label="Zone Name"
                 name="zone_name"
@@ -411,6 +412,8 @@ const ZoneManager = () => {
                 fullWidth
                 className={classes.textField}
               />
+                <br></br>
+                <br></br>
               <FormControl fullWidth className={classes.textField}>
                 <InputLabel className={classes.inputLabel}>Type</InputLabel>
                 <Select
@@ -423,6 +426,8 @@ const ZoneManager = () => {
                   <MenuItem value="internal zone">Internal Zone</MenuItem>
                 </Select>
               </FormControl>
+              <br></br>
+              <br></br>
               <TextField
                 label="Area Name"
                 name="areaName"

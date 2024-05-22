@@ -6,6 +6,7 @@ import {
   TextField,
   Button,
   IconButton,
+  Card,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -132,15 +133,15 @@ const useStyles = makeStyles((theme) => ({
     color: "var(--label-color)",
   },
   dialogTitle: {
-    backgroundColor: "var(--background-color)",
+    //backgroundColor: "var(--background-color)",
     color: "var(--text-color)",
   },
   dialogContent: {
-    backgroundColor: "var(--background-color)",
+    //backgroundColor: "var(--background-color)",
     color: "var(--text-color)",
   },
   dialogActions: {
-    backgroundColor: "var(--background-color)",
+    //backgroundColor: "var(--background-color)",
     color: "var(--text-color)",
   },
 }));
@@ -303,7 +304,7 @@ const CameraPage = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Container>
+   
         <Button
           variant="contained"
           color="primary"
@@ -351,7 +352,7 @@ const CameraPage = () => {
                 IP Address
               </InputLabel>
               <br></br>
-              <br></br>
+            <br></br>
               <Select
                 labelId="address-select-label"
                 id="address-select"
@@ -379,7 +380,7 @@ const CameraPage = () => {
               onChange={handleInputChange}
               color="secondary"
             />
-            <br></br>
+                      <br></br>
             <br></br>
             <TextField
               label="Password"
@@ -405,6 +406,8 @@ const CameraPage = () => {
         <Dialog open={editDialogOpen} onClose={handleCloseDialog}>
           <DialogTitle className={classes.dialogTitle}>Edit Camera</DialogTitle>
           <DialogContent className={classes.dialogContent}>
+          <br></br>
+        
             <TextField
               label="Camera Name"
               variant="outlined"
@@ -415,6 +418,8 @@ const CameraPage = () => {
               onChange={handleInputChange}
               color="secondary"
             />
+             <br></br>
+            <br></br>
             <FormControl fullWidth variant="outlined">
               <InputLabel
                 id="address-select-label"
@@ -422,6 +427,8 @@ const CameraPage = () => {
               >
                 IP Address
               </InputLabel>
+              <br></br>
+            <br></br>
               <Select
                 labelId="address-select-label"
                 id="address-select"
@@ -449,6 +456,8 @@ const CameraPage = () => {
               onChange={handleInputChange}
               color="secondary"
             />
+             <br></br>
+            <br></br>
             <TextField
               label="Password"
               variant="outlined"
@@ -460,6 +469,7 @@ const CameraPage = () => {
               color="secondary"
             />
           </DialogContent>
+
           <DialogActions className={classes.dialogActions}>
             <Button onClick={handleCloseDialog} color="primary">
               Cancel
@@ -473,10 +483,16 @@ const CameraPage = () => {
         <Dialog open={infoDialogOpen} onClose={handleCloseDialog}>
           <DialogTitle className={classes.dialogTitle}>Camera Info</DialogTitle>
           <DialogContent className={classes.dialogContent}>
+          <br></br>
+          
             <Typography>Name: {currentCamera?.name}</Typography>
+            <br></br>
             <Typography>IP Address: {currentCamera?.address}</Typography>
+            <br></br>
             <Typography>Username: {currentCamera?.username}</Typography>
+            <br></br>
             <Typography>Password: {currentCamera?.password}</Typography>
+            <br></br>
             <Typography>Resolution: {currentCamera?.resolution}</Typography>
           </DialogContent>
           <DialogActions className={classes.dialogActions}>
@@ -485,7 +501,7 @@ const CameraPage = () => {
             </Button>
           </DialogActions>
         </Dialog>
-      </Container>
+
     </ThemeProvider>
   );
 };
