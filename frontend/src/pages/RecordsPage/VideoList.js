@@ -50,7 +50,8 @@ const VideoList = () => {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertSeverity, setAlertSeverity] = useState("success");
   const videosPerPage = 6;
 
   const [darkMode, setDarkMode] = useState(() => {
@@ -111,6 +112,9 @@ const VideoList = () => {
     } catch (error) {
       console.error("Error fetching videos:", error);
       setError("Failed to fetch videos.");
+      setAlertMessage("Failed to fetch videos.");
+      setAlertSeverity("error");
+      setSnackbarOpen(true);
     }
     setLoading(false);
   };
@@ -119,9 +123,15 @@ const VideoList = () => {
     try {
       await axios.delete(`http://127.0.0.1:3002/api/videos/${videoId}`);
       fetchVideos();
+      setAlertMessage("Video deleted successfully.");
+      setAlertSeverity("success");
+      setSnackbarOpen(true);
     } catch (error) {
       console.error("Error deleting video:", error);
       setError("Failed to delete video.");
+      setAlertMessage("Failed to delete video.");
+      setAlertSeverity("error");
+      setSnackbarOpen(true);
     }
   };
 
@@ -178,11 +188,15 @@ const VideoList = () => {
       const writable = await handle.createWritable();
       await writable.write(blob);
       await writable.close();
-      setSuccess("Video downloaded successfully.");
+      setAlertMessage("Video downloaded successfully.");
+      setAlertSeverity("success");
       setSnackbarOpen(true);
     } catch (error) {
       console.error("Error downloading video:", error);
       setError("Failed to download video.");
+      setAlertMessage("Failed to download video.");
+      setAlertSeverity("error");
+      setSnackbarOpen(true);
     }
   };
 
@@ -194,6 +208,9 @@ const VideoList = () => {
         if (response.error) {
           console.error("Error during Google Drive authentication:", response);
           setError("Failed to authenticate with Google Drive.");
+          setAlertMessage("Failed to authenticate with Google Drive.");
+          setAlertSeverity("error");
+          setSnackbarOpen(true);
           return;
         }
         handleShare(response.access_token);
@@ -206,21 +223,18 @@ const VideoList = () => {
   const handleShare = async (accessToken) => {
     try {
       setLoading(true);
-      // Fetch the video URL from your server
       const response = await axios.get(
         `http://127.0.0.1:3002/api/videos/${videoToShare}/url`
       );
       console.log("Video URL response:", response.data);
       const videoUrl = response.data.url;
 
-      // Check if the video URL is accessible
       const headResponse = await fetch(videoUrl, { method: "HEAD" });
       if (!headResponse.ok) {
         throw new Error(`Failed to fetch video: ${headResponse.statusText}`);
       }
       console.log("Video HEAD response:", headResponse);
 
-      // Fetch the video blob from the URL
       const videoResponse = await fetch(videoUrl);
       if (!videoResponse.ok) {
         throw new Error(`Failed to fetch video: ${videoResponse.statusText}`);
@@ -228,7 +242,6 @@ const VideoList = () => {
       const videoBlob = await videoResponse.blob();
       console.log("Video blob:", videoBlob);
 
-      // Check the size of the blob
       if (videoBlob.size < 1024) {
         throw new Error(
           "The video blob is too small, indicating an issue with fetching the video content."
@@ -237,16 +250,13 @@ const VideoList = () => {
 
       const fileMetadata = {
         name: "Shared Video",
-        mimeType: videoBlob.type, // Use the correct MIME type from the blob
+        mimeType: videoBlob.type,
       };
 
-      // Load the Google Drive API client
       await window.gapi.client.load("drive", "v3");
 
-      // Initialize the Google API client with the access token
       window.gapi.client.setToken({ access_token: accessToken });
 
-      // Create FormData to handle the file upload
       const formData = new FormData();
       formData.append(
         "metadata",
@@ -254,7 +264,6 @@ const VideoList = () => {
       );
       formData.append("file", videoBlob);
 
-      // Create the file on Google Drive using fetch
       const uploadResponse = await fetch(
         "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
         {
@@ -277,11 +286,15 @@ const VideoList = () => {
       setShowShareModal(false);
       setVideoToShare(null);
       setSharePlatform("");
-      setSuccessMessage("Video shared successfully!");
+      setAlertMessage("Video shared successfully!");
+      setAlertSeverity("success");
       setSnackbarOpen(true);
     } catch (error) {
       console.error("Error sharing video:", error);
       setError("Failed to share video.");
+      setAlertMessage("Failed to share video.");
+      setAlertSeverity("error");
+      setSnackbarOpen(true);
     } finally {
       setLoading(false);
     }
@@ -312,8 +325,6 @@ const VideoList = () => {
           Video List
         </Typography>
 
-        {error && <Alert severity="error">{error}</Alert>}
-        {success && <Alert severity="success">{success}</Alert>}
         <TextField
           label="Search"
           variant="outlined"
@@ -455,7 +466,6 @@ const VideoList = () => {
                     Select a platform
                   </MenuItem>
                   <MenuItem value="GoogleDrive">Google Drive</MenuItem>
-                  {/* Add more platforms here */}
                 </Select>
                 <Box
                   sx={{
@@ -495,9 +505,9 @@ const VideoList = () => {
             elevation={6}
             variant="filled"
             onClose={handleCloseSnackbar}
-            severity="success"
+            severity={alertSeverity}
           >
-            {successMessage}
+            {alertMessage}
           </Alert>
         </Snackbar>
       </Container>
