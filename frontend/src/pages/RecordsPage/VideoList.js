@@ -52,6 +52,7 @@ const VideoList = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [alertSeverity, setAlertSeverity] = useState("success");
+  const [videoSize, setVideoSize] = useState(null); // Add state for video size
   const videosPerPage = 6;
 
   const [darkMode, setDarkMode] = useState(() => {
@@ -149,11 +150,26 @@ const VideoList = () => {
     setShowShareModal(false);
     setVideoToShare(null);
     setSharePlatform("");
+    setVideoSize(null); // Reset video size when modal is closed
   };
 
-  const handleShowShareModal = (videoId) => {
+  const handleShowShareModal = async (videoId) => {
     setVideoToShare(videoId);
     setShowShareModal(true);
+
+    // Fetch video size
+    try {
+      const videoUrlResponse = await axios.get(
+        `http://127.0.0.1:3002/api/videos/${videoId}/url`
+      );
+      const videoUrl = videoUrlResponse.data.url;
+      const headResponse = await fetch(videoUrl, { method: "HEAD" });
+      const size = headResponse.headers.get("content-length");
+      setVideoSize(size);
+    } catch (error) {
+      console.error("Error fetching video size:", error);
+      setVideoSize(null);
+    }
   };
 
   const handlePageChange = (event, value) => {
@@ -456,6 +472,11 @@ const VideoList = () => {
                 <Typography variant="h6" gutterBottom>
                   Share Video
                 </Typography>
+                {videoSize && (
+                  <Typography variant="body2" gutterBottom>
+                    Size: {(videoSize / (1024 * 1024)).toFixed(2)} MB
+                  </Typography>
+                )}
                 <Select
                   value={sharePlatform}
                   onChange={(e) => setSharePlatform(e.target.value)}
