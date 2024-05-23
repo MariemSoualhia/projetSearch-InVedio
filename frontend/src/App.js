@@ -17,7 +17,7 @@ import CanvasWithArea from "./CanvasWithArea";
 import MultipleStreamsPage from "./pages/LivePage/MultipleStreamsPage";
 import VideoComponent from "./pages/VideoComponent/VideoComponent";
 import StreamPage from "./pages/VideoComponent/StreamPage";
-//import WebRTCStreamer from "./pages/VideoComponent/WebRTCStreamer";
+// import WebRTCStreamer from "./pages/VideoComponent/WebRTCStreamer";
 import DetectionPage from "./pages/LivePage/DetectionPage";
 import AllDetection from "./pages/LivePage/AllDetection";
 import ProfilePage from "./pages/ProfilePage/ProfilePage";
@@ -25,6 +25,8 @@ import VideoUpload from "./pages/LivePage/VideoUpload";
 import ZoneManager from "./pages/zoneManager/zoneManager";
 import SettingsPage from "./pages/Settings/SettingsPage";
 import CameraPage from "./pages/LivePage/CameraPage";
+import ResetPasswordPage from "./pages/Login/ResetPasswordPage";
+
 // Fonction pour vérifier si l'utilisateur est connecté
 const isUserAuthenticated = () => {
   const token = localStorage.getItem("token");
@@ -34,36 +36,134 @@ const isUserAuthenticated = () => {
 function App() {
   return (
     <Router>
-      {isUserAuthenticated() ? (
-        <Layout>
-          <Routes>
+      <Routes>
+        {isUserAuthenticated() ? (
+          <>
             {/* Routes protégées */}
-            <Route path="/" element={<CameraPage />} />
-            <Route path="/live" element={<CameraPage />} />
-            <Route path="/liveAll" element={<CameraPage />} />
-            <Route path="/camera_config" element={<CameraConfig />} />
-            <Route path="/videoList" element={<VideoList />} />
-            <Route path="/networkConfig" element={<NetworkConfigPage />} />
-            <Route path="/videoComponent" element={<AllDetection />} />
-            <Route path="/canvasLine" element={<CanvasLine />} />
-            <Route path="/canvasWithArea" element={<CanvasWithArea />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/VideoUpload" element={<VideoUpload />} />
-            <Route path="/zoneManager" element={<ZoneManager />} />
-            <Route path="/settingsPage" element={<SettingsPage />} />
-
+            <Route
+              path="/"
+              element={
+                <Layout>
+                  <CameraPage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/live"
+              element={
+                <Layout>
+                  <CameraPage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/liveAll"
+              element={
+                <Layout>
+                  <CameraPage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/camera_config"
+              element={
+                <Layout>
+                  <CameraConfig />
+                </Layout>
+              }
+            />
+            <Route
+              path="/videoList"
+              element={
+                <Layout>
+                  <VideoList />
+                </Layout>
+              }
+            />
+            <Route
+              path="/networkConfig"
+              element={
+                <Layout>
+                  <NetworkConfigPage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/videoComponent"
+              element={
+                <Layout>
+                  <AllDetection />
+                </Layout>
+              }
+            />
+            <Route
+              path="/canvasLine"
+              element={
+                <Layout>
+                  <CanvasLine />
+                </Layout>
+              }
+            />
+            <Route
+              path="/canvasWithArea"
+              element={
+                <Layout>
+                  <CanvasWithArea />
+                </Layout>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <Layout>
+                  <ProfilePage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/VideoUpload"
+              element={
+                <Layout>
+                  <VideoUpload />
+                </Layout>
+              }
+            />
+            <Route
+              path="/zoneManager"
+              element={
+                <Layout>
+                  <ZoneManager />
+                </Layout>
+              }
+            />
+            <Route
+              path="/settingsPage"
+              element={
+                <Layout>
+                  <SettingsPage />
+                </Layout>
+              }
+            />
+            {/* Route publique pour la page Login */}
+            {/* <Route path="/login" element={<LoginPage />} /> */}
+            {/* <Route
+              path="/reset-password/:token"
+              element={<ResetPasswordPage />}
+            /> */}
+          </>
+        ) : (
+          <>
             {/* Route publique pour la page Login */}
             <Route path="/login" element={<LoginPage />} />
-          </Routes>
-        </Layout>
-      ) : (
-        <Routes>
-          {/* Route publique pour la page Login */}
-          <Route path="/login" element={<LoginPage />} />
-          {/* Redirection vers la page de connexion pour toutes les autres URL */}
-          <Route path="*" element={<Navigate to="/login" />} />
-        </Routes>
-      )}
+            <Route
+              path="/reset-password/:token"
+              element={<ResetPasswordPage />}
+            />
+            {/* Redirection vers la page de connexion pour toutes les autres URL */}
+            <Route path="*" element={<Navigate to="/login" />} />
+          </>
+        )}
+      </Routes>
     </Router>
   );
 }

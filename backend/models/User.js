@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const defimg =
   "https://cdn.pixabay.com/photo/2017/03/21/13/27/evil-2162179_640.png";
+
 // Définition du schéma du modèle User
 const userSchema = new Schema({
   username: {
@@ -19,8 +20,12 @@ const userSchema = new Schema({
     required: true,
   },
   photoProfil: { type: String, default: defimg },
-
-  // Vous pouvez ajouter d'autres champs ici selon les besoins
+  resetPasswordToken: {
+    type: String,
+  },
+  resetPasswordExpires: {
+    type: Date,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

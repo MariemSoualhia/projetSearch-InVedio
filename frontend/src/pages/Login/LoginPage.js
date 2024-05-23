@@ -241,11 +241,11 @@ const LoginPage = () => {
                       style: { color: darkMode ? "#fff" : "#000" },
                     }}
                   />
-                  <FormControlLabel
+                  {/* <FormControlLabel
                     control={<Checkbox value="remember" color="primary" />}
                     label="Remember me"
                     sx={{ color: darkMode ? "#fff" : "#000" }}
-                  />
+                  /> */}
                   <Box sx={{ position: "relative", mt: 3, mb: 2 }}>
                     <Button
                       type="submit"
@@ -288,11 +288,11 @@ const LoginPage = () => {
                         Forgot password?
                       </Link>
                     </Grid>
-                    <Grid item>
+                    {/* <Grid item>
                       <Link href="#" variant="body2" sx={{ color: "#9e58ff" }}>
                         {"Don't have an account? Sign Up"}
                       </Link>
-                    </Grid>
+                    </Grid> */}
                   </Grid>
                 </Box>
               </Box>

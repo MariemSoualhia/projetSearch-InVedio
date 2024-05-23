@@ -27,7 +27,105 @@ import ShareIcon from "@mui/icons-material/Share";
 import { makeStyles } from "@material-ui/core/styles";
 
 const useStyles = makeStyles((theme) => ({
-  // ... your existing styles
+  root: {
+    textAlign: "center",
+    paddingTop: theme.spacing(4),
+  },
+  formContainer: {
+    maxWidth: "600px",
+    margin: "auto",
+    padding: theme.spacing(4),
+    border: `2px solid ${theme.palette.divider}`,
+    borderRadius: "8px",
+    backgroundColor: theme.palette.background.paper,
+    [theme.breakpoints.down("sm")]: {
+      padding: theme.spacing(2),
+    },
+  },
+  textField: {
+    marginBottom: theme.spacing(2),
+  },
+  button: {
+    marginRight: theme.spacing(1),
+    backgroundColor: "#9E58FF",
+    color: "#fff",
+    "&:hover": {
+      backgroundColor: "#8E4CE0",
+    },
+  },
+  cameraList: {
+    backgroundColor: theme.palette.background.paper,
+    borderRadius: "8px",
+    border: `2px solid ${theme.palette.divider}`,
+    padding: theme.spacing(2),
+  },
+  listItem: {
+    marginBottom: theme.spacing(1),
+    backgroundColor: theme.palette.background.default,
+    borderRadius: "4px",
+    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+    color: theme.palette.text.primary,
+  },
+  listItemText: {
+    "& .MuiListItemText-primary": {
+      fontWeight: "bold",
+    },
+  },
+  editButton: {
+    color: theme.palette.primary.main,
+  },
+  deleteButton: {
+    color: "#f44336",
+  },
+  infoButton: {
+    color: "#1A237E",
+  },
+  streamContainer: {
+    margin: "10px",
+    padding: theme.spacing(2),
+    border: "1px solid #ccc",
+    borderRadius: "5px",
+  },
+  pagination: {
+    marginTop: theme.spacing(2),
+    display: "flex",
+    justifyContent: "center",
+    "& .MuiPaginationItem-root": {
+      color: "#9E58FF",
+    },
+  },
+  pageTitle: {
+    fontSize: "24px",
+    fontWeight: "bold",
+    marginBottom: theme.spacing(3),
+  },
+  inputLabel: {
+    color: theme.palette.text.secondary,
+  },
+  modalBox: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    backgroundColor: "var(--background-color)", // Ensure this is set to a solid color
+    boxShadow: 24,
+    padding: theme.spacing(4),
+    minWidth: 300,
+    maxWidth: 400,
+    borderRadius: 8,
+  },
+  dialogTitle: {
+    backgroundColor: "var(--background-color)",
+    color: "var(--text-color)",
+  },
+  dialogContent: {
+    backgroundColor: "var(--background-color)",
+    color: "var(--text-color)",
+  },
+  dialogActions: {
+    backgroundColor: "var(--background-color)",
+    color: "var(--text-color)",
+  },
 }));
 
 const CLIENT_ID =
@@ -336,202 +434,177 @@ const VideoList = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Container>
-        <Typography variant="h4" gutterBottom className={classes.title}>
-          Video List
-        </Typography>
 
-        <TextField
-          label="Search"
-          variant="outlined"
-          value={searchTerm}
-          onChange={handleSearchChange}
-          fullWidth
-          margin="normal"
-          placeholder="Search for videos..."
-          className={classes.searchField}
-        />
+      <Typography variant="h4" gutterBottom className={classes.pageTitle}>
+        Video List
+      </Typography>
 
-        <Grid container spacing={3}>
-          {videos.slice(startIndex, endIndex).map((video) => (
-            <Grid item key={video._id} xs={12} sm={6} md={4}>
-              <Paper elevation={3} className={classes.videoCard}>
-                <Typography variant="h6" className={classes.videoTitle}>
-                  {video.name}
-                </Typography>
-                <Typography variant="body2" className={classes.cameraInfo}>
-                  <strong>Camera:</strong> {video.cameraName}
-                </Typography>
-                <VideoPlayer videoId={video._id} width="100%" height="300px" />
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "center",
-                    marginTop: 2,
-                  }}
-                >
-                  <IconButton
-                    aria-label="delete"
-                    className={classes.deleteButton}
-                    onClick={() => handleShowDeleteModal(video._id)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                  <IconButton
-                    aria-label="download"
-                    className={classes.downloadButton}
-                    onClick={() => handleDownload(video._id, video.name)}
-                  >
-                    <DownloadIcon />
-                  </IconButton>
-                  <IconButton
-                    aria-label="share"
-                    className={classes.shareButton}
-                    onClick={() => handleShowShareModal(video._id)}
-                  >
-                    <ShareIcon />
-                  </IconButton>
-                </Box>
-              </Paper>
-            </Grid>
-          ))}
-        </Grid>
-        <Box sx={{ display: "flex", justifyContent: "center", marginTop: 3 }}>
-          <Pagination
-            count={Math.ceil(videos.length / videosPerPage)}
-            page={page}
-            onChange={handlePageChange}
-            color="primary"
-            className={classes.pagination}
-          />
-        </Box>
+      <TextField
+        label="Search"
+        variant="outlined"
+        value={searchTerm}
+        onChange={handleSearchChange}
+        fullWidth
+        margin="normal"
+        placeholder="Search for videos..."
+        className={classes.searchField}
+      />
 
-        <Modal open={showDeleteModal} onClose={handleCloseDeleteModal}>
-          <Box
-            sx={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              bgcolor: "background.paper",
-              boxShadow: 24,
-              p: 4,
-              minWidth: 300,
-              maxWidth: 400,
-            }}
-          >
-            <Typography variant="h6" gutterBottom>
-              Confirm Deletion
-            </Typography>
-            <Typography gutterBottom>
-              Are you sure you want to delete this video?
-            </Typography>
-            <Box
-              sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}
-            >
-              <Button
-                variant="outlined"
-                color="secondary"
-                onClick={handleCloseDeleteModal}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="contained"
-                color="error"
-                onClick={() => {
-                  handleDelete(videoToDelete);
-                  handleCloseDeleteModal();
+      <Grid container spacing={3}>
+        {videos.slice(startIndex, endIndex).map((video) => (
+          <Grid item key={video._id} xs={12} sm={6} md={4}>
+            <Paper elevation={3} className={classes.videoCard}>
+              <Typography variant="h6" className={classes.videoTitle}>
+                {video.name}
+              </Typography>
+              <Typography variant="body2" className={classes.cameraInfo}>
+                <strong>Camera:</strong> {video.cameraName}
+              </Typography>
+              <VideoPlayer videoId={video._id} width="100%" height="300px" />
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  marginTop: 2,
                 }}
-                sx={{ marginLeft: 1 }}
               >
-                Delete
-              </Button>
-            </Box>
-          </Box>
-        </Modal>
+                <IconButton
+                  aria-label="delete"
+                  className={classes.deleteButton}
+                  onClick={() => handleShowDeleteModal(video._id)}
+                >
+                  <DeleteIcon />
+                </IconButton>
+                <IconButton
+                  aria-label="download"
+                  className={classes.downloadButton}
+                  onClick={() => handleDownload(video._id, video.name)}
+                >
+                  <DownloadIcon />
+                </IconButton>
+                <IconButton
+                  aria-label="share"
+                  className={classes.shareButton}
+                  onClick={() => handleShowShareModal(video._id)}
+                >
+                  <ShareIcon />
+                </IconButton>
+              </Box>
+            </Paper>
+          </Grid>
+        ))}
+      </Grid>
+      <Box sx={{ display: "flex", justifyContent: "center", marginTop: 3 }}>
+        <Pagination
+          count={Math.ceil(videos.length / videosPerPage)}
+          page={page}
+          onChange={handlePageChange}
+          color="primary"
+          className={classes.pagination}
+        />
+      </Box>
 
-        <Modal open={showShareModal} onClose={handleCloseShareModal}>
+      <Modal open={showDeleteModal} onClose={handleCloseDeleteModal}>
+        <Box className={classes.modalBox}>
+          <Typography variant="h6" gutterBottom>
+            Confirm Deletion
+          </Typography>
+          <Typography gutterBottom>
+            Are you sure you want to delete this video?
+          </Typography>
           <Box
-            sx={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              bgcolor: "background.paper",
-              boxShadow: 24,
-              p: 4,
-              minWidth: 300,
-              maxWidth: 400,
-            }}
+            sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}
           >
-            {loading ? (
-              <CircularProgress />
-            ) : (
-              <>
-                <Typography variant="h6" gutterBottom>
-                  Share Video
-                </Typography>
-                {videoSize && (
-                  <Typography variant="body2" gutterBottom>
-                    Size: {(videoSize / (1024 * 1024)).toFixed(2)} MB
-                  </Typography>
-                )}
-                <Select
-                  value={sharePlatform}
-                  onChange={(e) => setSharePlatform(e.target.value)}
-                  displayEmpty
-                  fullWidth
-                >
-                  <MenuItem value="" disabled>
-                    Select a platform
-                  </MenuItem>
-                  <MenuItem value="GoogleDrive">Google Drive</MenuItem>
-                </Select>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    marginTop: 2,
-                  }}
-                >
-                  <Button
-                    variant="outlined"
-                    color="secondary"
-                    onClick={handleCloseShareModal}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleGoogleDriveAuth}
-                    sx={{ marginLeft: 1 }}
-                    disabled={!sharePlatform}
-                  >
-                    Share
-                  </Button>
-                </Box>
-              </>
-            )}
+            <Button
+              variant="outlined"
+              color="secondary"
+              onClick={handleCloseDeleteModal}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => {
+                handleDelete(videoToDelete);
+                handleCloseDeleteModal();
+              }}
+              sx={{ marginLeft: 1 }}
+            >
+              Delete
+            </Button>
           </Box>
-        </Modal>
-        <Snackbar
-          open={snackbarOpen}
-          autoHideDuration={3000}
+        </Box>
+      </Modal>
+
+      <Modal open={showShareModal} onClose={handleCloseShareModal}>
+        <Box className={classes.modalBox}>
+          {loading ? (
+            <CircularProgress />
+          ) : (
+            <>
+              <Typography variant="h6" gutterBottom>
+                Share Video
+              </Typography>
+              {videoSize && (
+                <Typography variant="body2" gutterBottom>
+                  Size: {(videoSize / (1024 * 1024)).toFixed(2)} MB
+                </Typography>
+              )}
+              <Select
+                value={sharePlatform}
+                onChange={(e) => setSharePlatform(e.target.value)}
+                displayEmpty
+                fullWidth
+              >
+                <MenuItem value="" disabled>
+                  Select a platform
+                </MenuItem>
+                <MenuItem value="GoogleDrive">Google Drive</MenuItem>
+              </Select>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  marginTop: 2,
+                }}
+              >
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  onClick={handleCloseShareModal}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleGoogleDriveAuth}
+                  sx={{ marginLeft: 1 }}
+                  disabled={!sharePlatform}
+                >
+                  Share
+                </Button>
+              </Box>
+            </>
+          )}
+        </Box>
+      </Modal>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          elevation={6}
+          variant="filled"
           onClose={handleCloseSnackbar}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          severity={alertSeverity}
         >
-          <Alert
-            elevation={6}
-            variant="filled"
-            onClose={handleCloseSnackbar}
-            severity={alertSeverity}
-          >
-            {alertMessage}
-          </Alert>
-        </Snackbar>
-      </Container>
+          {alertMessage}
+        </Alert>
+      </Snackbar>
     </ThemeProvider>
   );
 };

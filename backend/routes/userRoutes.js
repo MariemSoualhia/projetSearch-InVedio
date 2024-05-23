@@ -8,6 +8,7 @@ const path = require("path");
 const fs = require("fs");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
+const sendEmail = require("./emailService"); // Adjust the path accordingly
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -36,7 +37,7 @@ router.post("/create", async (req, res) => {
     // Vérifier si l'utilisateur existe déjà
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "Cet email est déjà utilisé" });
+      return res.status(400).json({ message: "This email is already in use" });
     }
 
     // Hacher le mot de passe
@@ -63,17 +64,17 @@ router.post("/signin", async (req, res) => {
     // Vérifier si l'utilisateur existe
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ message: "Utilisateur non trouvé" });
+      return res.status(404).json({ message: "User not found" });
     }
 
     // Vérifier le mot de passe
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ message: "Mot de passe incorrect" });
+      return res.status(401).json({ message: "Incorrect password" });
     }
 
     // Générer un token JWT
-    const token = jwt.sign({ userId: user._id }, "votre_secret_key_secrete", {
+    const token = jwt.sign({ userId: user._id }, "your_secret_key", {
       expiresIn: "1h", // Durée de validité du token (par exemple, 1 heure)
     });
     const dataRes = {
@@ -84,7 +85,7 @@ router.post("/signin", async (req, res) => {
     res.status(200).json(dataRes);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Erreur lors de la connexion" });
+    res.status(500).json({ message: "Error during login" });
   }
 });
 
@@ -103,7 +104,7 @@ router.get("/users/:id", async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) {
-      return res.status(404).send({ message: "Utilisateur non trouvé" });
+      return res.status(404).send({ message: "User not found" });
     }
     res.send(user);
   } catch (err) {
@@ -118,7 +119,7 @@ router.patch("/users/:id", async (req, res) => {
       new: true,
     });
     if (!user) {
-      return res.status(404).send({ message: "Utilisateur non trouvé" });
+      return res.status(404).send({ message: "User not found" });
     }
     res.send(user);
   } catch (err) {
@@ -131,7 +132,7 @@ router.delete("/users/:id", async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
     if (!user) {
-      return res.status(404).send({ message: "Utilisateur non trouvé" });
+      return res.status(404).send({ message: "User not found" });
     }
     res.send(user);
   } catch (err) {
@@ -148,7 +149,7 @@ router.put("/update/:id", async (req, res) => {
     // Vérifiez si l'utilisateur existe
     const user = await User.findById(id);
     if (!user) {
-      return res.status(404).send({ message: "Utilisateur non trouvé" });
+      return res.status(404).send({ message: "User not found" });
     }
 
     // Mettez à jour les informations de l'utilisateur
@@ -178,7 +179,7 @@ router.put("/change-password/:id", async (req, res) => {
     // Vérifiez si l'utilisateur existe
     const user = await User.findById(id);
     if (!user) {
-      return res.status(404).send({ message: "Utilisateur non trouvé" });
+      return res.status(404).send({ message: "User not found" });
     }
 
     // Vérifiez le mot de passe actuel
@@ -187,7 +188,7 @@ router.put("/change-password/:id", async (req, res) => {
       user.password
     );
     if (!isPasswordValid) {
-      return res.status(401).send({ message: "Mot de passe actuel incorrect" });
+      return res.status(401).send({ message: "Incorrect current password" });
     }
 
     // Hachez le nouveau mot de passe et mettez à jour l'utilisateur
@@ -198,7 +199,7 @@ router.put("/change-password/:id", async (req, res) => {
     await user.save();
 
     // Réponse avec l'utilisateur mis à jour
-    res.send({ message: "Mot de passe changé avec succès" });
+    res.send({ message: "Password changed successfully" });
   } catch (err) {
     res.status(400).send(err);
   }
@@ -215,7 +216,7 @@ router.put(
       // Vérifiez si l'utilisateur existe
       const user = await User.findById(id);
       if (!user) {
-        return res.status(404).send({ message: "Utilisateur non trouvé" });
+        return res.status(404).send({ message: "User not found" });
       }
 
       // Enregistrez le chemin absolu de la photo de profil
@@ -242,7 +243,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Route for forgot password (POST)
+// Route pour demander une réinitialisation de mot de passe
 router.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
 
@@ -252,8 +253,8 @@ router.post("/forgot-password", async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Generate a token with an expiration time
     const token = crypto.randomBytes(20).toString("hex");
+
     user.resetPasswordToken = token;
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
 
@@ -261,32 +262,23 @@ router.post("/forgot-password", async (req, res) => {
 
     const resetUrl = `http://localhost:3000/reset-password/${token}`;
 
-    // Send the email
-    const mailOptions = {
+    await sendEmail({
       to: user.email,
-      from: "your-email@gmail.com",
       subject: "Password Reset",
-      text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n
-             Please click on the following link, or paste this into your browser to complete the process:\n\n
-             ${resetUrl}\n\n
-             If you did not request this, please ignore this email and your password will remain unchanged.\n`,
-    };
-
-    transporter.sendMail(mailOptions, (err, response) => {
-      if (err) {
-        console.error("There was an error: ", err);
-        res.status(500).json({ message: "Error sending the email" });
-      } else {
-        res.status(200).json({ message: "Recovery email sent" });
-      }
+      text: `You are receiving this because you (or someone else) have requested to reset the password of your account.\n\n
+      Please click on the following link, or paste this into your browser to complete the process within one hour of receiving it:\n\n
+      ${resetUrl}\n\n
+      If you did not request this, please ignore this email and your password will remain unchanged.\n`,
     });
+
+    res.status(200).json({ message: "Password reset email sent" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// Route for reset password (POST)
+// Route pour réinitialiser le mot de passe
 router.post("/reset-password/:token", async (req, res) => {
   try {
     const user = await User.findOne({
@@ -301,6 +293,11 @@ router.post("/reset-password/:token", async (req, res) => {
     }
 
     const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({ message: "Password is required" });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     user.password = hashedPassword;
     user.resetPasswordToken = undefined;
