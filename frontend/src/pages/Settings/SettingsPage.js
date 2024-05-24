@@ -16,6 +16,7 @@ import {
 import { Alert, LinearProgress } from "@mui/material";
 import { createTheme, ThemeProvider } from "@material-ui/core/styles";
 import { makeStyles } from "@material-ui/core/styles";
+import NetworkConfig from "../NetworkConfig/NetworkConfig";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -91,6 +92,7 @@ const useStyles = makeStyles((theme) => ({
     color: "var(--text-color)",
   },
 }));
+
 const SettingsPage = () => {
   const classes = useStyles();
   const [darkMode, setDarkMode] = useState(false);
@@ -98,6 +100,13 @@ const SettingsPage = () => {
     bassiraId: "",
     areaName: "",
     dashboardToken: "",
+  });
+  const [networkConfig, setNetworkConfig] = useState({
+    interface: "eth0",
+    dhcp: true,
+    ip: "",
+    subnetMask: "",
+    gateway: "",
   });
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -108,10 +117,14 @@ const SettingsPage = () => {
     document.body.className = darkMode ? "dark" : "light";
     localStorage.setItem("theme", darkMode ? "dark" : "light");
   }, [darkMode]);
-  // Récupération des paramètres initiaux au chargement
+
+  // Fetch initial settings on load
   useEffect(() => {
     const storedDarkMode = JSON.parse(localStorage.getItem("darkMode"));
     const storedSettings = JSON.parse(localStorage.getItem("platformSettings"));
+    const storedNetworkConfig = JSON.parse(
+      localStorage.getItem("networkConfig")
+    );
 
     if (storedDarkMode !== null) {
       setDarkMode(storedDarkMode);
@@ -120,11 +133,14 @@ const SettingsPage = () => {
     if (storedSettings !== null) {
       setPlatformSettings(storedSettings);
     } else {
-      fetchSettings(); // Si les paramètres n'existent pas, chargez-les depuis l'API
+      fetchSettings();
+    }
+
+    if (storedNetworkConfig !== null) {
+      setNetworkConfig(storedNetworkConfig);
     }
   }, []);
 
-  // Fonction pour récupérer les paramètres depuis l'API
   const fetchSettings = async () => {
     try {
       const response = await axios.get("http://localhost:3002/api/settings");
@@ -141,7 +157,6 @@ const SettingsPage = () => {
   const saveSettings = async () => {
     setLoading(true);
     if (platformSettings._id) {
-      // Si les paramètres existent déjà, effectuez une mise à jour
       axios
         .put(
           `http://localhost:3002/api/settings/${platformSettings._id}`,
@@ -156,9 +171,8 @@ const SettingsPage = () => {
             setSuccessMessage("Dashboard not connected");
             setError(true);
           }
-
           setSnackbarOpen(true);
-          fetchSettings(); // Rafraîchir les paramètres affichés après la mise à jour
+          fetchSettings();
         })
         .catch((error) => {
           console.error("Error updating settings:", error);
@@ -169,17 +183,14 @@ const SettingsPage = () => {
         .finally(() => {
           setLoading(false);
         });
-
-      // Appel de la fonction avec le token
     } else {
-      // Si les paramètres n'existent pas, créez-les
       axios
         .post("http://localhost:3002/api/settings", platformSettings)
         .then(() => {
           console.log("Settings created successfully");
           setSuccessMessage("Settings created successfully");
           setSnackbarOpen(true);
-          fetchSettings(); // Rafraîchir les paramètres affichés après la création
+          fetchSettings();
         })
         .catch((error) => {
           console.error("Error creating settings:", error);
@@ -193,20 +204,25 @@ const SettingsPage = () => {
     }
   };
 
-  // Fonction pour basculer le mode sombre
+  const saveNetworkConfig = (config) => {
+    setNetworkConfig(config);
+    localStorage.setItem("networkConfig", JSON.stringify(config));
+    setSuccessMessage("Network configuration saved successfully");
+    setError(false);
+    setSnackbarOpen(true);
+  };
+
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode;
     setDarkMode(newDarkMode);
     localStorage.setItem("darkMode", JSON.stringify(newDarkMode));
-    if (newDarkMode == true) {
+    if (newDarkMode) {
       localStorage.setItem("theme", "dark");
     } else {
       localStorage.setItem("theme", "light");
     }
-    // Stockage du mode sombre
   };
 
-  // Fonction pour gérer les changements d'entrée
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setPlatformSettings({
@@ -215,12 +231,10 @@ const SettingsPage = () => {
     });
   };
 
-  // Fonction pour fermer le snackbar
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);
   };
 
-  // Dark and light theme configurations
   const lightTheme = createTheme({
     palette: {
       type: "light",
@@ -301,6 +315,16 @@ const SettingsPage = () => {
                   }
                   label="Dark Mode"
                 />
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12}>
+            <Card>
+              <CardContent>
+                <Typography variant="h5" component="h2" gutterBottom>
+                  Network Configuration
+                </Typography>
+                <NetworkConfig onConfig={saveNetworkConfig} />
               </CardContent>
             </Card>
           </Grid>

@@ -1,23 +1,15 @@
-# Utilisez l'image Node.js comme base
 FROM node:latest
 
-# Définissez le répertoire de travail dans le conteneur
 WORKDIR /app
 
-# Copiez le package.json et le package-lock.json (s'il existe) dans le conteneur
 COPY package*.json ./
 
-# Installez les dépendances
 RUN npm install --force
 
-# Copiez le reste des fichiers du projet dans le conteneur
 COPY . .
 
-# Build de l'application React
 RUN npm run build
 
-# Exposez le port sur lequel l'application va écouter (le port 3000 par défaut pour React)
 EXPOSE 3000
 
-# Commande pour démarrer l'application React
 CMD ["npm", "start"]

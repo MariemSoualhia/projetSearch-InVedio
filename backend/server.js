@@ -367,44 +367,29 @@ app.post("/api/stopAllRecording", async (req, res) => {
 
 app.post("/config", async (req, res) => {
   const { interface, dhcp, ip, prefix, gateway } = req.body;
-  console.log(`hiiiiiiiiiiii`);
   console.log(req.body);
   try {
     if (dhcp) {
-      // Configuration DHCP
-      const eth0 = {
-        interface: interface,
-        dhcp: true,
-      };
+      const eth0 = { interface, dhcp: true };
 
       await setIpAddress.configure([eth0]);
     } else {
-      // Configuration Manuelle
-
-      var vlan1 = {
-        interface: interface,
+      const vlan1 = {
+        interface,
         ip_address: ip,
-        prefix: prefix,
-        gateway: gateway,
+        prefix,
+        gateway,
         nameservers: ["8.8.8.8"],
       };
 
-      setIpAddress
-        .configure([vlan1])
-        .then((result) => {
-          console.log("Résultat de la configuration réseau :", result);
-          console.log("Configuration réseau appliquée avec succès !");
-        })
-        .catch((error) => {
-          console.error("Erreur lors de la configuration réseau :", error);
-        });
+      await setIpAddress.configure([vlan1]);
     }
 
-    console.log("Configuration Réseau Appliquée avec Succès");
-    res.send("Configuration Réseau Réussie !");
+    console.log("Network configuration applied successfully");
+    res.send("Network configuration succeeded!");
   } catch (error) {
-    console.error("Erreur lors de la Configuration Réseau :", error);
-    res.status(500).send("Erreur lors de la Configuration Réseau");
+    console.error("Error applying network configuration:", error);
+    res.status(500).send("Error applying network configuration");
   }
 });
 

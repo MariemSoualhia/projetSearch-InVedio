@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Menu, Dropdown, Switch } from "antd";
+import { Menu, Dropdown, Switch, Avatar } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import {
   AppstoreOutlined,
@@ -50,18 +50,16 @@ const items = [
     icon: <VideoSettingsIcon style={{ color: "var(--icon-color)" }} />,
     path: "/videoList",
   },
-
-  // {
-  //   label: "Network Config",
-  //   key: "network",
-  //   icon: <AppstoreOutlined />,
-  //   path: "/networkConfig",
-  // },
 ];
 
 const Navigation = () => {
   const navigate = useNavigate();
-  const [theme, setTheme] = useState("light");
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem("theme") || "light"
+  );
+  const [user, setUser] = useState(() =>
+    JSON.parse(localStorage.getItem("currentuser"))
+  );
 
   useEffect(() => {
     document.body.className = theme;
@@ -69,6 +67,8 @@ const Navigation = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("currentuser");
+    localStorage.removeItem("selectedCameraList");
     console.log("Déconnexion...");
     navigate("/");
     window.location.reload();
@@ -87,9 +87,6 @@ const Navigation = () => {
       <Menu.Item key="profile">
         <Link to="/profile">Profil</Link>
       </Menu.Item>
-      {/* <Menu.Item key="settings">
-        <Link to="/settings">Settings</Link>
-      </Menu.Item> */}
       <Menu.Item key="logout" onClick={handleLogout}>
         Logout
       </Menu.Item>
@@ -113,20 +110,14 @@ const Navigation = () => {
           <Link to={item.path}>{item.label}</Link>
         </Menu.Item>
       ))}
-      {/* <Menu.Item key="theme" className="theme-switch">
-        <Switch
-          checked={theme === "dark"}
-          onChange={toggleTheme}
-          checkedChildren="Dark"
-          unCheckedChildren="Light"
-        />
-      </Menu.Item> */}
+
       <Dropdown overlay={menu} placement="bottomRight" className="logout-item">
-        <Menu.Item
-          key="user"
-          icon={<UserOutlined style={{ color: "var(--icon-color)" }} />}
-          className="user-item"
-        />
+        <Menu.Item key="user" className="user-item">
+          <Avatar
+            src={`http://localhost:3002${user.photoProfil}`}
+            alt="User Profile Picture"
+          />
+        </Menu.Item>
       </Dropdown>
     </Menu>
   );

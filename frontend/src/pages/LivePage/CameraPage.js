@@ -46,9 +46,9 @@ const useStyles = makeStyles((theme) => ({
     maxWidth: "600px",
     margin: "auto",
     padding: theme.spacing(4),
-    border: `2px solid var(--border-color)`,
+    border: `2px solid ${theme.palette.divider}`,
     borderRadius: "8px",
-    backgroundColor: "var(--background-color)",
+    backgroundColor: theme.palette.background.paper,
     [theme.breakpoints.down("sm")]: {
       padding: theme.spacing(2),
     },
@@ -77,31 +77,34 @@ const useStyles = makeStyles((theme) => ({
   button: {
     marginRight: theme.spacing(1),
     backgroundColor: "#9E58FF",
+    color: "#fff",
+    "&:hover": {
+      backgroundColor: "#8E4CE0",
+    },
   },
   cameraList: {
-    backgroundColor: "var(--background-color)",
+    backgroundColor: theme.palette.background.paper,
     borderRadius: "8px",
-    border: `2px solid var(--border-color)`,
+    border: `2px solid ${theme.palette.divider}`,
     padding: theme.spacing(2),
   },
   listItem: {
     marginBottom: theme.spacing(1),
-    backgroundColor: "var(--input-background-color)",
+    backgroundColor: theme.palette.background.default,
     borderRadius: "4px",
     boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
-    color: "var(--text-color)",
+    color: theme.palette.text.primary,
   },
   listItemText: {
     "& .MuiListItemText-primary": {
       fontWeight: "bold",
-      color: "var(--text-color)",
     },
     "& .MuiListItemText-secondary": {
-      color: "var(--text-color)",
+      color: theme.palette.text.secondary,
     },
   },
   editButton: {
-    color: "var(--icon-color)",
+    color: "#9E58FF",
   },
   deleteButton: {
     color: "#f44336",
@@ -127,22 +130,19 @@ const useStyles = makeStyles((theme) => ({
     fontSize: "24px",
     fontWeight: "bold",
     marginBottom: theme.spacing(3),
-    color: "var(--text-color)",
+    color: theme.palette.text.primary,
   },
   inputLabel: {
-    color: "var(--label-color)",
+    color: theme.palette.text.secondary,
   },
   dialogTitle: {
-    //backgroundColor: "var(--background-color)",
-    color: "var(--text-color)",
+    color: theme.palette.text.primary,
   },
   dialogContent: {
-    //backgroundColor: "var(--background-color)",
-    color: "var(--text-color)",
+    color: theme.palette.text.primary,
   },
   dialogActions: {
-    //backgroundColor: "var(--background-color)",
-    color: "var(--text-color)",
+    color: theme.palette.text.primary,
   },
 }));
 
@@ -304,204 +304,201 @@ const CameraPage = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-   
-        <Button
-          variant="contained"
-          color="primary"
-          className={classes.button}
-          onClick={() => setOpenDialog(true)}
-        >
-          + Add Camera
-        </Button>
 
-        <Grid container spacing={2}>
-          {cameras.map((camera) => (
-            <Grid item xs={12} sm={6} md={4} key={camera.id}>
-              <StreamComponent
-                camera={camera}
-                handleEditCamera={handleEditCamera}
-                handleDeleteCamera={handleDeleteCamera}
-                setInfoDialogOpen={setInfoDialogOpen}
-                setCurrentCamera={setCurrentCamera}
-                classes={classes}
-              />
-            </Grid>
-          ))}
-        </Grid>
+      <Button
+        variant="contained"
+        style={{ backgroundColor: "#9E58FF" }}
+        className={classes.button}
+        onClick={() => setOpenDialog(true)}
+      >
+        + Add Camera
+      </Button>
+      <Grid container spacing={2}>
+        {cameras.map((camera) => (
+          <Grid item xs={12} sm={6} md={4} key={camera.id}>
+            <StreamComponent
+              camera={camera}
+              handleEditCamera={handleEditCamera}
+              handleDeleteCamera={handleDeleteCamera}
+              setInfoDialogOpen={setInfoDialogOpen}
+              setCurrentCamera={setCurrentCamera}
+              classes={classes}
+            />
+          </Grid>
+        ))}
+      </Grid>
 
-        <Dialog open={openDialog} onClose={handleCloseDialog}>
-          <DialogTitle className={classes.dialogTitle}>Add Camera</DialogTitle>
-          <DialogContent className={classes.dialogContent}>
-            <TextField
-              label="Camera Name"
-              variant="outlined"
-              fullWidth
-              className={classes.textField}
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              color="secondary"
-            />
-            <br></br>
-            <br></br>
-            <FormControl fullWidth variant="outlined">
-              <InputLabel
-                id="address-select-label"
-                className={classes.inputLabel}
-              >
-                IP Address
-              </InputLabel>
-              <br></br>
-            <br></br>
-              <Select
-                labelId="address-select-label"
-                id="address-select"
-                value={formData.address}
-                onChange={handleAddressChange}
-                label="IP Address"
-                color="secondary"
-              >
-                {listAddress.map((address, index) => (
-                  <MenuItem key={index} value={address}>
-                    {address}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <br />
-            <br />
-            <TextField
-              label="Username"
-              variant="outlined"
-              fullWidth
-              className={classes.textField}
-              name="username"
-              value={formData.username}
-              onChange={handleInputChange}
-              color="secondary"
-            />
-                      <br></br>
-            <br></br>
-            <TextField
-              label="Password"
-              variant="outlined"
-              fullWidth
-              className={classes.textField}
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              color="secondary"
-            />
-          </DialogContent>
-          <DialogActions className={classes.dialogActions}>
-            <Button onClick={handleCloseDialog} color="primary">
-              Cancel
-            </Button>
-            <Button onClick={handleAddCamera} color="primary">
-              Add
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        <Dialog open={editDialogOpen} onClose={handleCloseDialog}>
-          <DialogTitle className={classes.dialogTitle}>Edit Camera</DialogTitle>
-          <DialogContent className={classes.dialogContent}>
+      <Dialog open={openDialog} onClose={handleCloseDialog}>
+        <DialogTitle className={classes.dialogTitle}>Add Camera</DialogTitle>
+        <br></br>
+        <br></br>
+        <DialogContent className={classes.dialogContent}>
+          <TextField
+            label="Camera Name"
+            variant="outlined"
+            fullWidth
+            className={classes.textField}
+            name="name"
+            value={formData.name}
+            onChange={handleInputChange}
+            color="secondary"
+          />
           <br></br>
-        
-            <TextField
-              label="Camera Name"
-              variant="outlined"
-              fullWidth
-              className={classes.textField}
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              color="secondary"
-            />
-             <br></br>
-            <br></br>
-            <FormControl fullWidth variant="outlined">
-              <InputLabel
-                id="address-select-label"
-                className={classes.inputLabel}
-              >
-                IP Address
-              </InputLabel>
-              <br></br>
-            <br></br>
-              <Select
-                labelId="address-select-label"
-                id="address-select"
-                value={formData.address}
-                onChange={handleAddressChange}
-                label="IP Address"
-                color="secondary"
-              >
-                {listAddress.map((address, index) => (
-                  <MenuItem key={index} value={address}>
-                    {address}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <br />
-            <br />
-            <TextField
-              label="Username"
-              variant="outlined"
-              fullWidth
-              className={classes.textField}
-              name="username"
-              value={formData.username}
-              onChange={handleInputChange}
-              color="secondary"
-            />
-             <br></br>
-            <br></br>
-            <TextField
-              label="Password"
-              variant="outlined"
-              fullWidth
-              className={classes.textField}
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              color="secondary"
-            />
-          </DialogContent>
-
-          <DialogActions className={classes.dialogActions}>
-            <Button onClick={handleCloseDialog} color="primary">
-              Cancel
-            </Button>
-            <Button onClick={handleUpdateCamera} color="primary">
-              Save
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        <Dialog open={infoDialogOpen} onClose={handleCloseDialog}>
-          <DialogTitle className={classes.dialogTitle}>Camera Info</DialogTitle>
-          <DialogContent className={classes.dialogContent}>
           <br></br>
-          
-            <Typography>Name: {currentCamera?.name}</Typography>
-            <br></br>
-            <Typography>IP Address: {currentCamera?.address}</Typography>
-            <br></br>
-            <Typography>Username: {currentCamera?.username}</Typography>
-            <br></br>
-            <Typography>Password: {currentCamera?.password}</Typography>
-            <br></br>
-            <Typography>Resolution: {currentCamera?.resolution}</Typography>
-          </DialogContent>
-          <DialogActions className={classes.dialogActions}>
-            <Button onClick={handleCloseDialog} color="primary">
-              Close
-            </Button>
-          </DialogActions>
-        </Dialog>
+          <FormControl
+            fullWidth
+            variant="outlined"
+            className={classes.textField}
+          >
+            <InputLabel
+              id="address-select-label"
+              className={classes.inputLabel}
+            >
+              IP Address
+            </InputLabel>
+            <Select
+              labelId="address-select-label"
+              id="address-select"
+              value={formData.address}
+              onChange={handleAddressChange}
+              label="IP Address"
+              color="secondary"
+            >
+              {listAddress.map((address, index) => (
+                <MenuItem key={index} value={address}>
+                  {address}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <br></br>
+          <br></br>
+          <TextField
+            label="Username"
+            variant="outlined"
+            fullWidth
+            className={classes.textField}
+            name="username"
+            value={formData.username}
+            onChange={handleInputChange}
+            color="secondary"
+          />
+          <br></br>
+          <br></br>
+          <TextField
+            label="Password"
+            variant="outlined"
+            fullWidth
+            className={classes.textField}
+            name="password"
+            value={formData.password}
+            onChange={handleInputChange}
+            color="secondary"
+          />
+        </DialogContent>
+        <DialogActions className={classes.dialogActions}>
+          <Button onClick={handleCloseDialog} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleAddCamera} color="primary">
+            Add
+          </Button>
+        </DialogActions>
+      </Dialog>
 
+      <Dialog open={editDialogOpen} onClose={handleCloseDialog}>
+        <DialogTitle className={classes.dialogTitle}>Edit Camera</DialogTitle>
+        <br></br>
+        <DialogContent className={classes.dialogContent}>
+          <TextField
+            label="Camera Name"
+            variant="outlined"
+            fullWidth
+            className={classes.textField}
+            name="name"
+            value={formData.name}
+            onChange={handleInputChange}
+            color="secondary"
+          />
+          <br></br>
+          <br></br>
+          <FormControl
+            fullWidth
+            variant="outlined"
+            className={classes.textField}
+          >
+            <InputLabel
+              id="address-select-label"
+              className={classes.inputLabel}
+            >
+              IP Address
+            </InputLabel>
+            <Select
+              labelId="address-select-label"
+              id="address-select"
+              value={formData.address}
+              onChange={handleAddressChange}
+              label="IP Address"
+              color="secondary"
+            >
+              {listAddress.map((address, index) => (
+                <MenuItem key={index} value={address}>
+                  {address}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <br></br>
+          <br></br>
+          <TextField
+            label="Username"
+            variant="outlined"
+            fullWidth
+            className={classes.textField}
+            name="username"
+            value={formData.username}
+            onChange={handleInputChange}
+            color="secondary"
+          />
+          <br></br>
+          <br></br>
+          <TextField
+            label="Password"
+            variant="outlined"
+            fullWidth
+            className={classes.textField}
+            name="password"
+            value={formData.password}
+            onChange={handleInputChange}
+            color="secondary"
+          />
+        </DialogContent>
+        <br></br>
+        <br></br>
+        <DialogActions className={classes.dialogActions}>
+          <Button onClick={handleCloseDialog} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleUpdateCamera} color="primary">
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={infoDialogOpen} onClose={handleCloseDialog}>
+        <DialogTitle className={classes.dialogTitle}>Camera Info</DialogTitle>
+        <DialogContent className={classes.dialogContent}>
+          <Typography>Name: {currentCamera?.name}</Typography>
+          <Typography>IP Address: {currentCamera?.address}</Typography>
+          <Typography>Username: {currentCamera?.username}</Typography>
+          <Typography>Password: {currentCamera?.password}</Typography>
+        </DialogContent>
+        <DialogActions className={classes.dialogActions}>
+          <Button onClick={handleCloseDialog} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </ThemeProvider>
   );
 };
@@ -654,7 +651,7 @@ const StreamComponent = ({
           onClick={handleStreamAction}
           disabled={isRecording}
           className={classes.button}
-          style={{ color: isStreaming ? "#ff0000" : "#1A237E" }}
+          style={{ color: isStreaming ? "#ff0000" : "#9E58FF" }}
         >
           {isStreaming ? <Stop /> : <PlayArrow />}
           <span style={{ marginLeft: "5px", fontSize: "0.6em" }}>Stream</span>
@@ -664,7 +661,7 @@ const StreamComponent = ({
           onClick={handleRecordAction}
           disabled={!isStreaming}
           className={classes.button}
-          style={{ color: isRecording ? "#ff0000" : "#1A237E" }}
+          style={{ color: isRecording ? "#ff0000" : "#9E58FF" }}
         >
           <FiberManualRecord />
           <span style={{ marginLeft: "5px", fontSize: "0.6em" }}>Record</span>

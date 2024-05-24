@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Typography,
   Divider,
@@ -14,85 +14,62 @@ import {
   CardActions,
   CardHeader,
   Grid,
+  CssBaseline,
 } from "@mui/material";
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { makeStyles } from "@material-ui/core/styles";
+
 const useStyles = makeStyles((theme) => ({
   root: {
     textAlign: "center",
     paddingTop: theme.spacing(4),
   },
-  form: {
-    maxWidth: "600px",
-    margin: "auto",
-    padding: theme.spacing(4),
-    border: `2px solid var(--border-color)`,
+  profileCard: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    padding: theme.spacing(2),
+    backgroundColor: theme.palette.background.paper,
     borderRadius: "8px",
-    backgroundColor: "var(--background-color)",
+    boxShadow: theme.shadows[3],
+  },
+  profileDetails: {
+    textAlign: "left",
+    marginTop: theme.spacing(2),
+  },
+  profileAvatar: {
+    width: theme.spacing(55),
+    height: theme.spacing(55),
+  },
+  profileActions: {
+    display: "flex",
+    justifyContent: "center",
+    marginTop: theme.spacing(2),
   },
   textField: {
     marginBottom: theme.spacing(2),
-    "& .MuiOutlinedInput-root": {
-      "& fieldset": {
-        borderColor: "var(--input-border-color)",
-        backgroundColor: "var(--input-background-color)",
-      },
-      "&:hover fieldset": {
-        borderColor: "var(--input-border-color)",
-      },
-      "&.Mui-focused fieldset": {
-        borderColor: "var(--input-border-color)",
-      },
-      "& input": {
-        color: "var(--input-text-color)",
-      },
-    },
-    "& .MuiInputLabel-root": {
-      color: "var(--label-color)",
-    },
   },
   button: {
     marginRight: theme.spacing(1),
     backgroundColor: "#9E58FF",
-  },
-  tableContainer: {
-    marginTop: theme.spacing(2),
-    backgroundColor: "var(--background-color)",
-    borderRadius: "8px",
-    border: `2px solid var(--border-color)`,
-    padding: theme.spacing(2),
-  },
-  pageTitle: {
-    fontSize: "24px",
-    fontWeight: "bold",
-    marginBottom: theme.spacing(3),
-    color: "var(--text-color)",
-  },
-  tableHeader: {
-    fontWeight: "bold",
-  },
-  pagination: {
-    marginTop: theme.spacing(2),
-    display: "flex",
-    justifyContent: "center",
-    "& .MuiPaginationItem-root": {
-      color: "#9E58FF",
+    color: "#fff",
+    "&:hover": {
+      backgroundColor: "#8E4CE0",
     },
   },
-  dialogTitle: {
-    backgroundColor: "var(--background-color)",
-    color: "var(--text-color)",
+  card: {
+    backgroundColor: theme.palette.background.paper,
+    borderRadius: "8px",
+    boxShadow: theme.shadows[3],
   },
-  dialogContent: {
-    backgroundColor: "var(--background-color)",
-    color: "var(--text-color)",
-  },
-  dialogActions: {
-    backgroundColor: "var(--background-color)",
-    color: "var(--text-color)",
+  changePasswordButton: {
+    marginTop: theme.spacing(2),
   },
 }));
+
 const ProfilePage = () => {
+  const classes = useStyles();
   const storedUser = JSON.parse(localStorage.getItem("currentuser"));
   const [user, setUser] = useState(storedUser);
   const [editing, setEditing] = useState(false);
@@ -104,6 +81,27 @@ const ProfilePage = () => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [selectedFile, setSelectedFile] = useState(null);
+  const [darkMode, setDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem("theme");
+    return savedTheme === "dark";
+  });
+
+  useEffect(() => {
+    document.body.className = darkMode ? "dark" : "light";
+    localStorage.setItem("theme", darkMode ? "dark" : "light");
+  }, [darkMode]);
+
+  const lightTheme = createTheme({
+    palette: {
+      mode: "light",
+    },
+  });
+
+  const darkTheme = createTheme({
+    palette: {
+      mode: "dark",
+    },
+  });
 
   const handleEditProfile = () => {
     setEditing(true);
@@ -237,85 +235,164 @@ const ProfilePage = () => {
     }
   };
 
+  const handleThemeToggle = () => {
+    setDarkMode(!darkMode);
+  };
+
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        pt: 8,
-        px: 2,
-        maxWidth: 800,
-        margin: "auto",
-      }}
-    >
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Card>
-            <CardHeader
-              avatar={
-                <Avatar
-                  sx={{ width: 100, height: 100 }}
-                  src={`http://localhost:3002${user.photoProfil}`}
-                />
-              }
-              action={
-                editing && (
-                  <IconButton color="primary" component="label">
-                    <PhotoCamera />
-                    <input type="file" hidden onChange={handleFileChange} />
-                  </IconButton>
-                )
-              }
-              title={
-                <Typography variant="h5">
-                  {user.username || "User Profile"}
-                </Typography>
-              }
-            />
-          </Card>
-        </Grid>
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <TextField
-                label="Username"
-                value={user.username}
-                onChange={(e) => setUser({ ...user, username: e.target.value })}
-                variant="outlined"
-                fullWidth
-                disabled={!editing}
-                sx={{ mb: 2 }}
+    <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
+      <CssBaseline />
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+
+          pt: 8,
+          px: 2,
+
+          margin: "auto",
+        }}
+      >
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={4}>
+            <Card className={classes.profileCard}>
+              <Avatar
+                className={classes.profileAvatar}
+                src={`http://localhost:3002${user.photoProfil}`}
               />
-              <br></br>
-              <br></br>
-              <TextField
-                label="Email"
-                value={user.email}
-                onChange={(e) => setUser({ ...user, email: e.target.value })}
-                variant="outlined"
-                fullWidth
-                disabled={!editing}
-                sx={{ mb: 2 }}
-              />
-            </CardContent>
-            <CardActions>
-              {!editing ? (
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleEditProfile}
-                >
-                  Edit Profile
-                </Button>
-              ) : (
-                <>
+              <Typography variant="h6" sx={{ mt: 2 }}>
+                {user.username}
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                {user.email}
+              </Typography>
+              {editing && (
+                <IconButton color="primary" component="label" sx={{ mt: 2 }}>
+                  <PhotoCamera />
+                  <input type="file" hidden onChange={handleFileChange} />
+                </IconButton>
+              )}
+              <Box className={classes.profileActions}>
+                {!editing ? (
                   <Button
                     variant="contained"
                     color="primary"
-                    onClick={handleSaveProfile}
+                    onClick={handleEditProfile}
                   >
-                    Save Profile
+                    Edit Profile
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={handleSaveProfile}
+                      sx={{ mr: 1 }}
+                    >
+                      Save Profile
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      onClick={handleCancelEdit}
+                      sx={{ mr: 1 }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={handleUploadProfilePicture}
+                    >
+                      Upload Profile Picture
+                    </Button>
+                  </>
+                )}
+              </Box>
+            </Card>
+          </Grid>
+          <Grid item xs={12} md={8}>
+            <Card className={classes.card}>
+              <CardContent>
+                <Typography variant="h6">Profile Information</Typography>
+                <Divider sx={{ mb: 2 }} />
+                <TextField
+                  label="Full Name"
+                  value={user.username}
+                  onChange={(e) =>
+                    setUser({ ...user, username: e.target.value })
+                  }
+                  variant="outlined"
+                  fullWidth
+                  disabled={!editing}
+                  className={classes.textField}
+                />
+                <br></br>
+                <br></br>
+
+                <TextField
+                  label="Email"
+                  value={user.email}
+                  onChange={(e) => setUser({ ...user, email: e.target.value })}
+                  variant="outlined"
+                  fullWidth
+                  disabled={!editing}
+                  className={classes.textField}
+                />
+                <Button
+                  variant="contained"
+                  color="warning"
+                  onClick={() => setChangingPassword(true)}
+                  className={classes.changePasswordButton}
+                >
+                  Change Password
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+        {changingPassword && (
+          <Grid container spacing={3} sx={{ mt: 2 }}>
+            <Grid item xs={12}>
+              <Card className={classes.card}>
+                <CardContent>
+                  <Typography variant="h6">Change Password</Typography>
+                  <Divider sx={{ mb: 2 }} />
+                  <TextField
+                    label="Current Password"
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    variant="outlined"
+                    fullWidth
+                    className={classes.textField}
+                  />
+                  <TextField
+                    label="New Password"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    variant="outlined"
+                    fullWidth
+                    className={classes.textField}
+                  />
+                  <TextField
+                    label="Confirm New Password"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    variant="outlined"
+                    fullWidth
+                    className={classes.textField}
+                  />
+                </CardContent>
+                <CardActions>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleChangePassword}
+                  >
+                    Save New Password
                   </Button>
                   <Button
                     variant="contained"
@@ -324,104 +401,26 @@ const ProfilePage = () => {
                   >
                     Cancel
                   </Button>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleUploadProfilePicture}
-                  >
-                    Upload Profile Picture
-                  </Button>
-                </>
-              )}
-            </CardActions>
-          </Card>
-        </Grid>
-        {changingPassword && (
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <TextField
-                  label="Current Password"
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  variant="outlined"
-                  fullWidth
-                  sx={{ mb: 2 }}
-                />
-                <TextField
-                  label="New Password"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  variant="outlined"
-                  fullWidth
-                  sx={{ mb: 2 }}
-                />
-                <TextField
-                  label="Confirm New Password"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  variant="outlined"
-                  fullWidth
-                  sx={{ mb: 2 }}
-                />
-              </CardContent>
-              <CardActions>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleChangePassword}
-                >
-                  Save New Password
-                </Button>
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  onClick={handleCancelEdit}
-                >
-                  Cancel
-                </Button>
-              </CardActions>
-            </Card>
+                </CardActions>
+              </Card>
+            </Grid>
           </Grid>
         )}
-        {!changingPassword && (
-          <Grid item xs={12}>
-            <Card>
-              <CardActions>
-                <Button
-                  variant="contained"
-                  color="warning"
-                  onClick={() => setChangingPassword(true)}
-                  sx={{ mr: 2 }}
-                >
-                  Change Password
-                </Button>
-                {/* Uncomment the button below to enable account deletion */}
-                {/* <Button variant="contained" color="error">
-                  Delete Account
-                </Button> */}
-              </CardActions>
-            </Card>
-          </Grid>
-        )}
-      </Grid>
-      <Snackbar
-        open={openSnackbar}
-        autoHideDuration={6000}
-        onClose={() => setOpenSnackbar(false)}
-      >
-        <Alert
+        <Snackbar
+          open={openSnackbar}
+          autoHideDuration={6000}
           onClose={() => setOpenSnackbar(false)}
-          severity={snackbarSeverity}
-          sx={{ width: "100%" }}
         >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
-    </Box>
+          <Alert
+            onClose={() => setOpenSnackbar(false)}
+            severity={snackbarSeverity}
+            sx={{ width: "100%" }}
+          >
+            {snackbarMessage}
+          </Alert>
+        </Snackbar>
+      </Box>
+    </ThemeProvider>
   );
 };
 

@@ -2,28 +2,34 @@ version: '3.7'
 
 services:
   mongodb:
-    image: mongo
+    image: mongo:latest
     container_name: mongodb
     ports:
-      - "27017:27017"
+      - "27018:27017"
     networks:
       - mynetwork
 
-  testbackend:
-    image: testbackend
-    container_name: testbackend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend
     ports:
       - "3002:3002"
     networks:
       - mynetwork
+    depends_on:
+      - mongodb
 
-  testfrontend:
-    image: testfrontend
-    container_name: testfrontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
     ports:
       - "3000:3000"
     depends_on:
-      - testbackend
+      - backend
     networks:
       - mynetwork
 
