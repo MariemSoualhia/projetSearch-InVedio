@@ -1663,6 +1663,8 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
                 Clear
               </Button>
             </Col>
+            <input type="file" onChange={handleFileChange} />
+      <button onClick={handleUpload}>Upload Video</button>
           </Row>
         </>
       )}

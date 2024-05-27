@@ -11,7 +11,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 
-const VideoPlayer = ({ videoId }) => {
+const VideoPlayer = ({ videoId, videoPath }) => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -73,10 +73,17 @@ const VideoPlayer = ({ videoId }) => {
   const handleSearchChange = async (event) => {
     setSearchTerm(event.target.value);
     if (event.target.value.length > 2) {
-      const response = await axios.get(
-        `http://localhost:3002/api/videos/${videoId}/search?term=${event.target.value}`
-      );
-      setSearchResults(response.data.results);
+      try {
+        const response = await axios.post("http://127.0.0.1:5000/detect", {
+          video_path: videoPath,
+          texts: [event.target.value],
+        });
+        console.log(response)
+        setSearchResults([{ timestamp: response.data.first_detection_time }]);
+      } catch (error) {
+        console.error("Error searching video:", error);
+        setSearchResults([]);
+      }
     } else {
       setSearchResults([]);
     }
@@ -85,7 +92,7 @@ const VideoPlayer = ({ videoId }) => {
   const handleResultClick = (timestamp) => {
     if (videoRef.current) {
       videoRef.current.currentTime = timestamp;
-      //videoRef.current.play();
+      videoRef.current.play();
     }
     setHighlightTime(timestamp);
     setSearchResults([]); // Clear search results when a timestamp is clicked
