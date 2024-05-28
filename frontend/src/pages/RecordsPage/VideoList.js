@@ -453,7 +453,12 @@ const VideoList = () => {
               <Typography variant="body2" className={classes.cameraInfo}>
                 <strong>Camera:</strong> {video.cameraName}
               </Typography>
-              <VideoPlayer videoId={video._id} width="100%" height="300px" />
+              <VideoPlayer
+                videoId={video._id}
+                videoPath={video.path}
+                width="100%"
+                height="300px"
+              />
               <Box
                 sx={{
                   display: "flex",
