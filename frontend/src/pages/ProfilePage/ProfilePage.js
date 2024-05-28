@@ -19,7 +19,9 @@ import {
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { makeStyles } from "@material-ui/core/styles";
-
+import SaveIcon from "@mui/icons-material/Save";
+import UploadIcon from "@mui/icons-material/Upload";
+import CancelIcon from "@mui/icons-material/Cancel";
 const useStyles = makeStyles((theme) => ({
   root: {
     textAlign: "center",
@@ -260,14 +262,24 @@ const ProfilePage = () => {
                 className={classes.profileAvatar}
                 src={`http://localhost:3002${user.photoProfil}`}
               />
-              <Typography variant="h6" sx={{ mt: 2 }}>
+              <Typography variant="h6" sx={{ fontFamily: "time", mt: 2 }}>
                 {user.username}
               </Typography>
-              <Typography variant="body2" color="textSecondary">
+              <Typography
+                variant="body2"
+                sx={{ fontFamily: "time" }}
+                color="textSecondary"
+              >
                 {user.email}
               </Typography>
               {editing && (
-                <IconButton color="primary" component="label" sx={{ mt: 2 }}>
+                <IconButton
+                  sx={{
+                    color: "#9E58FF",
+                    mt: 2,
+                  }}
+                  component="label"
+                >
                   <PhotoCamera />
                   <input type="file" hidden onChange={handleFileChange} />
                 </IconButton>
@@ -276,7 +288,10 @@ const ProfilePage = () => {
                 {!editing ? (
                   <Button
                     variant="contained"
-                    color="primary"
+                    color="secondary"
+                    sx={{
+                      backgroundColor: "#9E58FF",
+                    }}
                     onClick={handleEditProfile}
                   >
                     Edit Profile
@@ -285,26 +300,41 @@ const ProfilePage = () => {
                   <>
                     <Button
                       variant="contained"
-                      color="primary"
+                      color="secondary"
+                      sx={{
+                        backgroundColor: "#9E58FF",
+                        fontFamily: "time",
+                        color: "#ffff",
+                        mr: 1,
+                      }}
                       onClick={handleSaveProfile}
-                      sx={{ mr: 1 }}
                     >
-                      Save Profile
+                      save profil <SaveIcon />
                     </Button>
                     <Button
                       variant="contained"
                       color="secondary"
                       onClick={handleCancelEdit}
-                      sx={{ mr: 1 }}
+                      sx={{
+                        backgroundColor: "#F47B20",
+                        fontFamily: "time",
+                        mr: 1,
+                        fontSize: "12px",
+                      }}
                     >
-                      Cancel
+                      cancel <CancelIcon />
                     </Button>
                     <Button
                       variant="contained"
-                      color="primary"
+                      color="secondary"
+                      sx={{
+                        backgroundColor: "#9E58FF",
+                        fontFamily: "time",
+                        fontSize: "12px",
+                      }}
                       onClick={handleUploadProfilePicture}
                     >
-                      Upload Profile Picture
+                      save image <UploadIcon />
                     </Button>
                   </>
                 )}
@@ -314,8 +344,10 @@ const ProfilePage = () => {
           <Grid item xs={12} md={8}>
             <Card className={classes.card}>
               <CardContent>
-                <Typography variant="h6">Profile Information</Typography>
-                <Divider sx={{ mb: 2 }} />
+                <Typography variant="h6" sx={{ fontFamily: "time" }}>
+                  Profile Information
+                </Typography>
+                <Divider sx={{ fontFamily: "time", mb: 2 }} />
                 <TextField
                   label="Full Name"
                   value={user.username}
@@ -339,9 +371,15 @@ const ProfilePage = () => {
                   disabled={!editing}
                   className={classes.textField}
                 />
+                <br></br>
+                <br></br>
+
                 <Button
                   variant="contained"
-                  color="warning"
+                  color="secondary"
+                  sx={{
+                    backgroundColor: "#F47B20",
+                  }}
                   onClick={() => setChangingPassword(true)}
                   className={classes.changePasswordButton}
                 >
@@ -356,8 +394,10 @@ const ProfilePage = () => {
             <Grid item xs={12}>
               <Card className={classes.card}>
                 <CardContent>
-                  <Typography variant="h6">Change Password</Typography>
-                  <Divider sx={{ mb: 2 }} />
+                  <Typography sx={{ fontFamily: "time" }} variant="h6">
+                    Change Password
+                  </Typography>
+                  <Divider sx={{ mb: 2, fontFamily: "time" }} />
                   <TextField
                     label="Current Password"
                     type="password"
@@ -389,7 +429,11 @@ const ProfilePage = () => {
                 <CardActions>
                   <Button
                     variant="contained"
-                    color="primary"
+                    color="secondary"
+                    sx={{
+                      backgroundColor: "#9E58FF",
+                      fontFamily: "time",
+                    }}
                     onClick={handleChangePassword}
                   >
                     Save New Password
@@ -397,6 +441,7 @@ const ProfilePage = () => {
                   <Button
                     variant="contained"
                     color="secondary"
+                    sx={{ fontFamily: "time", backgroundColor: "#F47B20" }}
                     onClick={handleCancelEdit}
                   >
                     Cancel
