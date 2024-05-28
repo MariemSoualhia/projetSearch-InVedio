@@ -80,11 +80,12 @@ const useStyles = makeStyles((theme) => ({
   infoButton: {
     color: "#1A237E",
   },
-  streamContainer: {
-    margin: "10px",
+  videoCard: {
     padding: theme.spacing(2),
-    border: "1px solid #ccc",
-    borderRadius: "5px",
+    borderRadius: "8px",
+  },
+  videoTitle: {
+    marginBottom: theme.spacing(1),
   },
   pagination: {
     marginTop: theme.spacing(2),
@@ -93,14 +94,15 @@ const useStyles = makeStyles((theme) => ({
     "& .MuiPaginationItem-root": {
       color: "#9E58FF",
     },
+    "& .Mui-selected": {
+      color: "#F47B20",
+      backgroundColor: "#e1ccff", // Optional: to ensure no background color
+    },
   },
   pageTitle: {
     fontSize: "24px",
     fontWeight: "bold",
     marginBottom: theme.spacing(3),
-  },
-  inputLabel: {
-    color: theme.palette.text.secondary,
   },
   modalBox: {
     position: "absolute",
@@ -114,17 +116,8 @@ const useStyles = makeStyles((theme) => ({
     maxWidth: 400,
     borderRadius: 8,
   },
-  dialogTitle: {
-    backgroundColor: "var(--background-color)",
-    color: "var(--text-color)",
-  },
-  dialogContent: {
-    backgroundColor: "var(--background-color)",
-    color: "var(--text-color)",
-  },
-  dialogActions: {
-    backgroundColor: "var(--background-color)",
-    color: "var(--text-color)",
+  searchField: {
+    marginBottom: theme.spacing(3),
   },
 }));
 
@@ -151,7 +144,7 @@ const VideoList = () => {
   const [alertMessage, setAlertMessage] = useState("");
   const [alertSeverity, setAlertSeverity] = useState("success");
   const [videoSize, setVideoSize] = useState(null); // Add state for video size
-  const videosPerPage = 6;
+  const videosPerPage = 2; // Change videos per page to 2 for 2 per line
 
   const [darkMode, setDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -450,9 +443,9 @@ const VideoList = () => {
         className={classes.searchField}
       />
 
-      <Grid container spacing={3}>
+      <Grid container spacing={2}>
         {videos.slice(startIndex, endIndex).map((video) => (
-          <Grid item key={video._id} xs={12} sm={6} md={4}>
+          <Grid item key={video._id} xs={12} sm={6} md={6}>
             <Paper elevation={3} className={classes.videoCard}>
               <Typography variant="h6" className={classes.videoTitle}>
                 {video.name}
@@ -460,7 +453,7 @@ const VideoList = () => {
               <Typography variant="body2" className={classes.cameraInfo}>
                 <strong>Camera:</strong> {video.cameraName}
               </Typography>
-              <VideoPlayer videoPath={video.path} videoId={video._id} width="100%" height="300px" />
+              <VideoPlayer videoId={video._id} width="100%" height="300px" />
               <Box
                 sx={{
                   display: "flex",
@@ -471,6 +464,9 @@ const VideoList = () => {
                 <IconButton
                   aria-label="delete"
                   className={classes.deleteButton}
+                  sx={{
+                    color: "#9E58FF",
+                  }}
                   onClick={() => handleShowDeleteModal(video._id)}
                 >
                   <DeleteIcon />
@@ -478,6 +474,9 @@ const VideoList = () => {
                 <IconButton
                   aria-label="download"
                   className={classes.downloadButton}
+                  sx={{
+                    color: "#F47B20",
+                  }}
                   onClick={() => handleDownload(video._id, video.name)}
                 >
                   <DownloadIcon />
@@ -499,7 +498,6 @@ const VideoList = () => {
           count={Math.ceil(videos.length / videosPerPage)}
           page={page}
           onChange={handlePageChange}
-          color="primary"
           className={classes.pagination}
         />
       </Box>
