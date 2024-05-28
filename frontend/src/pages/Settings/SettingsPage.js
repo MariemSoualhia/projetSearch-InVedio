@@ -291,14 +291,25 @@ const SettingsPage = () => {
                   />
                   <Button
                     variant="contained"
-                    color="primary"
+                    style={{
+                      backgroundColor: "#9E58FF",
+                      color: "#ffff",
+                      marginTop: "20px",
+                    }}
                     onClick={saveSettings}
-                    style={{ marginTop: "20px" }}
                     fullWidth
                   >
                     Connect to dashboard
                   </Button>
-                  {loading && <LinearProgress style={{ marginTop: "10px" }} />}
+                  {loading && (
+                    <LinearProgress
+                      style={{
+                        backgroundColor: "#F47B20",
+                        color: "#9E58FF",
+                        marginTop: "10px",
+                      }}
+                    />
+                  )}
                 </form>
               </CardContent>
             </Card>
@@ -311,7 +322,11 @@ const SettingsPage = () => {
                 </Typography>
                 <FormControlLabel
                   control={
-                    <Switch checked={darkMode} onChange={toggleDarkMode} />
+                    <Switch
+                      style={{ color: "#9E58FF" }}
+                      checked={darkMode}
+                      onChange={toggleDarkMode}
+                    />
                   }
                   label="Dark Mode"
                 />
@@ -321,9 +336,6 @@ const SettingsPage = () => {
           <Grid item xs={12}>
             <Card>
               <CardContent>
-                <Typography variant="h5" component="h2" gutterBottom>
-                  Network Configuration
-                </Typography>
                 <NetworkConfig onConfig={saveNetworkConfig} />
               </CardContent>
             </Card>
