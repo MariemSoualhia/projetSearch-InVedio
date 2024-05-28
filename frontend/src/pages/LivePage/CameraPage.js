@@ -26,6 +26,8 @@ import {
   Paper,
   Box,
   Tooltip,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { makeStyles } from "@material-ui/core/styles";
 import DeleteIcon from "@material-ui/icons/Delete";
@@ -166,6 +168,9 @@ const CameraPage = () => {
     const savedTheme = localStorage.getItem("theme");
     return savedTheme === "dark";
   });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
   useEffect(() => {
     fetchCameras();
@@ -227,9 +232,11 @@ const CameraPage = () => {
       });
       setLoading(false);
       setOpenDialog(false);
+      showSnackbar("Camera added successfully!", "success");
     } catch (error) {
       console.error("Error adding camera:", error);
       setLoading(false);
+      showSnackbar("Failed to add camera.", "error");
     }
   };
 
@@ -237,8 +244,10 @@ const CameraPage = () => {
     try {
       await axios.delete(`http://localhost:3002/api/cameras/${id}`);
       fetchCameras();
+      showSnackbar("Camera deleted successfully!", "success");
     } catch (error) {
       console.error("Error deleting camera:", error);
+      showSnackbar("Failed to delete camera.", "error");
     }
   };
 
@@ -273,8 +282,10 @@ const CameraPage = () => {
         resolution: "",
       });
       setEditDialogOpen(false);
+      showSnackbar("Camera updated successfully!", "success");
     } catch (error) {
       console.error("Error updating camera:", error);
+      showSnackbar("Failed to update camera.", "error");
     }
   };
 
@@ -289,6 +300,16 @@ const CameraPage = () => {
     setOpenDialog(false);
     setEditDialogOpen(false);
     setInfoDialogOpen(false);
+  };
+
+  const showSnackbar = (message, severity) => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
   };
 
   const theme = createTheme({
@@ -313,25 +334,30 @@ const CameraPage = () => {
       >
         + Add Camera
       </Button>
-      <Grid container spacing={2}>
-        {cameras.map((camera) => (
-          <Grid item xs={12} sm={6} md={4} key={camera.id}>
-            <StreamComponent
-              camera={camera}
-              handleEditCamera={handleEditCamera}
-              handleDeleteCamera={handleDeleteCamera}
-              setInfoDialogOpen={setInfoDialogOpen}
-              setCurrentCamera={setCurrentCamera}
-              classes={classes}
-            />
-          </Grid>
-        ))}
-      </Grid>
+
+      {cameras.length === 0 ? (
+        <Typography variant="h6" align="center" style={{ marginTop: "20px" }}>
+          No cameras available. Please add a new camera.
+        </Typography>
+      ) : (
+        <Grid container spacing={2}>
+          {cameras.map((camera) => (
+            <Grid item xs={12} sm={6} md={4} key={camera.id}>
+              <StreamComponent
+                camera={camera}
+                handleEditCamera={handleEditCamera}
+                handleDeleteCamera={handleDeleteCamera}
+                setInfoDialogOpen={setInfoDialogOpen}
+                setCurrentCamera={setCurrentCamera}
+                classes={classes}
+              />
+            </Grid>
+          ))}
+        </Grid>
+      )}
 
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle className={classes.dialogTitle}>Add Camera</DialogTitle>
-        <br></br>
-        <br></br>
         <DialogContent className={classes.dialogContent}>
           <TextField
             label="Camera Name"
@@ -343,8 +369,6 @@ const CameraPage = () => {
             onChange={handleInputChange}
             color="secondary"
           />
-          <br></br>
-          <br></br>
           <FormControl
             fullWidth
             variant="outlined"
@@ -371,8 +395,6 @@ const CameraPage = () => {
               ))}
             </Select>
           </FormControl>
-          <br></br>
-          <br></br>
           <TextField
             label="Username"
             variant="outlined"
@@ -383,8 +405,6 @@ const CameraPage = () => {
             onChange={handleInputChange}
             color="secondary"
           />
-          <br></br>
-          <br></br>
           <TextField
             label="Password"
             variant="outlined"
@@ -408,7 +428,6 @@ const CameraPage = () => {
 
       <Dialog open={editDialogOpen} onClose={handleCloseDialog}>
         <DialogTitle className={classes.dialogTitle}>Edit Camera</DialogTitle>
-        <br></br>
         <DialogContent className={classes.dialogContent}>
           <TextField
             label="Camera Name"
@@ -420,8 +439,6 @@ const CameraPage = () => {
             onChange={handleInputChange}
             color="secondary"
           />
-          <br></br>
-          <br></br>
           <FormControl
             fullWidth
             variant="outlined"
@@ -448,8 +465,6 @@ const CameraPage = () => {
               ))}
             </Select>
           </FormControl>
-          <br></br>
-          <br></br>
           <TextField
             label="Username"
             variant="outlined"
@@ -460,8 +475,6 @@ const CameraPage = () => {
             onChange={handleInputChange}
             color="secondary"
           />
-          <br></br>
-          <br></br>
           <TextField
             label="Password"
             variant="outlined"
@@ -473,8 +486,6 @@ const CameraPage = () => {
             color="secondary"
           />
         </DialogContent>
-        <br></br>
-        <br></br>
         <DialogActions className={classes.dialogActions}>
           <Button onClick={handleCloseDialog} color="primary">
             Cancel
@@ -499,6 +510,16 @@ const CameraPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </ThemeProvider>
   );
 };
