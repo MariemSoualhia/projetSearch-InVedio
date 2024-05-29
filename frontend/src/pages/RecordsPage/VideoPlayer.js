@@ -2,26 +2,47 @@ import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import {
   Box,
-  TextField,
   List,
   ListItem,
   ListItemText,
   Typography,
   Paper,
   CircularProgress,
+  Modal,
+  Backdrop,
+  Fade,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Chip,
+  OutlinedInput,
 } from "@mui/material";
+
+const predefinedClasses = [
+  "person",
+  "bicycle",
+  "car",
+  "cat",
+  "motorcycle",
+  "airplane",
+  "bus",
+  "train",
+  "truck",
+  "boat",
+  "traffic light",
+  "fire hydrant",
+  // Add more classes as needed
+];
 
 const VideoPlayer = ({ videoId, videoPath }) => {
   const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-  const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [highlightTime, setHighlightTime] = useState(null);
-  const [frames, setFrames] = useState([]);
   const [loading, setLoading] = useState(false);
-  const frameWidth = 100;
-  const frameHeight = 60;
-  const frameInterval = 5; // seconds
+  const [selectedClasses, setSelectedClasses] = useState([]);
+  const [selectedFrame, setSelectedFrame] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -31,122 +52,88 @@ const VideoPlayer = ({ videoId, videoPath }) => {
     }
   }, [videoId]);
 
-  useEffect(() => {
-    const captureFrames = async () => {
-      if (videoRef.current) {
-        setLoading(true);
-        const video = videoRef.current;
-        video.crossOrigin = "anonymous";
-        const canvas = document.createElement("canvas");
-        const context = canvas.getContext("2d");
-        const framesArray = [];
+  const handleClassChange = async (event) => {
+    const {
+      target: { value },
+    } = event;
+    setSelectedClasses(typeof value === "string" ? value.split(",") : value);
 
-        video.addEventListener("loadeddata", () => {
-          canvas.width = frameWidth;
-          canvas.height = frameHeight;
-          const captureFrame = (time) => {
-            video.currentTime = time;
-            video.addEventListener(
-              "seeked",
-              function capture() {
-                context.drawImage(video, 0, 0, frameWidth, frameHeight);
-                framesArray.push(canvas.toDataURL("image/jpeg"));
-                if (time + frameInterval < video.duration) {
-                  captureFrame(time + frameInterval);
-                } else {
-                  setFrames(framesArray);
-                  setLoading(false);
-                }
-                video.removeEventListener("seeked", capture);
-              },
-              { once: true }
-            );
-          };
-          captureFrame(0);
-        });
-      }
-    };
+    setLoading(true);
+    try {
+      const data = {
+        video_path: videoPath,
+        texts: value, // Only search for the first selected class
+      };
 
-    captureFrames();
-  }, [videoId]);
-
-  // const handleSearchChange = async (event) => {
-  //   setSearchTerm(event.target.value);
-  //   if (event.target.value.length > 2) {
-  //     const response = await axios.get(
-  //       `http://localhost:3002/api/videos/${videoId}/search?term=${event.target.value}`
-  //     );
-  //     setSearchResults(response.data.results);
-  //   } else {
-  //     setSearchResults([]);
-  //   }
-  // };
-  const handleSearchChange = async (event) => {
-    setSearchTerm(event.target.value);
-    if (event.target.value.length > 2) {
-      try {
-        const response = await axios.post("http://127.0.0.1:5000/detect", {
-          video_path: videoPath,
-          texts: [event.target.value],
-        });
-        console.log(response);
-        setSearchResults([{ timestamp: response.data.first_detection_time }]);
-      } catch (error) {
-        console.error("Error searching video:", error);
-        setSearchResults([]);
-      }
-    } else {
-      setSearchResults([]);
+      const response = await axios.post("http://127.0.0.1:5000/detect", data);
+      console.log(response.data.first_detection_time);
+      const res = [response.data.first_detection_time];
+      setSearchResults(res);
+    } catch (error) {
+      console.error("Error fetching detection times:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleResultClick = (timestamp) => {
     if (videoRef.current) {
       videoRef.current.currentTime = timestamp;
-      //videoRef.current.play();
+      videoRef.current.pause();
+      // Capture the frame after seeking to the timestamp
+      videoRef.current.addEventListener("seeked", captureFrame, { once: true });
     }
     setHighlightTime(timestamp);
     setSearchResults([]); // Clear search results when a timestamp is clicked
   };
 
-  const handleVideoTimeUpdate = () => {
-    const currentTime = videoRef.current.currentTime;
-    const frameIndex = Math.floor(currentTime / frameInterval);
-    if (canvasRef.current) {
-      const context = canvasRef.current.getContext("2d");
-      frames.forEach((frame, index) => {
-        const img = new Image();
-        img.src = frame;
-        img.onload = () => {
-          const x = index * frameWidth;
-          context.drawImage(img, x, 0, frameWidth, frameHeight);
-          if (index === frameIndex) {
-            context.strokeStyle = "red";
-            context.lineWidth = 2;
-            context.strokeRect(x, 0, frameWidth, frameHeight);
-          }
-        };
-      });
-    }
+  const captureFrame = () => {
+    const video = videoRef.current;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext("2d");
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const frame = canvas.toDataURL("image/jpeg");
+    setSelectedFrame(frame);
+    setModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setSelectedFrame(null); // Reset the frame to ensure the modal doesn't show a blank frame next time
   };
 
   return (
     <Box sx={{ padding: 2 }}>
-      <TextField
-        label="Search within video"
-        variant="outlined"
-        fullWidth
-        value={searchTerm}
-        onChange={handleSearchChange}
-        margin="normal"
-      />
+      <FormControl variant="outlined" fullWidth margin="normal">
+        <InputLabel id="class-select-label">Select Classes</InputLabel>
+        <Select
+          labelId="class-select-label"
+          //multiple
+          value={selectedClasses}
+          onChange={handleClassChange}
+          input={<OutlinedInput id="select-multiple-chip" label="Select Classes" />}
+          renderValue={(selected) => (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+              {selected.map((value) => (
+                <Chip key={value} label={value} />
+              ))}
+            </Box>
+          )}
+        >
+          {predefinedClasses.map((name) => (
+            <MenuItem key={name} value={name}>
+              {name}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
       <video
         ref={videoRef}
         width="100%"
         height="300px"
         controls
-        onTimeUpdate={handleVideoTimeUpdate}
-        autoPlay
         crossOrigin="anonymous"
         style={{ borderRadius: 8 }}
       >
@@ -158,13 +145,13 @@ const VideoPlayer = ({ videoId, videoPath }) => {
       </video>
       {searchResults.length > 0 && (
         <List>
-          {searchResults.map((result, index) => (
+          {searchResults.map((timestamp, index) => (
             <ListItem
               button
               key={index}
-              onClick={() => handleResultClick(result.timestamp)}
+              onClick={() => handleResultClick(timestamp)}
             >
-              <ListItemText primary={`Result at ${result.timestamp} seconds`} />
+              <ListItemText primary={`Result at ${timestamp} seconds`} />
             </ListItem>
           ))}
         </List>
@@ -176,16 +163,36 @@ const VideoPlayer = ({ videoId, videoPath }) => {
         elevation={3}
         sx={{ overflowX: "auto", whiteSpace: "nowrap", padding: 1 }}
       >
-        {loading ? (
-          <CircularProgress />
-        ) : (
-          <canvas
-            ref={canvasRef}
-            width={frames.length * frameWidth}
-            height={frameHeight}
-          />
-        )}
+        {loading && <CircularProgress />}
       </Paper>
+
+      <Modal
+        open={modalOpen}
+        onClose={handleCloseModal}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{
+          timeout: 500,
+        }}
+      >
+        <Fade in={modalOpen}>
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: "80%",
+              bgcolor: "background.paper",
+              boxShadow: 24,
+              p: 4,
+              borderRadius: 2,
+            }}
+          >
+            {selectedFrame && <img src={selectedFrame} alt="Selected Frame" width="100%" />}
+          </Box>
+        </Fade>
+      </Modal>
     </Box>
   );
 };

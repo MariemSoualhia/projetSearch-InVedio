@@ -40,6 +40,7 @@ import axios from "axios";
 import moment from "moment";
 import JSMpeg from "@cycjimmy/jsmpeg-player";
 import { API_API_URL } from "../../config/serverApiConfig";
+import {LinearProgress } from "@mui/material";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -225,20 +226,23 @@ const CameraPage = () => {
   };
 
   const handleAddCamera = async () => {
-    setLoading(true);
     try {
-      await axios.post("http://localhost:3002/api/cameras", formData);
-      fetchCameras();
-      setFormData({
-        name: "",
-        address: "",
-        username: "",
-        password: "",
-        resolution: "",
-      });
-      setLoading(false);
-      setOpenDialog(false);
-      showSnackbar("Camera added successfully!", "success");
+      setLoading(true);
+      const res= await axios.post("http://localhost:3002/api/cameras", formData);
+      if(res){
+        fetchCameras();
+        setFormData({
+          name: "",
+          address: "",
+          username: "",
+          password: "",
+          resolution: "",
+        });
+        //setLoading(false);
+        setOpenDialog(false);
+        showSnackbar("Camera added successfully!", "success");
+      }
+   
     } catch (error) {
       console.error("Error adding camera:", error);
       setLoading(false);
@@ -461,6 +465,12 @@ const CameraPage = () => {
           </FormControl>
         </DialogContent>
         <DialogActions className={classes.dialogActions}>
+        {loading==true && (
+                   <CircularProgress color="secondary" />
+
+                  )}
+          {!loading && (
+            <>
           <Button
             onClick={handleCloseDialog}
             variant="outlined"
@@ -486,6 +496,8 @@ const CameraPage = () => {
           >
             Save
           </Button>
+          </>
+          )}
         </DialogActions>
       </Dialog>
 
@@ -572,6 +584,18 @@ const CameraPage = () => {
           </FormControl>
         </DialogContent>
         <DialogActions className={classes.dialogActions}>
+        {loading==true && (
+                    <LinearProgress
+                      color="secondary"
+                      style={{
+                        backgroundColor: "#F47B20",
+                        color: "#9E58FF",
+                        marginTop: "10px",
+                      }}
+                    />
+                  )}
+          {!loading && (
+            <>
           <Button
             onClick={handleCloseDialog}
             variant="outlined"
@@ -596,6 +620,7 @@ const CameraPage = () => {
           >
             Update
           </Button>
+          </>)}
         </DialogActions>
       </Dialog>
 

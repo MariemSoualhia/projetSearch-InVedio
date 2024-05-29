@@ -29,62 +29,59 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Route pour créer un nouvel utilisateur (POST)
 router.post("/create", async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
-    // Vérifier si l'utilisateur existe déjà
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "This email is already in use" });
     }
 
-    // Hacher le mot de passe
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Créer un nouvel utilisateur avec le mot de passe haché
     const newUser = new User({ username, email, password: hashedPassword });
-
-    // Enregistrer l'utilisateur dans la base de données
     await newUser.save();
-
-    // Réponse avec l'utilisateur créé
-    res.status(201).send(newUser);
+    res.status(201).json(newUser);
   } catch (err) {
-    res.status(400).send(err);
+    console.error("Error during user creation:", err);
+    res.status(500).json({ message: "Error during user creation" });
   }
 });
 
-// Route pour se connecter (POST)
+// Route for signing in (POST)
 router.post("/signin", async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Vérifier si l'utilisateur existe
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Vérifier le mot de passe
+    // For debugging purpose, check the stored hashed password
+    console.log("Stored hashed password:", user.password);
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Incorrect password" });
     }
 
-    // Générer un token JWT
     const token = jwt.sign({ userId: user._id }, "your_secret_key", {
-      expiresIn: "1h", // Durée de validité du token (par exemple, 1 heure)
+      expiresIn: "1h",
     });
     const dataRes = {
       token: token,
-      user: user,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        photoProfil: user.photoProfil,
+      },
     };
-    // Réponse avec le token
+
     res.status(200).json(dataRes);
   } catch (err) {
-    console.error(err);
+    console.error("Error during login:", err);
     res.status(500).json({ message: "Error during login" });
   }
 });

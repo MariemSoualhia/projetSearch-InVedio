@@ -20,7 +20,13 @@ import {
   Checkbox,
   FormGroup,
   Box,
+
 } from "@material-ui/core";
+import {
+
+  Snackbar,
+  Alert,
+} from "@mui/material";
 import { Col, Row } from "antd";
 
 import Select from "@material-ui/core/Select";
@@ -115,7 +121,9 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentStream, setCurrentStream] = useState();
-
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [isTimer, setTimer] = useState("off");
   const [link, setLink] = useState();
   const [videoPath, setVideoPath] = useState("");
@@ -181,8 +189,8 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
       // Récupérer le port sélectionné depuis le localStorage, ou null s'il n'existe pas
       const storedPort = localStorage.getItem(
         "selectedPort" +
-          "selectedPort" +
-          localStorage.getItem("selectedCamera" + selectedCamera.name).name
+        "selectedPort" +
+        localStorage.getItem("selectedCamera" + selectedCamera.name).name
       );
     }
     if (storedPort) {
@@ -279,323 +287,9 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
   };
   const FristStream = async () => {
     //stopStreamedVideo(videoRef.current)
-
-    var connections = {};
-    var reportError;
-
-    function getLocalStream() {
-      var constraints = { audio: false, video: true };
-      if (navigator.mediaDevices.getUserMedia) {
-        return navigator.mediaDevices.getUserMedia(constraints);
-      }
-    }
-    function onIncomingSDP(url, sdp) {
-      console.log("Incoming SDP: (%s)" + JSON.stringify(sdp), url);
-
-      function onLocalDescription(desc) {
-        console.log("Local description (%s)\n" + JSON.stringify(desc), url);
-        connections[url].webrtcPeer
-          .setLocalDescription(desc)
-          .then(function () {
-            connections[url].websocket.send(
-              JSON.stringify({
-                type: "sdp",
-                data: connections[url].webrtcPeer.localDescription,
-              })
-            );
-          })
-          .catch(reportError);
-      }
-
-      connections[url].webrtcPeer.setRemoteDescription(sdp).catch(reportError);
-
-      if (connections[url].type == "inbound") {
-        connections[url].webrtcPeer
-          .createAnswer()
-          .then(onLocalDescription)
-          .catch(reportError);
-      } else if (connections[url].type == "outbound") {
-        getLocalStream().then((stream) => {
-          console.log("Adding local stream");
-          connections[url].webrtcPeer.addStream(stream);
-          connections[url].webrtcPeer
-            .createAnswer()
-            .then((sdp) => {
-              var arr = sdp.sdp.split("\r\n");
-              arr.forEach((str, i) => {
-                if (/^a=fmtp:\d*/.test(str)) {
-                  arr[i] =
-                    str +
-                    ";x-google-max-bitrate=10000;x-google-min-bitrate=0;x-google-start-bitrate=6000";
-                } else if (/^a=mid:(1|video)/.test(str)) {
-                  arr[i] += "\r\nb=AS:10000";
-                }
-              });
-              sdp = new RTCSessionDescription({
-                type: "answer",
-                sdp: arr.join("\r\n"),
-              });
-              onLocalDescription(sdp);
-            })
-            .catch(reportError);
-        });
-      }
-    }
-
-    function onIncomingICE(url, ice) {
-      var candidate = new RTCIceCandidate(ice);
-      console.log("Incoming ICE (%s)\n" + JSON.stringify(ice), url);
-      connections[url].webrtcPeer.addIceCandidate(candidate).catch(reportError);
-    }
-
-    function getConnectionStats(url, reportType) {
-      if (reportType == undefined) reportType = "all";
-
-      connections[url].webrtcPeer.getStats(null).then((stats) => {
-        let statsOutput = "";
-
-        stats.forEach((report) => {
-          // Le reste de votre logique JavaScript...
-        });
-
-        var statsElement =
-          connections[url].type == "inbound" ? "stats-player" : "stats-sender";
-        //document.getElementById(statsElement).innerHTML = statsOutput;
-      });
-    }
-
-    function onAddRemoteStream(event) {
-      var url = event.srcElement.url;
-      console.log("Adding remote stream to HTML video player (%s)", url);
-      if (event.streams[0] && url) {
-        connections[url].videoElement.srcObject = event.streams[0];
-        //connections[url].videoElement.play();
-      }
-    }
-
-    function onIceCandidate(event) {
-      var url = event.srcElement.url;
-
-      if (event.candidate == null) return;
-
-      console.log(
-        "Sending ICE candidate out (%s)\n" + JSON.stringify(event.candidate),
-        url
-      );
-      connections[url].websocket.send(
-        JSON.stringify({ type: "ice", data: event.candidate })
-      );
-    }
-
-    function onServerMessage(event) {
-      var msg;
-      var url = event.srcElement.url;
-
-      try {
-        msg = JSON.parse(event.data);
-      } catch (e) {
-        return;
-      }
-
-      if (!connections[url].webrtcPeer) {
-        connections[url].webrtcPeer = new RTCPeerConnection(
-          connections[url].webrtcConfig
-        );
-        connections[url].webrtcPeer.url = url;
-
-        connections[url].webrtcPeer.onconnectionstatechange = (ev) => {
-          console.log(
-            "WebRTC connection state (%s) " +
-              connections[url].webrtcPeer.connectionState,
-            url
-          );
-          if (connections[url].webrtcPeer.connectionState == "connected")
-            setInterval(
-              getConnectionStats,
-              1000,
-              url,
-              connections[url].type == "inbound"
-                ? "inbound-rtp"
-                : "outbound-rtp"
-            );
-        };
-
-        if (connections[url].type == "inbound")
-          connections[url].webrtcPeer.ontrack = onAddRemoteStream;
-        connections[url].webrtcPeer.onicecandidate = onIceCandidate;
-      }
-
-      switch (msg.type) {
-        case "sdp":
-          onIncomingSDP(url, msg.data);
-          break;
-        case "ice":
-          onIncomingICE(url, msg.data);
-          break;
-        default:
-          break;
-      }
-    }
-
-    function playStream(
-      videoPlayer,
-      hostname,
-      port,
-      path,
-      configuration,
-      reportErrorCB
-    ) {
-      var l = window.location;
-
-      if (path == "null") return;
-      var wsProt = l.protocol == "https:" ? "wss://" : "ws://";
-      var wsHost = hostname != undefined ? hostname : l.hostname;
-      var wsPort = port != undefined ? port : stream.output_port;
-      var wsPath = path != undefined ? path : "/ws";
-      if (wsPort) wsPort = ":" + wsPort;
-      var wsUrl = wsProt + wsHost + wsPort + wsPath;
-      console.log("Video server URL: " + wsUrl);
-      var url = wsUrl;
-
-      connections[url] = {};
-
-      connections[url].type = "inbound";
-      connections[url].videoElement = videoRef.current; // Utilisation de la référence vidéo
-      connections[url].webrtcConfig = configuration;
-      reportError =
-        reportErrorCB != undefined ? reportErrorCB : function (text) {};
-
-      connections[url].websocket = new WebSocket(wsUrl);
-      connections[url].websocket.addEventListener("message", onServerMessage);
-      connections[url].websocket.addEventListener("close", function (event) {
-        console.log(
-          "Connection closed with code:",
-          event.code,
-          "and reason:",
-          event.reason
-        );
-        if (stream.input_stream) {
-          const data = {
-            input_stream: stream.input_stream,
-          };
-          console.log(data);
-
-          axios.put(`http://127.0.0.1:3002/api/stream/stop/${stream._id}`);
-        }
-      });
-
-      connections[url].websocket.addEventListener("error", function (error) {
-        console.error("WebSocket error:", error);
-        if (stream.input_stream) {
-          const data = {
-            input_stream: stream.input_stream,
-          };
-          console.log(data);
-
-          axios.put(`http://127.0.0.1:3002/api/stream/stop/${stream._id}`);
-        }
-      });
-    }
-
-    function sendStream(hostname, port, path, configuration, reportErrorCB) {
-      var l = window.location;
-      if (path == "null") return;
-      if (l.protocol != "https:") {
-        alert("Please use HTTPS to enable the use of your browser webcam");
-        return;
-      }
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        alert("getUserMedia() not available (confirm HTTPS is being used)");
-        return;
-      }
-      var wsProt = l.protocol == "https:" ? "wss://" : "ws://";
-      var wsHost = hostname != undefined ? hostname : l.hostname;
-      var wsPort =
-        port != undefined
-          ? port
-          : localStorage.getItem("selectedPort" + selectedCamera.name);
-      var wsPath = path != undefined ? path : "/ws";
-      if (wsPort) wsPort = ":" + wsPort;
-      var wsUrl = wsProt + wsHost + wsPort + wsPath;
-      console.log("Video server URL: " + wsUrl);
-      var url = wsUrl;
-
-      connections[url] = {};
-
-      connections[url].type = "outbound";
-      connections[url].webrtcConfig = configuration;
-      reportError =
-        reportErrorCB != undefined ? reportErrorCB : function (text) {};
-
-      connections[url].websocket = new WebSocket(wsUrl);
-      connections[url].websocket.addEventListener("message", onServerMessage);
-    }
-
-    playStream(
-      "video-player",
-      null,
-      null,
-      "/output",
-      { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] },
-      function (errmsg) {
-        console.error(errmsg);
-      }
-    );
-    sendStream(
-      null,
-      null,
-      "null",
-      { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] },
-      function (errmsg) {
-        console.error(errmsg);
-      }
-    );
-  };
-  const handleCameraButtonClick = async (cam) => {
-    console.log("camera is", cam);
-    setSelectedCamera(cam);
-    localStorage.setItem("selectedCamera" + cam.name, JSON.stringify(cam));
-    setSelectedCameraList((prevList) => [...prevList, cam]);
-
-    // Enregistrer la liste mise à jour dans le localStorage
-    const updatedList = [...selectedCameraList, cam];
-    localStorage.setItem("selectedCameraList", JSON.stringify(updatedList));
-
-    const data = {
-      input_stream: cam.rtspUrl,
-      startDet: "false",
-      camera_name: cam.name,
-    };
-    const response = await axios.post("http://127.0.0.1:5050/get_output", data);
-    console.log("la resultat est", response.data);
-    console.log(response.data.port);
-    setCurrentStream(response.data.stream);
-
-    //const selectedCamera = JSON.parse(localStorage.getItem('selectedCamera'+selectedCamera.name));
-    localStorage.setItem(
-      "selectedPort" + selectedCamera.name,
-      response.data.port
-    );
-
-    if (response) {
-      const dataStream = {
-        input_stream: cam.rtspUrl,
-        output_port: response.data.port,
-
-        stream_name: cam.name,
-        streamplay: true,
-      };
-      const response2 = await axios.post(
-        "http://127.0.0.1:3002/api/stream/",
-        dataStream
-      );
-      console.log(response2);
-      const updatedStream = { ...initialStream, ...response2.data };
-      setStream(updatedStream);
-      setSelectedPort(response.data.port);
+    try {
       var connections = {};
       var reportError;
-      var port = localStorage.getItem("selectedPort");
 
       function getLocalStream() {
         var constraints = { audio: false, video: true };
@@ -603,7 +297,6 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
           return navigator.mediaDevices.getUserMedia(constraints);
         }
       }
-
       function onIncomingSDP(url, sdp) {
         console.log("Incoming SDP: (%s)" + JSON.stringify(sdp), url);
 
@@ -622,9 +315,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
             .catch(reportError);
         }
 
-        connections[url].webrtcPeer
-          .setRemoteDescription(sdp)
-          .catch(reportError);
+        connections[url].webrtcPeer.setRemoteDescription(sdp).catch(reportError);
 
         if (connections[url].type == "inbound") {
           connections[url].webrtcPeer
@@ -662,9 +353,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
       function onIncomingICE(url, ice) {
         var candidate = new RTCIceCandidate(ice);
         console.log("Incoming ICE (%s)\n" + JSON.stringify(ice), url);
-        connections[url].webrtcPeer
-          .addIceCandidate(candidate)
-          .catch(reportError);
+        connections[url].webrtcPeer.addIceCandidate(candidate).catch(reportError);
       }
 
       function getConnectionStats(url, reportType) {
@@ -678,9 +367,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
           });
 
           var statsElement =
-            connections[url].type == "inbound"
-              ? "stats-player"
-              : "stats-sender";
+            connections[url].type == "inbound" ? "stats-player" : "stats-sender";
           //document.getElementById(statsElement).innerHTML = statsOutput;
         });
       }
@@ -688,8 +375,10 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
       function onAddRemoteStream(event) {
         var url = event.srcElement.url;
         console.log("Adding remote stream to HTML video player (%s)", url);
-        connections[url].videoElement.srcObject = event.streams[0];
-        //connections[url].videoElement.play();
+        if (event.streams[0] && url) {
+          connections[url].videoElement.srcObject = event.streams[0];
+          //connections[url].videoElement.play();
+        }
       }
 
       function onIceCandidate(event) {
@@ -725,7 +414,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
           connections[url].webrtcPeer.onconnectionstatechange = (ev) => {
             console.log(
               "WebRTC connection state (%s) " +
-                connections[url].webrtcPeer.connectionState,
+              connections[url].webrtcPeer.connectionState,
               url
             );
             if (connections[url].webrtcPeer.connectionState == "connected")
@@ -765,15 +454,11 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
         reportErrorCB
       ) {
         var l = window.location;
-        //const selectedCamera = JSON.parse(localStorage.getItem('selectedCamera'+selectedCamera.name));
 
         if (path == "null") return;
         var wsProt = l.protocol == "https:" ? "wss://" : "ws://";
         var wsHost = hostname != undefined ? hostname : l.hostname;
-        var wsPort =
-          port != undefined
-            ? port
-            : localStorage.getItem("selectedPort" + selectedCamera.name);
+        var wsPort = port != undefined ? port : stream.output_port;
         var wsPath = path != undefined ? path : "/ws";
         if (wsPort) wsPort = ":" + wsPort;
         var wsUrl = wsProt + wsHost + wsPort + wsPath;
@@ -786,38 +471,40 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
         connections[url].videoElement = videoRef.current; // Utilisation de la référence vidéo
         connections[url].webrtcConfig = configuration;
         reportError =
-          reportErrorCB != undefined ? reportErrorCB : function (text) {};
-
-        // Mettez à jour les données de connexion dans le state ou où vous en avez besoin
-        setConnectionsNow(connections[url]);
-        const videoData = {
-          src: videoRef.current.src,
-          // Ajoutez d'autres propriétés pertinentes si nécessaire
-        };
-
-        // Créez l'objet connections[url] avec les données extraites
-        const connectionData = {
-          type: "inbound",
-          videoElement: videoRef.current.src,
-          webrtcConfig: configuration,
-          reportError:
-            reportErrorCB != undefined ? reportErrorCB : function (text) {},
-        };
-
-        // Mettez à jour les données de connexion dans le state ou où vous en avez besoin
-        setConnectionsNow(connections[url]);
-
-        // Enregistrez les données de connexion dans le localStorage
-        localStorage.setItem(
-          "connections[" + response.data.port + "]",
-          JSON.stringify(connectionData)
-        );
+          reportErrorCB != undefined ? reportErrorCB : function (text) { };
 
         connections[url].websocket = new WebSocket(wsUrl);
         connections[url].websocket.addEventListener("message", onServerMessage);
-        //connections[url].websocket.close()
+        connections[url].websocket.addEventListener("close", function (event) {
+          console.log(
+            "Connection closed with code:",
+            event.code,
+            "and reason:",
+            event.reason
+          );
+          if (stream.input_stream) {
+            const data = {
+              input_stream: stream.input_stream,
+            };
+            console.log(data);
 
-        //localStorage.setItem('connections', JSON.stringify(connections[url]));
+            axios.put(`http://127.0.0.1:3002/api/stream/stop/${stream._id}`);
+          }
+        });
+
+        connections[url].websocket.addEventListener("error", function (error) {
+          console.error("WebSocket error:", error);
+          if (stream.input_stream) {
+            const data = {
+              input_stream: stream.input_stream,
+            };
+            console.log(data);
+
+            axios.put(`http://127.0.0.1:3002/api/stream/stop/${stream._id}`);
+          }
+        });
+        showSnackbar("Stream start successfully!", "success");
+
       }
 
       function sendStream(hostname, port, path, configuration, reportErrorCB) {
@@ -836,11 +523,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
         var wsPort =
           port != undefined
             ? port
-            : localStorage.getItem(
-                "selectedPort" +
-                  localStorage.getItem("selectedCamera" + selectedCamera.name)
-                    .name
-              );
+            : localStorage.getItem("selectedPort" + selectedCamera.name);
         var wsPath = path != undefined ? path : "/ws";
         if (wsPort) wsPort = ":" + wsPort;
         var wsUrl = wsProt + wsHost + wsPort + wsPath;
@@ -851,9 +534,8 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
 
         connections[url].type = "outbound";
         connections[url].webrtcConfig = configuration;
-
         reportError =
-          reportErrorCB != undefined ? reportErrorCB : function (text) {};
+          reportErrorCB != undefined ? reportErrorCB : function (text) { };
 
         connections[url].websocket = new WebSocket(wsUrl);
         connections[url].websocket.addEventListener("message", onServerMessage);
@@ -878,6 +560,347 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
           console.error(errmsg);
         }
       );
+    } catch {
+      console.log("erreur")
+      showSnackbar("Failed to start stream", "error");
+    }
+  };
+  const handleCameraButtonClick = async (cam) => {
+    console.log("camera is", cam);
+    setSelectedCamera(cam);
+    localStorage.setItem("selectedCamera" + cam.name, JSON.stringify(cam));
+    setSelectedCameraList((prevList) => [...prevList, cam]);
+
+    // Enregistrer la liste mise à jour dans le localStorage
+    const updatedList = [...selectedCameraList, cam];
+    localStorage.setItem("selectedCameraList", JSON.stringify(updatedList));
+
+    const data = {
+      input_stream: cam.rtspUrl,
+      startDet: "false",
+      camera_name: cam.name,
+    };
+    try {
+
+
+      const response = await axios.post("http://127.0.0.1:5050/get_output", data);
+      console.log("la resultat est", response.data);
+      console.log(response.data.port);
+      setCurrentStream(response.data.stream);
+
+      //const selectedCamera = JSON.parse(localStorage.getItem('selectedCamera'+selectedCamera.name));
+      localStorage.setItem(
+        "selectedPort" + selectedCamera.name,
+        response.data.port
+      );
+
+      if (response) {
+        const dataStream = {
+          input_stream: cam.rtspUrl,
+          output_port: response.data.port,
+
+          stream_name: cam.name,
+          streamplay: true,
+        };
+        const response2 = await axios.post(
+          "http://127.0.0.1:3002/api/stream/",
+          dataStream
+        );
+        console.log(response2);
+        const updatedStream = { ...initialStream, ...response2.data };
+        setStream(updatedStream);
+        setSelectedPort(response.data.port);
+        var connections = {};
+        var reportError;
+        var port = localStorage.getItem("selectedPort");
+
+        function getLocalStream() {
+          var constraints = { audio: false, video: true };
+          if (navigator.mediaDevices.getUserMedia) {
+            return navigator.mediaDevices.getUserMedia(constraints);
+          }
+        }
+
+        function onIncomingSDP(url, sdp) {
+          console.log("Incoming SDP: (%s)" + JSON.stringify(sdp), url);
+
+          function onLocalDescription(desc) {
+            console.log("Local description (%s)\n" + JSON.stringify(desc), url);
+            connections[url].webrtcPeer
+              .setLocalDescription(desc)
+              .then(function () {
+                connections[url].websocket.send(
+                  JSON.stringify({
+                    type: "sdp",
+                    data: connections[url].webrtcPeer.localDescription,
+                  })
+                );
+              })
+              .catch(reportError);
+          }
+
+          connections[url].webrtcPeer
+            .setRemoteDescription(sdp)
+            .catch(reportError);
+
+          if (connections[url].type == "inbound") {
+            connections[url].webrtcPeer
+              .createAnswer()
+              .then(onLocalDescription)
+              .catch(reportError);
+          } else if (connections[url].type == "outbound") {
+            getLocalStream().then((stream) => {
+              console.log("Adding local stream");
+              connections[url].webrtcPeer.addStream(stream);
+              connections[url].webrtcPeer
+                .createAnswer()
+                .then((sdp) => {
+                  var arr = sdp.sdp.split("\r\n");
+                  arr.forEach((str, i) => {
+                    if (/^a=fmtp:\d*/.test(str)) {
+                      arr[i] =
+                        str +
+                        ";x-google-max-bitrate=10000;x-google-min-bitrate=0;x-google-start-bitrate=6000";
+                    } else if (/^a=mid:(1|video)/.test(str)) {
+                      arr[i] += "\r\nb=AS:10000";
+                    }
+                  });
+                  sdp = new RTCSessionDescription({
+                    type: "answer",
+                    sdp: arr.join("\r\n"),
+                  });
+                  onLocalDescription(sdp);
+                })
+                .catch(reportError);
+            });
+          }
+        }
+
+        function onIncomingICE(url, ice) {
+          var candidate = new RTCIceCandidate(ice);
+          console.log("Incoming ICE (%s)\n" + JSON.stringify(ice), url);
+          connections[url].webrtcPeer
+            .addIceCandidate(candidate)
+            .catch(reportError);
+        }
+
+        function getConnectionStats(url, reportType) {
+          if (reportType == undefined) reportType = "all";
+
+          connections[url].webrtcPeer.getStats(null).then((stats) => {
+            let statsOutput = "";
+
+            stats.forEach((report) => {
+              // Le reste de votre logique JavaScript...
+            });
+
+            var statsElement =
+              connections[url].type == "inbound"
+                ? "stats-player"
+                : "stats-sender";
+            //document.getElementById(statsElement).innerHTML = statsOutput;
+          });
+        }
+
+        function onAddRemoteStream(event) {
+          var url = event.srcElement.url;
+          console.log("Adding remote stream to HTML video player (%s)", url);
+          connections[url].videoElement.srcObject = event.streams[0];
+          //connections[url].videoElement.play();
+        }
+
+        function onIceCandidate(event) {
+          var url = event.srcElement.url;
+
+          if (event.candidate == null) return;
+
+          console.log(
+            "Sending ICE candidate out (%s)\n" + JSON.stringify(event.candidate),
+            url
+          );
+          connections[url].websocket.send(
+            JSON.stringify({ type: "ice", data: event.candidate })
+          );
+        }
+
+        function onServerMessage(event) {
+          var msg;
+          var url = event.srcElement.url;
+
+          try {
+            msg = JSON.parse(event.data);
+          } catch (e) {
+            return;
+          }
+
+          if (!connections[url].webrtcPeer) {
+            connections[url].webrtcPeer = new RTCPeerConnection(
+              connections[url].webrtcConfig
+            );
+            connections[url].webrtcPeer.url = url;
+
+            connections[url].webrtcPeer.onconnectionstatechange = (ev) => {
+              console.log(
+                "WebRTC connection state (%s) " +
+                connections[url].webrtcPeer.connectionState,
+                url
+              );
+              if (connections[url].webrtcPeer.connectionState == "connected")
+                setInterval(
+                  getConnectionStats,
+                  1000,
+                  url,
+                  connections[url].type == "inbound"
+                    ? "inbound-rtp"
+                    : "outbound-rtp"
+                );
+            };
+
+            if (connections[url].type == "inbound")
+              connections[url].webrtcPeer.ontrack = onAddRemoteStream;
+            connections[url].webrtcPeer.onicecandidate = onIceCandidate;
+          }
+
+          switch (msg.type) {
+            case "sdp":
+              onIncomingSDP(url, msg.data);
+              break;
+            case "ice":
+              onIncomingICE(url, msg.data);
+              break;
+            default:
+              break;
+          }
+        }
+
+        function playStream(
+          videoPlayer,
+          hostname,
+          port,
+          path,
+          configuration,
+          reportErrorCB
+        ) {
+          var l = window.location;
+          //const selectedCamera = JSON.parse(localStorage.getItem('selectedCamera'+selectedCamera.name));
+
+          if (path == "null") return;
+          var wsProt = l.protocol == "https:" ? "wss://" : "ws://";
+          var wsHost = hostname != undefined ? hostname : l.hostname;
+          var wsPort =
+            port != undefined
+              ? port
+              : localStorage.getItem("selectedPort" + selectedCamera.name);
+          var wsPath = path != undefined ? path : "/ws";
+          if (wsPort) wsPort = ":" + wsPort;
+          var wsUrl = wsProt + wsHost + wsPort + wsPath;
+          console.log("Video server URL: " + wsUrl);
+          var url = wsUrl;
+
+          connections[url] = {};
+
+          connections[url].type = "inbound";
+          connections[url].videoElement = videoRef.current; // Utilisation de la référence vidéo
+          connections[url].webrtcConfig = configuration;
+          reportError =
+            reportErrorCB != undefined ? reportErrorCB : function (text) { };
+
+          // Mettez à jour les données de connexion dans le state ou où vous en avez besoin
+          setConnectionsNow(connections[url]);
+          const videoData = {
+            src: videoRef.current.src,
+            // Ajoutez d'autres propriétés pertinentes si nécessaire
+          };
+
+          // Créez l'objet connections[url] avec les données extraites
+          const connectionData = {
+            type: "inbound",
+            videoElement: videoRef.current.src,
+            webrtcConfig: configuration,
+            reportError:
+              reportErrorCB != undefined ? reportErrorCB : function (text) { },
+          };
+
+          // Mettez à jour les données de connexion dans le state ou où vous en avez besoin
+          setConnectionsNow(connections[url]);
+
+          // Enregistrez les données de connexion dans le localStorage
+          localStorage.setItem(
+            "connections[" + response.data.port + "]",
+            JSON.stringify(connectionData)
+          );
+
+          connections[url].websocket = new WebSocket(wsUrl);
+          connections[url].websocket.addEventListener("message", onServerMessage);
+          //connections[url].websocket.close()
+
+          //localStorage.setItem('connections', JSON.stringify(connections[url]));
+          showSnackbar("Stream start successfully!", "success");
+        }
+
+        function sendStream(hostname, port, path, configuration, reportErrorCB) {
+          var l = window.location;
+          if (path == "null") return;
+          if (l.protocol != "https:") {
+            alert("Please use HTTPS to enable the use of your browser webcam");
+            return;
+          }
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert("getUserMedia() not available (confirm HTTPS is being used)");
+            return;
+          }
+          var wsProt = l.protocol == "https:" ? "wss://" : "ws://";
+          var wsHost = hostname != undefined ? hostname : l.hostname;
+          var wsPort =
+            port != undefined
+              ? port
+              : localStorage.getItem(
+                "selectedPort" +
+                localStorage.getItem("selectedCamera" + selectedCamera.name)
+                  .name
+              );
+          var wsPath = path != undefined ? path : "/ws";
+          if (wsPort) wsPort = ":" + wsPort;
+          var wsUrl = wsProt + wsHost + wsPort + wsPath;
+          console.log("Video server URL: " + wsUrl);
+          var url = wsUrl;
+
+          connections[url] = {};
+
+          connections[url].type = "outbound";
+          connections[url].webrtcConfig = configuration;
+
+          reportError =
+            reportErrorCB != undefined ? reportErrorCB : function (text) { };
+
+          connections[url].websocket = new WebSocket(wsUrl);
+          connections[url].websocket.addEventListener("message", onServerMessage);
+          showSnackbar("Stream start successfully!", "success");
+        }
+
+        playStream(
+          "video-player",
+          null,
+          null,
+          "/output",
+          { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] },
+          function (errmsg) {
+            console.error(errmsg);
+          }
+        );
+        sendStream(
+          null,
+          null,
+          "null",
+          { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] },
+          function (errmsg) {
+            console.error(errmsg);
+          }
+        );
+      }
+    } catch {
+      console.log("erreur")
+      showSnackbar("Failed to start stream", "error");
     }
   };
   const startDrawing = (event) => {
@@ -947,7 +970,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
     }
     setIsDrawing(false);
   };
-  const drawLine = (x) => {};
+  const drawLine = (x) => { };
 
   // Fonction pour fermer la connexion
   const closeConnection = () => {
@@ -1082,299 +1105,305 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
     const data = {
       input_stream: stream.rtspUrl,
     };
-    // Envoyer les coordonnées du rectangle au backend (exemple avec Axios)
-    axios.post("http://127.0.0.1:5050/stop_stream", data);
-    //connectionNow.websocket.close()
-    axios
-      .post("http://127.0.0.1:5050/start_counting", rectangleData)
+    try {
+      // nvoyer les coordonnées du rectangle au backend (exemple avec Axios)
+      axios.post("http://127.0.0.1:5050/stop_stream", data);
+      //connectionNow.websocket.close()
+      axios
+        .post("http://127.0.0.1:5050/start_counting", rectangleData)
 
-      .then((response) => {
-        console.log("Coordonnées du rectangle envoyées avec succès !");
-        console.log(response.data.port);
-        const dataToSend = {
-          port: response.data.port,
-        };
-        axios
-          .put(
-            `http://127.0.0.1:3002/api/stream/updatePort/${stream._id}`,
-            dataToSend
-          )
-          .then((resp) => {
-            console.log("Coordonnées du rectangle envoyées avec succès !");
+        .then((response) => {
+          console.log("Coordonnées du rectangle envoyées avec succès !");
+          console.log(response.data.port);
+          const dataToSend = {
+            port: response.data.port,
+          };
+          axios
+            .put(
+              `http://127.0.0.1:3002/api/stream/updatePort/${stream._id}`,
+              dataToSend
+            )
+            .then((resp) => {
+              console.log("Coordonnées du rectangle envoyées avec succès !");
 
-            const updatedStream = { ...initialStream, ...resp.data };
-            setStream(updatedStream);
-          });
+              const updatedStream = { ...initialStream, ...resp.data };
+              setStream(updatedStream);
+            });
 
-        setSelectedPort(response.data.port);
+          setSelectedPort(response.data.port);
 
-        clearCanvas();
-        console.log(connectionNow.websocket);
+          clearCanvas();
+          console.log(connectionNow.websocket);
 
-        var connections = {};
-        var reportError;
-        var port = response.data.port;
+          var connections = {};
+          var reportError;
+          var port = response.data.port;
 
-        function getLocalStream() {
-          var constraints = { audio: false, video: true };
-          if (navigator.mediaDevices.getUserMedia) {
-            return navigator.mediaDevices.getUserMedia(constraints);
-          }
-        }
-
-        function onIncomingSDP(url, sdp) {
-          console.log("Incoming SDP: (%s)" + JSON.stringify(sdp), url);
-          function onLocalDescription(desc) {
-            console.log("Local description (%s)\n" + JSON.stringify(desc), url);
-            connections[url].webrtcPeer
-              .setLocalDescription(desc)
-              .then(function () {
-                connections[url].websocket.send(
-                  JSON.stringify({
-                    type: "sdp",
-                    data: connections[url].webrtcPeer.localDescription,
-                  })
-                );
-              })
-              .catch(reportError);
+          function getLocalStream() {
+            var constraints = { audio: false, video: true };
+            if (navigator.mediaDevices.getUserMedia) {
+              return navigator.mediaDevices.getUserMedia(constraints);
+            }
           }
 
-          connections[url].webrtcPeer
-            .setRemoteDescription(sdp)
-            .catch(reportError);
-
-          if (connections[url].type == "inbound") {
-            connections[url].webrtcPeer
-              .createAnswer()
-              .then(onLocalDescription)
-              .catch(reportError);
-          } else if (connections[url].type == "outbound") {
-            getLocalStream().then((stream) => {
-              console.log("Adding local stream");
-              connections[url].webrtcPeer.addStream(stream);
+          function onIncomingSDP(url, sdp) {
+            console.log("Incoming SDP: (%s)" + JSON.stringify(sdp), url);
+            function onLocalDescription(desc) {
+              console.log("Local description (%s)\n" + JSON.stringify(desc), url);
               connections[url].webrtcPeer
-                .createAnswer()
-                .then((sdp) => {
-                  var arr = sdp.sdp.split("\r\n");
-                  arr.forEach((str, i) => {
-                    if (/^a=fmtp:\d*/.test(str)) {
-                      arr[i] =
-                        str +
-                        ";x-google-max-bitrate=10000;x-google-min-bitrate=0;x-google-start-bitrate=6000";
-                    } else if (/^a=mid:(1|video)/.test(str)) {
-                      arr[i] += "\r\nb=AS:10000";
-                    }
-                  });
-                  sdp = new RTCSessionDescription({
-                    type: "answer",
-                    sdp: arr.join("\r\n"),
-                  });
-                  onLocalDescription(sdp);
+                .setLocalDescription(desc)
+                .then(function () {
+                  connections[url].websocket.send(
+                    JSON.stringify({
+                      type: "sdp",
+                      data: connections[url].webrtcPeer.localDescription,
+                    })
+                  );
                 })
                 .catch(reportError);
+            }
+
+            connections[url].webrtcPeer
+              .setRemoteDescription(sdp)
+              .catch(reportError);
+
+            if (connections[url].type == "inbound") {
+              connections[url].webrtcPeer
+                .createAnswer()
+                .then(onLocalDescription)
+                .catch(reportError);
+            } else if (connections[url].type == "outbound") {
+              getLocalStream().then((stream) => {
+                console.log("Adding local stream");
+                connections[url].webrtcPeer.addStream(stream);
+                connections[url].webrtcPeer
+                  .createAnswer()
+                  .then((sdp) => {
+                    var arr = sdp.sdp.split("\r\n");
+                    arr.forEach((str, i) => {
+                      if (/^a=fmtp:\d*/.test(str)) {
+                        arr[i] =
+                          str +
+                          ";x-google-max-bitrate=10000;x-google-min-bitrate=0;x-google-start-bitrate=6000";
+                      } else if (/^a=mid:(1|video)/.test(str)) {
+                        arr[i] += "\r\nb=AS:10000";
+                      }
+                    });
+                    sdp = new RTCSessionDescription({
+                      type: "answer",
+                      sdp: arr.join("\r\n"),
+                    });
+                    onLocalDescription(sdp);
+                  })
+                  .catch(reportError);
+              });
+            }
+          }
+
+          function onIncomingICE(url, ice) {
+            var candidate = new RTCIceCandidate(ice);
+            console.log("Incoming ICE (%s)\n" + JSON.stringify(ice), url);
+            connections[url].webrtcPeer
+              .addIceCandidate(candidate)
+              .catch(reportError);
+          }
+
+          function getConnectionStats(url, reportType) {
+            if (reportType === undefined) reportType = "all";
+
+            connections[url].webrtcPeer.getStats(null).then((stats) => {
+              let statsOutput = "";
+
+              stats.forEach((report) => {
+                // Vérifier le type de rapport
+                if (reportType === "all" || report.type === reportType) {
+                  // Ajouter les informations du rapport à la sortie
+                  statsOutput += `<p>${report.type} - ${report.stat}</p>`;
+                  // Vous pouvez accéder à d'autres propriétés du rapport ici selon vos besoins
+                }
+              });
             });
           }
-        }
 
-        function onIncomingICE(url, ice) {
-          var candidate = new RTCIceCandidate(ice);
-          console.log("Incoming ICE (%s)\n" + JSON.stringify(ice), url);
-          connections[url].webrtcPeer
-            .addIceCandidate(candidate)
-            .catch(reportError);
-        }
+          function onAddRemoteStream(event) {
+            var url = event.srcElement.url;
+            console.log("Adding remote stream to HTML video player (%s)", url);
+            connections[url].videoElement.srcObject = event.streams[0];
+            connections[url].videoElement.play();
+          }
 
-        function getConnectionStats(url, reportType) {
-          if (reportType === undefined) reportType = "all";
+          function onIceCandidate(event) {
+            var url = event.srcElement.url;
 
-          connections[url].webrtcPeer.getStats(null).then((stats) => {
-            let statsOutput = "";
+            if (event.candidate == null) return;
 
-            stats.forEach((report) => {
-              // Vérifier le type de rapport
-              if (reportType === "all" || report.type === reportType) {
-                // Ajouter les informations du rapport à la sortie
-                statsOutput += `<p>${report.type} - ${report.stat}</p>`;
-                // Vous pouvez accéder à d'autres propriétés du rapport ici selon vos besoins
-              }
-            });
-          });
-        }
-
-        function onAddRemoteStream(event) {
-          var url = event.srcElement.url;
-          console.log("Adding remote stream to HTML video player (%s)", url);
-          connections[url].videoElement.srcObject = event.streams[0];
-          connections[url].videoElement.play();
-        }
-
-        function onIceCandidate(event) {
-          var url = event.srcElement.url;
-
-          if (event.candidate == null) return;
-
-          console.log(
-            "Sending ICE candidate out (%s)\n" +
+            console.log(
+              "Sending ICE candidate out (%s)\n" +
               JSON.stringify(event.candidate),
-            url
-          );
-          connections[url].websocket.send(
-            JSON.stringify({ type: "ice", data: event.candidate })
-          );
-        }
-
-        function onServerMessage(event) {
-          var msg;
-          var url = event.srcElement.url;
-
-          try {
-            msg = JSON.parse(event.data);
-          } catch (e) {
-            return;
-          }
-
-          if (!connections[url].webrtcPeer) {
-            connections[url].webrtcPeer = new RTCPeerConnection(
-              connections[url].webrtcConfig
+              url
             );
-            connections[url].webrtcPeer.url = url;
+            connections[url].websocket.send(
+              JSON.stringify({ type: "ice", data: event.candidate })
+            );
+          }
 
-            connections[url].webrtcPeer.onconnectionstatechange = (ev) => {
-              console.log(
-                "WebRTC connection state (%s) " +
-                  connections[url].webrtcPeer.connectionState,
-                url
+          function onServerMessage(event) {
+            var msg;
+            var url = event.srcElement.url;
+
+            try {
+              msg = JSON.parse(event.data);
+            } catch (e) {
+              return;
+            }
+
+            if (!connections[url].webrtcPeer) {
+              connections[url].webrtcPeer = new RTCPeerConnection(
+                connections[url].webrtcConfig
               );
-              if (connections[url].webrtcPeer.connectionState == "connected")
-                setInterval(
-                  getConnectionStats,
-                  1000,
-                  url,
-                  connections[url].type == "inbound"
-                    ? "inbound-rtp"
-                    : "outbound-rtp"
+              connections[url].webrtcPeer.url = url;
+
+              connections[url].webrtcPeer.onconnectionstatechange = (ev) => {
+                console.log(
+                  "WebRTC connection state (%s) " +
+                  connections[url].webrtcPeer.connectionState,
+                  url
                 );
-            };
+                if (connections[url].webrtcPeer.connectionState == "connected")
+                  setInterval(
+                    getConnectionStats,
+                    1000,
+                    url,
+                    connections[url].type == "inbound"
+                      ? "inbound-rtp"
+                      : "outbound-rtp"
+                  );
+              };
 
-            if (connections[url].type == "inbound")
-              connections[url].webrtcPeer.ontrack = onAddRemoteStream;
-            connections[url].webrtcPeer.onicecandidate = onIceCandidate;
+              if (connections[url].type == "inbound")
+                connections[url].webrtcPeer.ontrack = onAddRemoteStream;
+              connections[url].webrtcPeer.onicecandidate = onIceCandidate;
+            }
+
+            switch (msg.type) {
+              case "sdp":
+                onIncomingSDP(url, msg.data);
+                break;
+              case "ice":
+                onIncomingICE(url, msg.data);
+                break;
+              default:
+                break;
+            }
           }
 
-          switch (msg.type) {
-            case "sdp":
-              onIncomingSDP(url, msg.data);
-              break;
-            case "ice":
-              onIncomingICE(url, msg.data);
-              break;
-            default:
-              break;
+          function playStream(
+            videoPlayer,
+            hostname,
+            port,
+            path,
+            configuration,
+            reportErrorCB
+          ) {
+            var l = window.location;
+            if (path == "null") return;
+            var wsProt = l.protocol == "https:" ? "wss://" : "ws://";
+            var wsHost = hostname != undefined ? hostname : l.hostname;
+            var wsPort = port != undefined ? port : response.data.port;
+            var wsPath = path != undefined ? path : "/ws";
+            if (wsPort) wsPort = ":" + wsPort;
+            var wsUrl = wsProt + wsHost + wsPort + wsPath;
+            console.log("Video server URL: " + wsUrl);
+            var url = wsUrl;
+
+            connections[url] = {};
+
+            connections[url].type = "inbound";
+            connections[url].videoElement = videoRef.current; // Utilisation de la référence vidéo
+            connections[url].webrtcConfig = configuration;
+            reportError =
+              reportErrorCB != undefined ? reportErrorCB : function (text) { };
+
+            setConnectionsNow(connections[url]);
+
+            connections[url].websocket = new WebSocket(wsUrl);
+            connections[url].websocket.addEventListener(
+              "message",
+              onServerMessage
+            );
+            showSnackbar("Stream start successfully!", "success");
           }
-        }
 
-        function playStream(
-          videoPlayer,
-          hostname,
-          port,
-          path,
-          configuration,
-          reportErrorCB
-        ) {
-          var l = window.location;
-          if (path == "null") return;
-          var wsProt = l.protocol == "https:" ? "wss://" : "ws://";
-          var wsHost = hostname != undefined ? hostname : l.hostname;
-          var wsPort = port != undefined ? port : response.data.port;
-          var wsPath = path != undefined ? path : "/ws";
-          if (wsPort) wsPort = ":" + wsPort;
-          var wsUrl = wsProt + wsHost + wsPort + wsPath;
-          console.log("Video server URL: " + wsUrl);
-          var url = wsUrl;
+          function sendStream(
+            hostname,
+            port,
+            path,
+            configuration,
+            reportErrorCB
+          ) {
+            var l = window.location;
+            if (path == "null") return;
+            if (l.protocol != "https:") {
+              alert("Please use HTTPS to enable the use of your browser webcam");
+              return;
+            }
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+              alert("getUserMedia() not available (confirm HTTPS is being used)");
+              return;
+            }
+            var wsProt = l.protocol == "https:" ? "wss://" : "ws://";
+            var wsHost = hostname != undefined ? hostname : l.hostname;
+            var wsPort = port != undefined ? port : stream.output_port;
+            var wsPath = path != undefined ? path : "/ws";
+            if (wsPort) wsPort = ":" + wsPort;
+            var wsUrl = wsProt + wsHost + wsPort + wsPath;
+            console.log("Video server URL: " + wsUrl);
+            var url = wsUrl;
 
-          connections[url] = {};
+            connections[url] = {};
 
-          connections[url].type = "inbound";
-          connections[url].videoElement = videoRef.current; // Utilisation de la référence vidéo
-          connections[url].webrtcConfig = configuration;
-          reportError =
-            reportErrorCB != undefined ? reportErrorCB : function (text) {};
+            connections[url].type = "outbound";
+            connections[url].webrtcConfig = configuration;
+            reportError =
+              reportErrorCB != undefined ? reportErrorCB : function (text) { };
 
-          setConnectionsNow(connections[url]);
+            connections[url].websocket = new WebSocket(wsUrl);
+            connections[url].websocket.addEventListener(
+              "message",
+              onServerMessage
+            );
+          }
 
-          connections[url].websocket = new WebSocket(wsUrl);
-          connections[url].websocket.addEventListener(
-            "message",
-            onServerMessage
+          playStream(
+            "video-player",
+            null,
+            null,
+            "/output",
+            { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] },
+            function (errmsg) {
+              console.error(errmsg);
+            }
           );
-        }
-
-        function sendStream(
-          hostname,
-          port,
-          path,
-          configuration,
-          reportErrorCB
-        ) {
-          var l = window.location;
-          if (path == "null") return;
-          if (l.protocol != "https:") {
-            alert("Please use HTTPS to enable the use of your browser webcam");
-            return;
-          }
-          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            alert("getUserMedia() not available (confirm HTTPS is being used)");
-            return;
-          }
-          var wsProt = l.protocol == "https:" ? "wss://" : "ws://";
-          var wsHost = hostname != undefined ? hostname : l.hostname;
-          var wsPort = port != undefined ? port : stream.output_port;
-          var wsPath = path != undefined ? path : "/ws";
-          if (wsPort) wsPort = ":" + wsPort;
-          var wsUrl = wsProt + wsHost + wsPort + wsPath;
-          console.log("Video server URL: " + wsUrl);
-          var url = wsUrl;
-
-          connections[url] = {};
-
-          connections[url].type = "outbound";
-          connections[url].webrtcConfig = configuration;
-          reportError =
-            reportErrorCB != undefined ? reportErrorCB : function (text) {};
-
-          connections[url].websocket = new WebSocket(wsUrl);
-          connections[url].websocket.addEventListener(
-            "message",
-            onServerMessage
+          sendStream(
+            null,
+            null,
+            "null",
+            { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] },
+            function (errmsg) {
+              console.error(errmsg);
+            }
           );
-        }
-
-        playStream(
-          "video-player",
-          null,
-          null,
-          "/output",
-          { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] },
-          function (errmsg) {
-            console.error(errmsg);
-          }
-        );
-        sendStream(
-          null,
-          null,
-          "null",
-          { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] },
-          function (errmsg) {
-            console.error(errmsg);
-          }
-        );
-      })
-      .catch((error) => {
-        console.error(
-          "Erreur lors de l'envoi des coordonnées du rectangle :",
-          error
-        );
-      });
+        })
+        .catch((error) => {
+          console.error(
+            "Erreur lors de l'envoi des coordonnées du rectangle :",
+            error
+          );
+        });
+    } catch {
+      console.log("erreur")
+      showSnackbar("Failed to start stream", "error");
+    }
   };
 
   const clearCanvas = () => {
@@ -1454,6 +1483,16 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
     setLink(event);
   };
 
+  const showSnackbar = (message, severity) => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
+
   return (
     <>
       <div className={classes.streamContainer}>
@@ -1493,6 +1532,15 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
 
       {(stream.output_port || videoPath) && (
         <>
+          <Snackbar
+            open={snackbarOpen}
+            autoHideDuration={3000}
+            onClose={handleSnackbarClose}
+          >
+            <Alert onClose={handleSnackbarClose} severity={snackbarSeverity}>
+              {snackbarMessage}
+            </Alert>
+          </Snackbar>
           <Box sx={{ width: "100%", textAlign: "center" }}>
             <Typography variant="h6" gutterBottom>
               {stream.stream_name} : {stream.input_stream}
@@ -1664,10 +1712,11 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
               </Button>
             </Col>
             <input type="file" onChange={handleFileChange} />
-      <button onClick={handleUpload}>Upload Video</button>
+            <button onClick={handleUpload}>Upload Video</button>
           </Row>
         </>
       )}
+
     </>
   );
 };

@@ -196,7 +196,7 @@ const LoginPage = () => {
                   src="https://data-doit.com/wp-content/uploads/2022/11/datadoit1-150x150.png"
                   alt="Logo"
                 />
-                <Typography component="h1" variant="h5">
+                <Typography component="h1" variant="h5" sx={{ fontFamily: "time", mt: 2, fontSize:"36px" }}>
                   Sign in
                 </Typography>
                 <Box
@@ -220,7 +220,7 @@ const LoginPage = () => {
                       style: { color: darkMode ? "#fff" : "#000" },
                     }}
                     InputLabelProps={{
-                      style: { color: darkMode ? "#fff" : "#000" },
+                      style: { color: darkMode ? "#fff" : "#000" ,fontFamily:"time"},
                     }}
                   />
                   <TextField
@@ -238,7 +238,7 @@ const LoginPage = () => {
                       style: { color: darkMode ? "#fff" : "#000" },
                     }}
                     InputLabelProps={{
-                      style: { color: darkMode ? "#fff" : "#000" },
+                      style: { color: darkMode ? "#fff" : "#000" , fontFamily:"time"},
                     }}
                   />
                   {/* <FormControlLabel
@@ -257,6 +257,8 @@ const LoginPage = () => {
                         ":hover": {
                           backgroundColor: "#8e4ce0",
                         },
+                        fontFamily:"time",
+                        fontSize:"20px",
                       }}
                       disabled={loading}
                     >
@@ -281,7 +283,7 @@ const LoginPage = () => {
                       <Link
                         href="#"
                         variant="body2"
-                        sx={{ color: "#9e58ff" }}
+                        sx={{ color: "#9e58ff" ,fontFamily:"time", fontSize:"18px"}}
                         onClick={handleOpenDialog}
                       >
                         <LockOutlinedIcon sx={{ mr: 1 }} />

@@ -103,6 +103,7 @@ const useStyles = makeStyles((theme) => ({
     fontSize: "24px",
     fontWeight: "bold",
     marginBottom: theme.spacing(3),
+    textAlign: "center", // Center the title
   },
   modalBox: {
     position: "absolute",
@@ -428,8 +429,8 @@ const VideoList = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
 
-      <Typography variant="h4" gutterBottom className={classes.pageTitle}>
-        Video List
+      <Typography variant="h4" gutterBottom className={classes.pageTitle}    style={{ fontFamily: "time", fontSize: "36px" ,color: "#9E58FF" }}>
+        Records List
       </Typography>
 
       <TextField
@@ -447,11 +448,11 @@ const VideoList = () => {
         {videos.slice(startIndex, endIndex).map((video) => (
           <Grid item key={video._id} xs={12} sm={6} md={6}>
             <Paper elevation={3} className={classes.videoCard}>
-              <Typography variant="h6" className={classes.videoTitle}>
+              <Typography variant="h6" className={classes.videoTitle} style={{ fontFamily: "time", fontSize: "36px" ,color: "#9E58FF" }}>
                 {video.name}
               </Typography>
               <Typography variant="body2" className={classes.cameraInfo}>
-                <strong>Camera:</strong> {video.cameraName}
+                <strong style={{ fontFamily: "time",color: "#9E58FF" }}>  Camera:</strong> {video.cameraName}
               </Typography>
               <VideoPlayer
                 videoId={video._id}

@@ -283,7 +283,7 @@ const ZoneManager = () => {
         {/* <Button onClick={toggleDarkMode}>
           Toggle to {darkMode ? "Light" : "Dark"} Mode
         </Button> */}
-        <Typography variant="h3" gutterBottom className={classes.pageTitle}>
+        <Typography variant="h3" gutterBottom className={classes.pageTitle} style={{ fontFamily: "time", fontSize: "36px" }}>
           Zone Management
         </Typography>
 
@@ -337,6 +337,7 @@ const ZoneManager = () => {
                 variant="contained"
                 color="primary"
                 className={classes.button}
+                style={{ fontFamily: "time", fontSize: "16px" }}
               >
                 Add Zone
               </Button>
