@@ -25,12 +25,12 @@ const useStyles = makeStyles((theme) => ({
     maxWidth: 600,
   },
   title: {
-    marginBottom: theme.spacing(2),
-    fontWeight: "bold",
-    fontSize: "1.5rem",
-    color: theme.palette.primary.main,
-    borderBottom: `2px solid ${theme.palette.primary.main}`,
-    paddingBottom: theme.spacing(1),
+    marginBottom: theme.spacing(5),
+    //fontWeight: "bold",
+
+    //color: "#9E58FF",
+    //borderBottom: `2px solid ${theme.palette.primary.main}`,
+    paddingBottom: theme.spacing(4),
   },
   textField: {
     marginBottom: theme.spacing(2),
@@ -79,9 +79,15 @@ const NetworkConfig = ({ onConfig }) => {
     >
       <CssBaseline />
       <Paper className={classes.root} elevation={3}>
-        <Typography variant="h4" className={classes.title}>
+        <Typography
+          variant="h4"
+          className={classes.title}
+          style={{ fontFamily: "time", fontSize: "36px" }}
+        >
           Network Configuration
         </Typography>
+        <br></br>
+        <br></br>
         <TextField
           fullWidth
           label="Interface Name"
@@ -100,12 +106,12 @@ const NetworkConfig = ({ onConfig }) => {
           >
             <FormControlLabel
               value="dhcp"
-              control={<Radio color="primary" />}
+              control={<Radio style={{ color: "#F47B20" }} />}
               label="Automatic DHCP"
             />
             <FormControlLabel
               value="manual"
-              control={<Radio color="primary" />}
+              control={<Radio style={{ color: "#F47B20" }} />}
               label="Manual Configuration"
             />
           </RadioGroup>
@@ -141,7 +147,11 @@ const NetworkConfig = ({ onConfig }) => {
         <Button
           variant="contained"
           onClick={handleConfig}
-          color="primary"
+          style={{
+            fontFamily: "time",
+            fontSize: "20px",
+            backgroundColor: "#9E58FF",
+          }}
           className={classes.button}
         >
           Configure

@@ -26,7 +26,8 @@ body.dark {
 
 .menu-horizontal .ant-menu-item a {
   color: var(--text-color); /* Use CSS variable for text color */
-  font-family: 'Arial', sans-serif; /* Font family */
+  font-family: 'time'; /* Font family */
+  font-size: 18px;
 }
 
 .menu-horizontal .ant-menu-item a:hover {
@@ -58,6 +59,8 @@ body.dark {
 .menu-horizontal .logout-item {
   margin-left: auto; /* Move logout item to the right */
   color: var(--text-color); /* Use CSS variable for logout item text color */
+  font-family: 'time'; /* Font family */
+  font-size: 18px; /* Font size for logo text */
 }
 
 .menu-horizontal .logout-item:hover {
@@ -80,4 +83,9 @@ body.dark {
   color: var(--text-color); /* Use CSS variable for logo text color */
   font-size: 18px; /* Font size for logo text */
   font-weight: bold; /* Bold font weight for logo text */
+}
+
+.user-item{
+  font-family: 'time'; /* Font family */
+  font-size: 18px; /* Font size for logo text */
 }

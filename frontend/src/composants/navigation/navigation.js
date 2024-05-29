@@ -83,11 +83,17 @@ const Navigation = () => {
   };
 
   const menu = (
-    <Menu>
+    <Menu className="logout-item">
       <Menu.Item key="profile">
-        <Link to="/profile">Profil</Link>
+        <Link to="/profile" style={{ fontFamily: "time", fontSize: "18px" }}>
+          Profil
+        </Link>
       </Menu.Item>
-      <Menu.Item key="logout" onClick={handleLogout}>
+      <Menu.Item
+        key="logout"
+        style={{ fontFamily: "time", fontSize: "18px" }}
+        onClick={handleLogout}
+      >
         Logout
       </Menu.Item>
     </Menu>
@@ -112,7 +118,7 @@ const Navigation = () => {
       ))}
 
       <Dropdown overlay={menu} placement="bottomRight" className="logout-item">
-        <Menu.Item key="user" className="user-item">
+        <Menu.Item key="user" className="logout-item">
           <Avatar
             src={`http://localhost:3002${user.photoProfil}`}
             alt="User Profile Picture"

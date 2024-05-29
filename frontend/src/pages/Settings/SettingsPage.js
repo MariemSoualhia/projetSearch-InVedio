@@ -251,14 +251,23 @@ const SettingsPage = () => {
     <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
       <CssBaseline />
       <Container className={classes.root}>
-        <Typography variant="h3" gutterBottom>
+        <Typography
+          variant="h3"
+          gutterBottom
+          style={{ fontFamily: "time", fontSize: "56px", color: "#9E58FF" }}
+        >
           Settings
         </Typography>
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6}>
             <Card>
               <CardContent>
-                <Typography variant="h5" component="h2" gutterBottom>
+                <Typography
+                  variant="h5"
+                  component="h2"
+                  style={{ fontFamily: "time", fontSize: "36px" }}
+                  gutterBottom
+                >
                   Dashboard Settings
                 </Typography>
                 <form>
@@ -289,12 +298,14 @@ const SettingsPage = () => {
                     onChange={handleInputChange}
                     style={{ marginBottom: "20px" }}
                   />
+
                   <Button
                     variant="contained"
+                    color="secondary"
                     style={{
                       backgroundColor: "#9E58FF",
-                      color: "#ffff",
-                      marginTop: "20px",
+                      fontFamily: "time",
+                      fontSize: "20px",
                     }}
                     onClick={saveSettings}
                     fullWidth
@@ -303,6 +314,7 @@ const SettingsPage = () => {
                   </Button>
                   {loading && (
                     <LinearProgress
+                      color="secondary"
                       style={{
                         backgroundColor: "#F47B20",
                         color: "#9E58FF",
@@ -317,7 +329,12 @@ const SettingsPage = () => {
           <Grid item xs={12} sm={6}>
             <Card>
               <CardContent>
-                <Typography variant="h5" component="h2" gutterBottom>
+                <Typography
+                  variant="h5"
+                  component="h2"
+                  gutterBottom
+                  style={{ fontFamily: "time", fontSize: "36px" }}
+                >
                   Theme Settings
                 </Typography>
                 <FormControlLabel

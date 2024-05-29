@@ -32,8 +32,10 @@ import {
 import { makeStyles } from "@material-ui/core/styles";
 import DeleteIcon from "@material-ui/icons/Delete";
 import EditIcon from "@material-ui/icons/Edit";
+import ReportGmailerrorredIcon from "@mui/icons-material/ReportGmailerrorred";
 import InfoIcon from "@material-ui/icons/Info";
 import { PlayArrow, Stop, FiberManualRecord } from "@material-ui/icons";
+import { Col, Row } from "antd";
 import axios from "axios";
 import moment from "moment";
 import JSMpeg from "@cycjimmy/jsmpeg-player";
@@ -56,7 +58,9 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   textField: {
-    marginBottom: theme.spacing(2),
+    marginBottom: "15px", // Add margin bottom
+    paddingBottom: "15px",
+    marginTop: "15px",
     "& .MuiOutlinedInput-root": {
       "& fieldset": {
         borderColor: "var(--input-border-color)",
@@ -120,6 +124,13 @@ const useStyles = makeStyles((theme) => ({
     border: "1px solid #ccc",
     borderRadius: "5px",
   },
+
+  pageTitle: {
+    fontSize: "24px",
+    fontWeight: "bold",
+    marginBottom: theme.spacing(3),
+    color: theme.palette.text.primary,
+  },
   pagination: {
     marginTop: theme.spacing(2),
     display: "flex",
@@ -128,23 +139,18 @@ const useStyles = makeStyles((theme) => ({
       color: "#9E58FF",
     },
   },
-  pageTitle: {
-    fontSize: "24px",
-    fontWeight: "bold",
-    marginBottom: theme.spacing(3),
-    color: theme.palette.text.primary,
-  },
-  inputLabel: {
-    color: theme.palette.text.secondary,
-  },
   dialogTitle: {
-    color: theme.palette.text.primary,
+    //backgroundColor: "var(--background-color)",
+    textAlign: "center", // Center the title
+    color: "var(--text-color)",
   },
   dialogContent: {
-    color: theme.palette.text.primary,
+    //backgroundColor: "var(--background-color)",
+    color: "var(--text-color)",
   },
   dialogActions: {
-    color: theme.palette.text.primary,
+    //backgroundColor: "var(--background-color)",
+    color: "var(--text-color)",
   },
 }));
 
@@ -328,16 +334,33 @@ const CameraPage = () => {
 
       <Button
         variant="contained"
-        style={{ backgroundColor: "#9E58FF" }}
         className={classes.button}
+        style={{
+          fontFamily: "time",
+          fontSize: "16px",
+          backgroundColor: "#9E58FF",
+          fontweight: "bold",
+        }}
         onClick={() => setOpenDialog(true)}
       >
         + Add Camera
       </Button>
 
       {cameras.length === 0 ? (
-        <Typography variant="h6" align="center" style={{ marginTop: "20px" }}>
-          No cameras available. Please add a new camera.
+        <Typography
+          variant="h6"
+          align="center"
+          style={{ marginTop: "20px", fontFamily: "time", fontSize: "36px" }}
+        >
+          No cameras available. Please add a new camera &nbsp;
+          <ReportGmailerrorredIcon
+            style={{
+              marginTop: "20px",
+              fontFamily: "time",
+              fontSize: "36px",
+              color: "#F47B20",
+            }}
+          />
         </Typography>
       ) : (
         <Grid container spacing={2}>
@@ -357,22 +380,35 @@ const CameraPage = () => {
       )}
 
       <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle className={classes.dialogTitle}>Add Camera</DialogTitle>
+        <DialogTitle
+          className={classes.dialogTitle}
+          style={{ fontFamily: "time", fontSize: "36px" }}
+        >
+          Add Camera
+        </DialogTitle>
         <DialogContent className={classes.dialogContent}>
-          <TextField
-            label="Camera Name"
-            variant="outlined"
+          <FormControl
             fullWidth
             className={classes.textField}
-            name="name"
-            value={formData.name}
-            onChange={handleInputChange}
-            color="secondary"
-          />
+            style={{ marginTop: "15px" }}
+          >
+            <TextField
+              label="Camera Name"
+              variant="outlined"
+              //fullWidth
+              //className={classes.textField}
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              style={{ marginTop: "15px" }}
+            />
+          </FormControl>
+
           <FormControl
             fullWidth
             variant="outlined"
             className={classes.textField}
+            style={{ marginTop: "15px" }}
           >
             <InputLabel
               id="address-select-label"
@@ -395,33 +431,60 @@ const CameraPage = () => {
               ))}
             </Select>
           </FormControl>
-          <TextField
-            label="Username"
-            variant="outlined"
-            fullWidth
-            className={classes.textField}
-            name="username"
-            value={formData.username}
-            onChange={handleInputChange}
-            color="secondary"
-          />
-          <TextField
-            label="Password"
-            variant="outlined"
-            fullWidth
-            className={classes.textField}
-            name="password"
-            value={formData.password}
-            onChange={handleInputChange}
-            color="secondary"
-          />
+
+          <FormControl fullWidth className={classes.textField}>
+            <TextField
+              label="Username"
+              variant="outlined"
+              //fullWidth
+              //className={classes.textField}
+              name="username"
+              value={formData.username}
+              onChange={handleInputChange}
+              color="secondary"
+              style={{ marginTop: "15px" }}
+            />
+          </FormControl>
+
+          <FormControl fullWidth className={classes.textField}>
+            <TextField
+              label="Password"
+              variant="outlined"
+              //fullWidth
+              //className={classes.textField}
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
+              color="secondary"
+              style={{ marginTop: "15px" }}
+            />
+          </FormControl>
         </DialogContent>
         <DialogActions className={classes.dialogActions}>
-          <Button onClick={handleCloseDialog} color="primary">
+          <Button
+            onClick={handleCloseDialog}
+            variant="outlined"
+            color="secondary"
+            sx={{
+              color: "#F47B20",
+              borderColor: "#F47B20",
+              fontFamily: "time",
+            }}
+          >
             Cancel
           </Button>
-          <Button onClick={handleAddCamera} color="primary">
-            Add
+
+          <Button
+            variant="contained"
+            color="secondary"
+            sx={{
+              backgroundColor: "#9E58FF",
+              color: "#ffff",
+              fontFamily: "time",
+            }}
+            onClick={handleAddCamera}
+          >
+            Save
           </Button>
         </DialogActions>
       </Dialog>
@@ -429,20 +492,28 @@ const CameraPage = () => {
       <Dialog open={editDialogOpen} onClose={handleCloseDialog}>
         <DialogTitle className={classes.dialogTitle}>Edit Camera</DialogTitle>
         <DialogContent className={classes.dialogContent}>
-          <TextField
-            label="Camera Name"
-            variant="outlined"
+          <FormControl
             fullWidth
             className={classes.textField}
-            name="name"
-            value={formData.name}
-            onChange={handleInputChange}
-            color="secondary"
-          />
+            style={{ marginTop: "15px" }}
+          >
+            <TextField
+              label="Camera Name"
+              variant="outlined"
+              //fullWidth
+              //className={classes.textField}
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              color="secondary"
+            />
+          </FormControl>
+
           <FormControl
             fullWidth
             variant="outlined"
             className={classes.textField}
+            style={{ marginTop: "15px" }}
           >
             <InputLabel
               id="address-select-label"
@@ -465,33 +536,65 @@ const CameraPage = () => {
               ))}
             </Select>
           </FormControl>
-          <TextField
-            label="Username"
-            variant="outlined"
+
+          <FormControl
             fullWidth
             className={classes.textField}
-            name="username"
-            value={formData.username}
-            onChange={handleInputChange}
-            color="secondary"
-          />
-          <TextField
-            label="Password"
-            variant="outlined"
+            style={{ marginTop: "15px" }}
+          >
+            <TextField
+              label="Username"
+              variant="outlined"
+              //fullWidth
+              //className={classes.textField}
+              name="username"
+              value={formData.username}
+              onChange={handleInputChange}
+              color="secondary"
+            />
+          </FormControl>
+
+          <FormControl
             fullWidth
             className={classes.textField}
-            name="password"
-            value={formData.password}
-            onChange={handleInputChange}
-            color="secondary"
-          />
+            style={{ marginTop: "15px" }}
+          >
+            <TextField
+              label="Password"
+              variant="outlined"
+              fullWidth
+              className={classes.textField}
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
+              color="secondary"
+            />
+          </FormControl>
         </DialogContent>
         <DialogActions className={classes.dialogActions}>
-          <Button onClick={handleCloseDialog} color="primary">
+          <Button
+            onClick={handleCloseDialog}
+            variant="outlined"
+            color="secondary"
+            sx={{
+              color: "#F47B20",
+              borderColor: "#F47B20",
+              fontFamily: "time",
+            }}
+          >
             Cancel
           </Button>
-          <Button onClick={handleUpdateCamera} color="primary">
-            Save
+          <Button
+            onClick={handleUpdateCamera}
+            variant="contained"
+            color="secondary"
+            sx={{
+              backgroundColor: "#9E58FF",
+              color: "#ffff",
+              fontFamily: "time",
+            }}
+          >
+            Update
           </Button>
         </DialogActions>
       </Dialog>
