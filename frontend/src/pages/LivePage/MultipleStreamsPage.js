@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import JSMpeg from "@cycjimmy/jsmpeg-player";
-import { API_API_URL } from "../../config/serverApiConfig";
+import { API_API_URL, SOCKET_API_URL } from "../../config/serverApiConfig";
 import { makeStyles } from "@material-ui/core/styles";
 import { Grid, Button, Typography } from "@material-ui/core";
 import { IconButton } from "@material-ui/core";
@@ -48,7 +48,7 @@ const MultipleStreamsPage = () => {
 
   useEffect(() => {
     cameras.forEach((camera) => {
-      const url = `ws://127.0.0.1:${camera.port}`;
+      const url = SOCKET_API_URL + `:${camera.port}`;
       const canvasId = `canvas-${camera.rtspUrl}`;
       let canvas = document.getElementById(canvasId);
       new JSMpeg.Player(url, { canvas: canvas });

@@ -412,8 +412,6 @@ app.post("/rectangle", (req, res) => {
 });
 
 async function createDevice() {
-  // Lecture du fichier JSON
-
   try {
     const file = await Settings.find();
 
@@ -425,9 +423,8 @@ async function createDevice() {
       BassiraStatus: "on",
     };
 
-    // Envoi de la requête PATCH
     axios
-      .post("https://dashboard.datadoit.io/api/bassira/create", requestData)
+      .post(`${process.env.DASHBOARD_URL}/api/bassira/create`, requestData)
       .then((response) => {
         console.log(response.data);
       })
@@ -439,8 +436,6 @@ async function createDevice() {
   }
 }
 async function statusDevice() {
-  // Lecture du fichier JSON
-
   try {
     const file = await Settings.find();
 
@@ -452,9 +447,8 @@ async function statusDevice() {
       BassiraStatus: "on",
     };
 
-    // Envoi de la requête PATCH
     axios
-      .patch("https://dashboard.datadoit.io/api/bassira/update", requestData)
+      .patch(`${process.env.DASHBOARD_URL}/api/bassira/update`, requestData)
       .then((response) => {
         console.log(response.data);
       })
@@ -466,7 +460,6 @@ async function statusDevice() {
   }
 }
 
-// Définition de la fonction pour exécuter statusDevice toutes les 5 minutes
 function statusDeviceScheduler() {
   setInterval(() => {
     statusDevice();

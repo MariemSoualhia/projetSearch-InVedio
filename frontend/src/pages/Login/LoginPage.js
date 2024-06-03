@@ -2,10 +2,8 @@ import React, { useState } from "react";
 import {
   Box,
   Button,
-  Checkbox,
   Container,
   CssBaseline,
-  FormControlLabel,
   Grid,
   Link,
   Paper,
@@ -21,10 +19,19 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import AttachEmailIcon from "@mui/icons-material/AttachEmail";
 import { useNavigate } from "react-router-dom";
-
+import {
+  API_API_URL,
+  API_API_URLDetection,
+  API_API_URLRTSP,
+} from "../../config/serverApiConfig";
 const LoginPage = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -41,6 +48,7 @@ const LoginPage = () => {
     const savedTheme = localStorage.getItem("theme");
     return savedTheme === "dark";
   });
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (event) => {
     setFormData({
@@ -56,16 +64,13 @@ const LoginPage = () => {
   const handleForgotPasswordSubmit = async () => {
     setLoading(true);
     try {
-      const response = await fetch(
-        "http://localhost:3002/api/user/forgot-password",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email: forgotEmail }),
-        }
-      );
+      const response = await fetch(API_API_URL + "/api/user/forgot-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: forgotEmail }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -88,7 +93,7 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:3002/api/user/signin", {
+      const response = await fetch(API_API_URL + "/api/user/signin", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -139,6 +144,14 @@ const LoginPage = () => {
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
+  };
+
+  const handleClickShowPassword = () => {
+    setShowPassword((prevShowPassword) => !prevShowPassword);
+  };
+
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
   };
 
   return (
@@ -196,7 +209,16 @@ const LoginPage = () => {
                   src="https://data-doit.com/wp-content/uploads/2022/11/datadoit1-150x150.png"
                   alt="Logo"
                 />
-                <Typography component="h1" variant="h5" sx={{ fontFamily: "time", mt: 2, fontSize:"36px" }}>
+                <Typography
+                  component="h1"
+                  variant="h5"
+                  sx={{
+                    fontFamily: "time",
+                    mt: 2,
+                    fontSize: "36px",
+                    fontWeight: "bold",
+                  }}
+                >
                   Sign in
                 </Typography>
                 <Box
@@ -218,9 +240,18 @@ const LoginPage = () => {
                     onChange={handleChange}
                     InputProps={{
                       style: { color: darkMode ? "#fff" : "#000" },
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <AttachEmailIcon />
+                        </InputAdornment>
+                      ),
                     }}
                     InputLabelProps={{
-                      style: { color: darkMode ? "#fff" : "#000" ,fontFamily:"time"},
+                      style: {
+                        color: darkMode ? "#fff" : "#000",
+                        fontFamily: "time",
+                        fontSize: "20px",
+                      },
                     }}
                   />
                   <TextField
@@ -229,23 +260,39 @@ const LoginPage = () => {
                     fullWidth
                     name="password"
                     label="Password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     id="password"
                     autoComplete="current-password"
                     value={formData.password}
                     onChange={handleChange}
                     InputProps={{
                       style: { color: darkMode ? "#fff" : "#000" },
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <LockOutlinedIcon />
+                        </InputAdornment>
+                      ),
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            aria-label="toggle password visibility"
+                            onClick={handleClickShowPassword}
+                            onMouseDown={handleMouseDownPassword}
+                            edge="end"
+                          >
+                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
                     }}
                     InputLabelProps={{
-                      style: { color: darkMode ? "#fff" : "#000" , fontFamily:"time"},
+                      style: {
+                        color: darkMode ? "#fff" : "#000",
+                        fontFamily: "time",
+                        fontSize: "20px",
+                      },
                     }}
                   />
-                  {/* <FormControlLabel
-                    control={<Checkbox value="remember" color="primary" />}
-                    label="Remember me"
-                    sx={{ color: darkMode ? "#fff" : "#000" }}
-                  /> */}
                   <Box sx={{ position: "relative", mt: 3, mb: 2 }}>
                     <Button
                       type="submit"
@@ -257,8 +304,8 @@ const LoginPage = () => {
                         ":hover": {
                           backgroundColor: "#8e4ce0",
                         },
-                        fontFamily:"time",
-                        fontSize:"20px",
+                        fontFamily: "time",
+                        fontSize: "20px",
                       }}
                       disabled={loading}
                     >
@@ -283,18 +330,24 @@ const LoginPage = () => {
                       <Link
                         href="#"
                         variant="body2"
-                        sx={{ color: "#9e58ff" ,fontFamily:"time", fontSize:"18px"}}
+                        sx={{
+                          color: "#9e58ff",
+                          fontFamily: "time",
+                          fontSize: "18px",
+                        }}
                         onClick={handleOpenDialog}
                       >
-                        <LockOutlinedIcon sx={{ mr: 1 }} />
+                        <LockOutlinedIcon
+                          sx={{
+                            fontFamily: "time",
+                            mt: 2,
+                            fontSize: "36px",
+                            mr: 1,
+                          }}
+                        />
                         Forgot password?
                       </Link>
                     </Grid>
-                    {/* <Grid item>
-                      <Link href="#" variant="body2" sx={{ color: "#9e58ff" }}>
-                        {"Don't have an account? Sign Up"}
-                      </Link>
-                    </Grid> */}
                   </Grid>
                 </Box>
               </Box>
@@ -316,9 +369,26 @@ const LoginPage = () => {
         </Snackbar>
 
         <Dialog open={openDialog} onClose={handleCloseDialog}>
-          <DialogTitle>Forgot Password</DialogTitle>
+          <DialogTitle
+            sx={{
+              fontFamily: "time",
+              mt: 2,
+              fontSize: "36px",
+              textAlign: "center",
+              color: "#9E58FF",
+              fontWeight: "bold",
+            }}
+          >
+            Forgot Password
+          </DialogTitle>
           <DialogContent>
-            <DialogContentText>
+            <DialogContentText
+              sx={{
+                fontFamily: "time",
+                mt: 2,
+                fontSize: "20px",
+              }}
+            >
               Please enter your email address. We will send you an email to
               reset your password.
             </DialogContentText>
@@ -335,8 +405,30 @@ const LoginPage = () => {
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseDialog}>Cancel</Button>
-            <Button onClick={handleForgotPasswordSubmit}>Submit</Button>
+            <Button
+              variant="outlined"
+              color="secondary"
+              sx={{
+                color: "#F47B20",
+                borderColor: "#F47B20",
+                fontFamily: "time",
+              }}
+              onClick={handleCloseDialog}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              color="secondary"
+              sx={{
+                backgroundColor: "#9E58FF",
+                color: "#ffff",
+                fontFamily: "time",
+              }}
+              onClick={handleForgotPasswordSubmit}
+            >
+              Submit
+            </Button>
           </DialogActions>
         </Dialog>
       </Container>

@@ -1,10 +1,25 @@
-// settingsController.js
-
 const Settings = require("../models/Settings");
-const request = require('request')
+const User = require("../models/User");
+const request = require("request");
+
 exports.getSettings = async (req, res) => {
+  const { token } = req.query; // Assuming the token is passed as a query parameter
+
+  if (!token) {
+    return res.status(400).json({ message: "Token is required" });
+  }
+
   try {
-    const settings = await Settings.find();
+    const user = await User.findOne({ dashboardToken: token });
+    if (!user) {
+      return res.status(404).json({ message: "Invalid token" });
+    }
+
+    const settings = await Settings.findOne({ dashboardToken: token });
+    if (!settings) {
+      return res.status(404).json({ message: "Settings not found" });
+    }
+
     res.status(200).json(settings);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -14,6 +29,18 @@ exports.getSettings = async (req, res) => {
 exports.createSettings = async (req, res) => {
   try {
     const newSettings = await Settings.create(req.body);
+
+    // Update the user's dashboardToken
+    const user = await User.findOneAndUpdate(
+      { _id: req.body.userId }, // Assuming userId is provided in the request body
+      { dashboardToken: newSettings.dashboardToken },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
     res.status(201).json(newSettings);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -27,26 +54,32 @@ exports.updateSettings = async (req, res) => {
       new: true,
     });
 
+    // Update the user's dashboardToken
+    const user = await User.findOneAndUpdate(
+      { _id: req.body.userId }, // Assuming userId is provided in the request body
+      { dashboardToken: updatedSettings.dashboardToken },
+      { new: true }
+    );
+
     // Effectuer la requête GET avec request.get
-    request.get({
-      url: 'https://dashboard.datadoit.io/api/tokenapi/test',
-      json: true,
-      body: {
-        "TokenAPI": updatedSettings.dashboardToken,
+    request.get(
+      {
+        url: "https://dashboard.datadoit.io/api/tokenapi/test",
+        json: true,
+        body: {
+          TokenAPI: updatedSettings.dashboardToken,
+        },
+      },
+      (error, response, body) => {
+        if (error) {
+          res.status(200).json(error);
+        } else {
+          console.log("Réponse de la requête GET:", body);
+          res.status(200).json(body);
+        }
       }
-    }, (error, response, body) => {
-      if (error) {
-        res.status(200).json(error);
-      } else {
-        console.log('Réponse de la requête GET:', body);
-        res.status(200).json(body);
-      }
-    });
-    
-    // Répondre avec les paramètres mis à jour
-  
+    );
   } catch (error) {
-    // Gérer les erreurs
     res.status(500).json({ message: error.message });
   }
 };

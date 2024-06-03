@@ -25,7 +25,11 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
 import ShareIcon from "@mui/icons-material/Share";
 import { makeStyles } from "@material-ui/core/styles";
-
+import {
+  API_API_URL,
+  API_API_URLDetection,
+  API_API_URLRTSP,
+} from "../../config/serverApiConfig";
 const useStyles = makeStyles((theme) => ({
   root: {
     textAlign: "center",
@@ -83,9 +87,20 @@ const useStyles = makeStyles((theme) => ({
   videoCard: {
     padding: theme.spacing(2),
     borderRadius: "8px",
+    backgroundColor: "var(--background-color)", // Ensure background color consistency
+    border: `2px solid ${theme.palette.divider}`,
+    boxShadow: theme.shadows[2],
   },
   videoTitle: {
     marginBottom: theme.spacing(1),
+    fontFamily: "time",
+    fontSize: "24px",
+    color: "#9E58FF",
+  },
+  cameraInfo: {
+    fontFamily: "time",
+    fontSize: "16px",
+    color: "#9E58FF",
   },
   pagination: {
     marginTop: theme.spacing(2),
@@ -100,25 +115,36 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   pageTitle: {
-    fontSize: "24px",
+    fontSize: "36px",
     fontWeight: "bold",
     marginBottom: theme.spacing(3),
     textAlign: "center", // Center the title
+    fontFamily: "time",
+    color: "#9E58FF",
   },
   modalBox: {
     position: "absolute",
     top: "50%",
     left: "50%",
     transform: "translate(-50%, -50%)",
-    backgroundColor: "var(--background-color)", // Ensure this is set to a solid color
+    backgroundColor: theme.palette.background.paper, // Ensure this is set to a solid color
     boxShadow: 24,
     padding: theme.spacing(4),
-    minWidth: 300,
-    maxWidth: 400,
+    minWidth: 600,
+    maxWidth: 800,
     borderRadius: 8,
   },
   searchField: {
     marginBottom: theme.spacing(3),
+  },
+  deleteIcon: {
+    color: "#f44336",
+  },
+  downloadIcon: {
+    color: "#F47B20",
+  },
+  shareIcon: {
+    color: "#1A237E",
   },
 }));
 
@@ -198,7 +224,7 @@ const VideoList = () => {
   const fetchVideos = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("http://127.0.0.1:3002/api/videos/", {
+      const response = await axios.get(API_API_URL + "/api/videos/", {
         params: { search: searchTerm },
       });
       setVideos(response.data);
@@ -214,7 +240,7 @@ const VideoList = () => {
 
   const handleDelete = async (videoId) => {
     try {
-      await axios.delete(`http://127.0.0.1:3002/api/videos/${videoId}`);
+      await axios.delete(API_API_URL + `/api/videos/${videoId}`);
       fetchVideos();
       setAlertMessage("Video deleted successfully.");
       setAlertSeverity("success");
@@ -252,7 +278,7 @@ const VideoList = () => {
     // Fetch video size
     try {
       const videoUrlResponse = await axios.get(
-        `http://127.0.0.1:3002/api/videos/${videoId}/url`
+        API_API_URL + `/api/videos/${videoId}/url`
       );
       const videoUrl = videoUrlResponse.data.url;
       const headResponse = await fetch(videoUrl, { method: "HEAD" });
@@ -275,7 +301,7 @@ const VideoList = () => {
   const handleDownload = async (videoId, videoName) => {
     try {
       const response = await axios.get(
-        `http://127.0.0.1:3002/api/videos/${videoId}/download`,
+        API_API_URL + `/api/videos/${videoId}/download`,
         {
           responseType: "blob",
         }
@@ -332,7 +358,7 @@ const VideoList = () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `http://127.0.0.1:3002/api/videos/${videoToShare}/url`
+        API_API_URL + `/api/videos/${videoToShare}/url`
       );
       console.log("Video URL response:", response.data);
       const videoUrl = response.data.url;
@@ -429,7 +455,17 @@ const VideoList = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
 
-      <Typography variant="h4" gutterBottom className={classes.pageTitle}    style={{ fontFamily: "time", fontSize: "36px" ,color: "#9E58FF" }}>
+      <Typography
+        variant="h4"
+        gutterBottom
+        //className={classes.pageTitle}
+        style={{
+          fontFamily: "time",
+          fontSize: "56px",
+          color: "#9E58FF",
+          textAlign: "center",
+        }}
+      >
         Records List
       </Typography>
 
@@ -442,17 +478,27 @@ const VideoList = () => {
         margin="normal"
         placeholder="Search for videos..."
         className={classes.searchField}
+        InputProps={{
+          style: { color: darkMode ? "#fff" : "#000" },
+        }}
+        InputLabelProps={{
+          style: {
+            color: darkMode ? "#fff" : "#000",
+            fontFamily: "time",
+            fontSize: "20px",
+          },
+        }}
       />
 
       <Grid container spacing={2}>
         {videos.slice(startIndex, endIndex).map((video) => (
           <Grid item key={video._id} xs={12} sm={6} md={6}>
             <Paper elevation={3} className={classes.videoCard}>
-              <Typography variant="h6" className={classes.videoTitle} style={{ fontFamily: "time", fontSize: "36px" ,color: "#9E58FF" }}>
+              <Typography variant="h6" className={classes.videoTitle}>
                 {video.name}
               </Typography>
               <Typography variant="body2" className={classes.cameraInfo}>
-                <strong style={{ fontFamily: "time",color: "#9E58FF" }}>  Camera:</strong> {video.cameraName}
+                <strong>Camera:</strong> {video.cameraName}
               </Typography>
               <VideoPlayer
                 videoId={video._id}
@@ -469,27 +515,20 @@ const VideoList = () => {
               >
                 <IconButton
                   aria-label="delete"
-                  className={classes.deleteButton}
-                  sx={{
-                    color: "#9E58FF",
-                  }}
                   onClick={() => handleShowDeleteModal(video._id)}
                 >
                   <DeleteIcon />
                 </IconButton>
                 <IconButton
                   aria-label="download"
-                  className={classes.downloadButton}
-                  sx={{
-                    color: "#F47B20",
-                  }}
+                  sx={{ color: "#9E58FF" }}
                   onClick={() => handleDownload(video._id, video.name)}
                 >
                   <DownloadIcon />
                 </IconButton>
                 <IconButton
                   aria-label="share"
-                  className={classes.shareButton}
+                  sx={{ color: "#F47B20" }}
                   onClick={() => handleShowShareModal(video._id)}
                 >
                   <ShareIcon />
@@ -547,11 +586,28 @@ const VideoList = () => {
             <CircularProgress />
           ) : (
             <>
-              <Typography variant="h6" gutterBottom>
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{
+                  color: "#9E58FF",
+                  fontFamily: "time",
+                  fontSize: "20px",
+                  fontWeight: "bold",
+                }}
+              >
                 Share Video
               </Typography>
               {videoSize && (
-                <Typography variant="body2" gutterBottom>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "#9E58FF",
+                    fontFamily: "time",
+                    fontSize: "18px",
+                  }}
+                  gutterBottom
+                >
                   Size: {(videoSize / (1024 * 1024)).toFixed(2)} MB
                 </Typography>
               )}
@@ -582,9 +638,14 @@ const VideoList = () => {
                 </Button>
                 <Button
                   variant="contained"
-                  color="primary"
+                  color="secondary"
+                  sx={{
+                    backgroundColor: "#9E58FF",
+                    color: "#ffff",
+                    fontFamily: "time",
+                    marginLeft: 1,
+                  }}
                   onClick={handleGoogleDriveAuth}
-                  sx={{ marginLeft: 1 }}
                   disabled={!sharePlatform}
                 >
                   Share

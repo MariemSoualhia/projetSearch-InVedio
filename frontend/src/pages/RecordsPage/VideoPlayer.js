@@ -17,8 +17,15 @@ import {
   InputLabel,
   Chip,
   OutlinedInput,
+  Alert,
+  Snackbar,
 } from "@mui/material";
-
+import {
+  API_API_URL,
+  API_API_URLDetection,
+  API_API_URLRTSP,
+  API_API_SEARCH,
+} from "../../config/serverApiConfig";
 const predefinedClasses = [
   "person",
   "bicycle",
@@ -43,7 +50,9 @@ const VideoPlayer = ({ videoId, videoPath }) => {
   const [selectedClasses, setSelectedClasses] = useState([]);
   const [selectedFrame, setSelectedFrame] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertSeverity, setAlertSeverity] = useState("success");
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.pause();
@@ -65,12 +74,15 @@ const VideoPlayer = ({ videoId, videoPath }) => {
         texts: value, // Only search for the first selected class
       };
 
-      const response = await axios.post("http://127.0.0.1:5000/detect", data);
+      const response = await axios.post(API_API_SEARCH + "/detect", data);
       console.log(response.data.first_detection_time);
       const res = [response.data.first_detection_time];
       setSearchResults(res);
     } catch (error) {
       console.error("Error fetching detection times:", error);
+      setAlertMessage("Failed to search in video.");
+      setAlertSeverity("error");
+      setSnackbarOpen(true);
     } finally {
       setLoading(false);
     }
@@ -101,11 +113,29 @@ const VideoPlayer = ({ videoId, videoPath }) => {
 
   const handleCloseModal = () => {
     setModalOpen(false);
-    setSelectedFrame(null); // Reset the frame to ensure the modal doesn't show a blank frame next time
+    setSelectedFrame(null);
+  };
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
   };
 
   return (
     <Box sx={{ padding: 2 }}>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          elevation={6}
+          variant="filled"
+          onClose={handleCloseSnackbar}
+          severity={alertSeverity}
+        >
+          {alertMessage}
+        </Alert>
+      </Snackbar>
       <FormControl variant="outlined" fullWidth margin="normal">
         <InputLabel id="class-select-label">Select Classes</InputLabel>
         <Select
@@ -113,9 +143,11 @@ const VideoPlayer = ({ videoId, videoPath }) => {
           //multiple
           value={selectedClasses}
           onChange={handleClassChange}
-          input={<OutlinedInput id="select-multiple-chip" label="Select Classes" />}
+          input={
+            <OutlinedInput id="select-multiple-chip" label="Select Classes" />
+          }
           renderValue={(selected) => (
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
               {selected.map((value) => (
                 <Chip key={value} label={value} />
               ))}
@@ -137,10 +169,7 @@ const VideoPlayer = ({ videoId, videoPath }) => {
         crossOrigin="anonymous"
         style={{ borderRadius: 8 }}
       >
-        <source
-          src={`http://localhost:3002/api/videos/${videoId}`}
-          type="video/mp4"
-        />
+        <source src={API_API_URL + `/api/videos/${videoId}`} type="video/mp4" />
         Your browser does not support the video tag.
       </video>
       {searchResults.length > 0 && (
@@ -189,7 +218,9 @@ const VideoPlayer = ({ videoId, videoPath }) => {
               borderRadius: 2,
             }}
           >
-            {selectedFrame && <img src={selectedFrame} alt="Selected Frame" width="100%" />}
+            {selectedFrame && (
+              <img src={selectedFrame} alt="Selected Frame" width="100%" />
+            )}
           </Box>
         </Fade>
       </Modal>

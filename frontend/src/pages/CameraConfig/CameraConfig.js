@@ -29,7 +29,11 @@ import DeleteIcon from "@material-ui/icons/Delete";
 import EditIcon from "@material-ui/icons/Edit";
 import "./CameraConfig.css";
 import axios from "axios";
-
+import {
+  API_API_URL,
+  API_API_URLDetection,
+  API_API_URLRTSP,
+} from "../../config/serverApiConfig";
 const useStyles = makeStyles((theme) => ({
   root: {
     textAlign: "center",
@@ -171,7 +175,7 @@ const CameraConfig = () => {
 
   const fetchCameras = async () => {
     try {
-      const response = await axios.get("http://localhost:3002/api/cameras");
+      const response = await axios.get(API_API_URL + "/api/cameras");
       setCameras(response.data);
     } catch (error) {
       console.error("Error fetching cameras:", error);
@@ -180,7 +184,7 @@ const CameraConfig = () => {
 
   const fetchCamerasAddress = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:5000/scan_ips");
+      const response = await axios.get(API_API_URLRTSP + "/scan_ips");
       setListAddress(response.data.list_ips);
       localStorage.setItem("addresses", JSON.stringify(response.data.list_ips));
     } catch (error) {
@@ -199,7 +203,7 @@ const CameraConfig = () => {
   const handleAddCamera = async () => {
     setLoading(true);
     try {
-      await axios.post("http://localhost:3002/api/cameras", formData);
+      await axios.post(API_API_URL + "/api/cameras", formData);
       fetchCameras();
       setFormData({
         name: "",
@@ -217,7 +221,7 @@ const CameraConfig = () => {
 
   const handleDeleteCamera = async (id) => {
     try {
-      await axios.delete(`http://localhost:3002/api/cameras/${id}`);
+      await axios.delete(API_API_URL + `/api/cameras/${id}`);
       fetchCameras();
     } catch (error) {
       console.error("Error deleting camera:", error);
@@ -242,10 +246,7 @@ const CameraConfig = () => {
 
   const handleUpdateCamera = async () => {
     try {
-      await axios.put(
-        `http://localhost:3002/api/cameras/${formData.id}`,
-        formData
-      );
+      await axios.put(API_API_URL + `/api/cameras/${formData.id}`, formData);
       fetchCameras();
       setFormData({
         name: "",

@@ -30,6 +30,9 @@ const userSchema = new Schema({
     type: Date,
     default: Date.now,
   },
+  dashboardToken: {
+    type: String,
+  },
 });
 
 // Création du modèle User à partir du schéma

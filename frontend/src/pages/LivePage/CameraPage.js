@@ -39,8 +39,12 @@ import { Col, Row } from "antd";
 import axios from "axios";
 import moment from "moment";
 import JSMpeg from "@cycjimmy/jsmpeg-player";
-import { API_API_URL } from "../../config/serverApiConfig";
-import {LinearProgress } from "@mui/material";
+import {
+  API_API_URL,
+  API_API_URLDetection,
+  API_API_URLRTSP,
+} from "../../config/serverApiConfig";
+import { LinearProgress } from "@mui/material";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -200,20 +204,22 @@ const CameraPage = () => {
 
   const fetchCameras = async () => {
     try {
-      const response = await axios.get("http://localhost:3002/api/cameras");
+      const response = await axios.get(API_API_URL + "/api/cameras");
       setCameras(response.data);
     } catch (error) {
       console.error("Error fetching cameras:", error);
+      showSnackbar("Failed to fetching cameras.", "error");
     }
   };
 
   const fetchCamerasAddress = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:5000/scan_ips");
+      const response = await axios.get(API_API_URLRTSP + "scan_ips");
       setListAddress(response.data.list_ips);
       localStorage.setItem("addresses", JSON.stringify(response.data.list_ips));
     } catch (error) {
-      console.error("Error fetching cameras:", error);
+      console.error("Error fetching ip cameras:", error);
+      showSnackbar("Failed fetching ip cameras.", "error");
     }
   };
 
@@ -228,8 +234,8 @@ const CameraPage = () => {
   const handleAddCamera = async () => {
     try {
       setLoading(true);
-      const res= await axios.post("http://localhost:3002/api/cameras", formData);
-      if(res){
+      const res = await axios.post(API_API_URL + "/api/cameras", formData);
+      if (res) {
         fetchCameras();
         setFormData({
           name: "",
@@ -242,7 +248,6 @@ const CameraPage = () => {
         setOpenDialog(false);
         showSnackbar("Camera added successfully!", "success");
       }
-   
     } catch (error) {
       console.error("Error adding camera:", error);
       setLoading(false);
@@ -252,7 +257,7 @@ const CameraPage = () => {
 
   const handleDeleteCamera = async (id) => {
     try {
-      await axios.delete(`http://localhost:3002/api/cameras/${id}`);
+      await axios.delete(API_API_URL + `/api/cameras/${id}`);
       fetchCameras();
       showSnackbar("Camera deleted successfully!", "success");
     } catch (error) {
@@ -279,10 +284,7 @@ const CameraPage = () => {
 
   const handleUpdateCamera = async () => {
     try {
-      await axios.put(
-        `http://localhost:3002/api/cameras/${formData.id}`,
-        formData
-      );
+      await axios.put(API_API_URL + `/api/cameras/${formData.id}`, formData);
       fetchCameras();
       setFormData({
         name: "",
@@ -360,9 +362,10 @@ const CameraPage = () => {
           <ReportGmailerrorredIcon
             style={{
               marginTop: "20px",
-              fontFamily: "time",
-              fontSize: "36px",
+              marginBottom: "-10px",
               color: "#F47B20",
+              width: "45px",
+              height: "45px",
             }}
           />
         </Typography>
@@ -386,7 +389,11 @@ const CameraPage = () => {
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle
           className={classes.dialogTitle}
-          style={{ fontFamily: "time", fontSize: "36px" }}
+          style={{
+            fontFamily: "time",
+            fontSize: "25px",
+            fontWeight: "bold",
+          }}
         >
           Add Camera
         </DialogTitle>
@@ -465,44 +472,50 @@ const CameraPage = () => {
           </FormControl>
         </DialogContent>
         <DialogActions className={classes.dialogActions}>
-        {loading==true && (
-                   <CircularProgress color="secondary" />
-
-                  )}
+          {loading == true && <CircularProgress color="secondary" />}
           {!loading && (
             <>
-          <Button
-            onClick={handleCloseDialog}
-            variant="outlined"
-            color="secondary"
-            sx={{
-              color: "#F47B20",
-              borderColor: "#F47B20",
-              fontFamily: "time",
-            }}
-          >
-            Cancel
-          </Button>
+              <Button
+                onClick={handleCloseDialog}
+                variant="outlined"
+                color="secondary"
+                sx={{
+                  color: "#F47B20",
+                  borderColor: "#F47B20",
+                  fontFamily: "time",
+                }}
+              >
+                Cancel
+              </Button>
 
-          <Button
-            variant="contained"
-            color="secondary"
-            sx={{
-              backgroundColor: "#9E58FF",
-              color: "#ffff",
-              fontFamily: "time",
-            }}
-            onClick={handleAddCamera}
-          >
-            Save
-          </Button>
-          </>
+              <Button
+                variant="contained"
+                color="secondary"
+                sx={{
+                  backgroundColor: "#9E58FF",
+                  color: "#ffff",
+                  fontFamily: "time",
+                }}
+                onClick={handleAddCamera}
+              >
+                Save
+              </Button>
+            </>
           )}
         </DialogActions>
       </Dialog>
 
       <Dialog open={editDialogOpen} onClose={handleCloseDialog}>
-        <DialogTitle className={classes.dialogTitle}>Edit Camera</DialogTitle>
+        <DialogTitle
+          className={classes.dialogTitle}
+          style={{
+            fontFamily: "time",
+            fontSize: "25px",
+            fontWeight: "bold",
+          }}
+        >
+          Edit Camera
+        </DialogTitle>
         <DialogContent className={classes.dialogContent}>
           <FormControl
             fullWidth
@@ -584,43 +597,44 @@ const CameraPage = () => {
           </FormControl>
         </DialogContent>
         <DialogActions className={classes.dialogActions}>
-        {loading==true && (
-                    <LinearProgress
-                      color="secondary"
-                      style={{
-                        backgroundColor: "#F47B20",
-                        color: "#9E58FF",
-                        marginTop: "10px",
-                      }}
-                    />
-                  )}
+          {loading == true && (
+            <LinearProgress
+              color="secondary"
+              style={{
+                backgroundColor: "#F47B20",
+                color: "#9E58FF",
+                marginTop: "10px",
+              }}
+            />
+          )}
           {!loading && (
             <>
-          <Button
-            onClick={handleCloseDialog}
-            variant="outlined"
-            color="secondary"
-            sx={{
-              color: "#F47B20",
-              borderColor: "#F47B20",
-              fontFamily: "time",
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleUpdateCamera}
-            variant="contained"
-            color="secondary"
-            sx={{
-              backgroundColor: "#9E58FF",
-              color: "#ffff",
-              fontFamily: "time",
-            }}
-          >
-            Update
-          </Button>
-          </>)}
+              <Button
+                onClick={handleCloseDialog}
+                variant="outlined"
+                color="secondary"
+                sx={{
+                  color: "#F47B20",
+                  borderColor: "#F47B20",
+                  fontFamily: "time",
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleUpdateCamera}
+                variant="contained"
+                color="secondary"
+                sx={{
+                  backgroundColor: "#9E58FF",
+                  color: "#ffff",
+                  fontFamily: "time",
+                }}
+              >
+                Update
+              </Button>
+            </>
+          )}
         </DialogActions>
       </Dialog>
 

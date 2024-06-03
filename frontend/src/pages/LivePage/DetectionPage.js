@@ -20,13 +20,8 @@ import {
   Checkbox,
   FormGroup,
   Box,
-
 } from "@material-ui/core";
-import {
-
-  Snackbar,
-  Alert,
-} from "@mui/material";
+import { Snackbar, Alert } from "@mui/material";
 import { Col, Row } from "antd";
 
 import Select from "@material-ui/core/Select";
@@ -34,7 +29,11 @@ import FormControl from "@material-ui/core/FormControl";
 import InputLabel from "@material-ui/core/InputLabel";
 import { makeStyles } from "@material-ui/core/styles";
 import { ContactSupportOutlined, Videocam } from "@material-ui/icons";
-import { API_API_URL } from "../../config/serverApiConfig";
+import {
+  API_API_URL,
+  API_API_URLDetection,
+  API_API_URLRTSP,
+} from "../../config/serverApiConfig";
 
 const useStyles = makeStyles((theme) => ({
   streamContainer: {
@@ -139,23 +138,26 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
   // Fonction pour récupérer les paramètres depuis l'API
   const fetchSettings = async () => {
     try {
-      const response = await axios.get("http://localhost:3002/api/settings");
+      const response = await axios.get(API_API_URL + "/api/settings");
       if (Array.isArray(response.data) && response.data.length > 0) {
         setPlatformSettings(response.data[0]);
       } else {
         console.error("Error: No settings found or invalid response format");
+        showSnackbar(
+          "Error: No settings found or invalid response format.",
+          "error"
+        );
       }
     } catch (error) {
       console.error("Error fetching settings:", error);
+      showSnackbar("Failed fetching settings.", "error");
     }
   };
 
   useEffect(() => {
     const fetchInternalZones = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:3002/api/zone/internal"
-        );
+        const response = await axios.get(API_API_URL + "/api/zone/internal");
         setInternalZones(response.data);
         console.log(response.data);
       } catch (error) {
@@ -165,7 +167,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
 
     const fetchGateZones = async () => {
       try {
-        const response = await axios.get("http://localhost:3002/api/zone/gate");
+        const response = await axios.get(API_API_URL + "/api/zone/gate");
         setGateZones(response.data);
         console.log(response.data);
       } catch (error) {
@@ -189,8 +191,8 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
       // Récupérer le port sélectionné depuis le localStorage, ou null s'il n'existe pas
       const storedPort = localStorage.getItem(
         "selectedPort" +
-        "selectedPort" +
-        localStorage.getItem("selectedCamera" + selectedCamera.name).name
+          "selectedPort" +
+          localStorage.getItem("selectedCamera" + selectedCamera.name).name
       );
     }
     if (storedPort) {
@@ -237,15 +239,11 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
     formData.append("file", selectedFile);
 
     try {
-      const response = await axios.post(
-        "http://localhost:3002/upload",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const response = await axios.post(API_API_URL + "/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       if (response.data.success) {
         setUploadStatus("File uploaded successfully");
@@ -315,7 +313,9 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
             .catch(reportError);
         }
 
-        connections[url].webrtcPeer.setRemoteDescription(sdp).catch(reportError);
+        connections[url].webrtcPeer
+          .setRemoteDescription(sdp)
+          .catch(reportError);
 
         if (connections[url].type == "inbound") {
           connections[url].webrtcPeer
@@ -353,7 +353,9 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
       function onIncomingICE(url, ice) {
         var candidate = new RTCIceCandidate(ice);
         console.log("Incoming ICE (%s)\n" + JSON.stringify(ice), url);
-        connections[url].webrtcPeer.addIceCandidate(candidate).catch(reportError);
+        connections[url].webrtcPeer
+          .addIceCandidate(candidate)
+          .catch(reportError);
       }
 
       function getConnectionStats(url, reportType) {
@@ -367,7 +369,9 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
           });
 
           var statsElement =
-            connections[url].type == "inbound" ? "stats-player" : "stats-sender";
+            connections[url].type == "inbound"
+              ? "stats-player"
+              : "stats-sender";
           //document.getElementById(statsElement).innerHTML = statsOutput;
         });
       }
@@ -414,7 +418,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
           connections[url].webrtcPeer.onconnectionstatechange = (ev) => {
             console.log(
               "WebRTC connection state (%s) " +
-              connections[url].webrtcPeer.connectionState,
+                connections[url].webrtcPeer.connectionState,
               url
             );
             if (connections[url].webrtcPeer.connectionState == "connected")
@@ -471,7 +475,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
         connections[url].videoElement = videoRef.current; // Utilisation de la référence vidéo
         connections[url].webrtcConfig = configuration;
         reportError =
-          reportErrorCB != undefined ? reportErrorCB : function (text) { };
+          reportErrorCB != undefined ? reportErrorCB : function (text) {};
 
         connections[url].websocket = new WebSocket(wsUrl);
         connections[url].websocket.addEventListener("message", onServerMessage);
@@ -488,7 +492,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
             };
             console.log(data);
 
-            axios.put(`http://127.0.0.1:3002/api/stream/stop/${stream._id}`);
+            axios.put(API_API_URL + `/api/stream/stop/${stream._id}`);
           }
         });
 
@@ -500,11 +504,10 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
             };
             console.log(data);
 
-            axios.put(`http://127.0.0.1:3002/api/stream/stop/${stream._id}`);
+            axios.put(API_API_URL + `/api/stream/stop/${stream._id}`);
           }
         });
         showSnackbar("Stream start successfully!", "success");
-
       }
 
       function sendStream(hostname, port, path, configuration, reportErrorCB) {
@@ -535,7 +538,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
         connections[url].type = "outbound";
         connections[url].webrtcConfig = configuration;
         reportError =
-          reportErrorCB != undefined ? reportErrorCB : function (text) { };
+          reportErrorCB != undefined ? reportErrorCB : function (text) {};
 
         connections[url].websocket = new WebSocket(wsUrl);
         connections[url].websocket.addEventListener("message", onServerMessage);
@@ -561,7 +564,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
         }
       );
     } catch {
-      console.log("erreur")
+      console.log("erreur");
       showSnackbar("Failed to start stream", "error");
     }
   };
@@ -581,9 +584,10 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
       camera_name: cam.name,
     };
     try {
-
-
-      const response = await axios.post("http://127.0.0.1:5050/get_output", data);
+      const response = await axios.post(
+        API_API_URLDetection + "/get_output",
+        data
+      );
       console.log("la resultat est", response.data);
       console.log(response.data.port);
       setCurrentStream(response.data.stream);
@@ -603,7 +607,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
           streamplay: true,
         };
         const response2 = await axios.post(
-          "http://127.0.0.1:3002/api/stream/",
+          API_API_URL + "/api/stream/",
           dataStream
         );
         console.log(response2);
@@ -715,7 +719,8 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
           if (event.candidate == null) return;
 
           console.log(
-            "Sending ICE candidate out (%s)\n" + JSON.stringify(event.candidate),
+            "Sending ICE candidate out (%s)\n" +
+              JSON.stringify(event.candidate),
             url
           );
           connections[url].websocket.send(
@@ -742,7 +747,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
             connections[url].webrtcPeer.onconnectionstatechange = (ev) => {
               console.log(
                 "WebRTC connection state (%s) " +
-                connections[url].webrtcPeer.connectionState,
+                  connections[url].webrtcPeer.connectionState,
                 url
               );
               if (connections[url].webrtcPeer.connectionState == "connected")
@@ -803,7 +808,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
           connections[url].videoElement = videoRef.current; // Utilisation de la référence vidéo
           connections[url].webrtcConfig = configuration;
           reportError =
-            reportErrorCB != undefined ? reportErrorCB : function (text) { };
+            reportErrorCB != undefined ? reportErrorCB : function (text) {};
 
           // Mettez à jour les données de connexion dans le state ou où vous en avez besoin
           setConnectionsNow(connections[url]);
@@ -818,7 +823,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
             videoElement: videoRef.current.src,
             webrtcConfig: configuration,
             reportError:
-              reportErrorCB != undefined ? reportErrorCB : function (text) { },
+              reportErrorCB != undefined ? reportErrorCB : function (text) {},
           };
 
           // Mettez à jour les données de connexion dans le state ou où vous en avez besoin
@@ -831,14 +836,23 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
           );
 
           connections[url].websocket = new WebSocket(wsUrl);
-          connections[url].websocket.addEventListener("message", onServerMessage);
+          connections[url].websocket.addEventListener(
+            "message",
+            onServerMessage
+          );
           //connections[url].websocket.close()
 
           //localStorage.setItem('connections', JSON.stringify(connections[url]));
           showSnackbar("Stream start successfully!", "success");
         }
 
-        function sendStream(hostname, port, path, configuration, reportErrorCB) {
+        function sendStream(
+          hostname,
+          port,
+          path,
+          configuration,
+          reportErrorCB
+        ) {
           var l = window.location;
           if (path == "null") return;
           if (l.protocol != "https:") {
@@ -855,10 +869,10 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
             port != undefined
               ? port
               : localStorage.getItem(
-                "selectedPort" +
-                localStorage.getItem("selectedCamera" + selectedCamera.name)
-                  .name
-              );
+                  "selectedPort" +
+                    localStorage.getItem("selectedCamera" + selectedCamera.name)
+                      .name
+                );
           var wsPath = path != undefined ? path : "/ws";
           if (wsPort) wsPort = ":" + wsPort;
           var wsUrl = wsProt + wsHost + wsPort + wsPath;
@@ -871,10 +885,13 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
           connections[url].webrtcConfig = configuration;
 
           reportError =
-            reportErrorCB != undefined ? reportErrorCB : function (text) { };
+            reportErrorCB != undefined ? reportErrorCB : function (text) {};
 
           connections[url].websocket = new WebSocket(wsUrl);
-          connections[url].websocket.addEventListener("message", onServerMessage);
+          connections[url].websocket.addEventListener(
+            "message",
+            onServerMessage
+          );
           showSnackbar("Stream start successfully!", "success");
         }
 
@@ -899,7 +916,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
         );
       }
     } catch {
-      console.log("erreur")
+      console.log("erreur");
       showSnackbar("Failed to start stream", "error");
     }
   };
@@ -970,7 +987,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
     }
     setIsDrawing(false);
   };
-  const drawLine = (x) => { };
+  const drawLine = (x) => {};
 
   // Fonction pour fermer la connexion
   const closeConnection = () => {
@@ -1011,11 +1028,11 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
     console.log(data);
 
     const response = await axios.post(
-      "http://127.0.0.1:5050/stop_stream",
+      API_API_URLDetection + "/stop_stream",
       data
     );
     const response2 = await axios.put(
-      `http://127.0.0.1:3002/api/stream/stop/${stream._id}`
+      API_API_URL + `/api/stream/stop/${stream._id}`
     );
 
     if (response && response2) {
@@ -1107,10 +1124,10 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
     };
     try {
       // nvoyer les coordonnées du rectangle au backend (exemple avec Axios)
-      axios.post("http://127.0.0.1:5050/stop_stream", data);
+      axios.post(API_API_URLDetection + "/stop_stream", data);
       //connectionNow.websocket.close()
       axios
-        .post("http://127.0.0.1:5050/start_counting", rectangleData)
+        .post(API_API_URLDetection + "/start_counting", rectangleData)
 
         .then((response) => {
           console.log("Coordonnées du rectangle envoyées avec succès !");
@@ -1120,7 +1137,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
           };
           axios
             .put(
-              `http://127.0.0.1:3002/api/stream/updatePort/${stream._id}`,
+              API_API_URL + `/api/stream/updatePort/${stream._id}`,
               dataToSend
             )
             .then((resp) => {
@@ -1149,7 +1166,10 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
           function onIncomingSDP(url, sdp) {
             console.log("Incoming SDP: (%s)" + JSON.stringify(sdp), url);
             function onLocalDescription(desc) {
-              console.log("Local description (%s)\n" + JSON.stringify(desc), url);
+              console.log(
+                "Local description (%s)\n" + JSON.stringify(desc),
+                url
+              );
               connections[url].webrtcPeer
                 .setLocalDescription(desc)
                 .then(function () {
@@ -1239,7 +1259,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
 
             console.log(
               "Sending ICE candidate out (%s)\n" +
-              JSON.stringify(event.candidate),
+                JSON.stringify(event.candidate),
               url
             );
             connections[url].websocket.send(
@@ -1266,7 +1286,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
               connections[url].webrtcPeer.onconnectionstatechange = (ev) => {
                 console.log(
                   "WebRTC connection state (%s) " +
-                  connections[url].webrtcPeer.connectionState,
+                    connections[url].webrtcPeer.connectionState,
                   url
                 );
                 if (connections[url].webrtcPeer.connectionState == "connected")
@@ -1322,7 +1342,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
             connections[url].videoElement = videoRef.current; // Utilisation de la référence vidéo
             connections[url].webrtcConfig = configuration;
             reportError =
-              reportErrorCB != undefined ? reportErrorCB : function (text) { };
+              reportErrorCB != undefined ? reportErrorCB : function (text) {};
 
             setConnectionsNow(connections[url]);
 
@@ -1344,11 +1364,18 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
             var l = window.location;
             if (path == "null") return;
             if (l.protocol != "https:") {
-              alert("Please use HTTPS to enable the use of your browser webcam");
+              alert(
+                "Please use HTTPS to enable the use of your browser webcam"
+              );
               return;
             }
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-              alert("getUserMedia() not available (confirm HTTPS is being used)");
+            if (
+              !navigator.mediaDevices ||
+              !navigator.mediaDevices.getUserMedia
+            ) {
+              alert(
+                "getUserMedia() not available (confirm HTTPS is being used)"
+              );
               return;
             }
             var wsProt = l.protocol == "https:" ? "wss://" : "ws://";
@@ -1365,7 +1392,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
             connections[url].type = "outbound";
             connections[url].webrtcConfig = configuration;
             reportError =
-              reportErrorCB != undefined ? reportErrorCB : function (text) { };
+              reportErrorCB != undefined ? reportErrorCB : function (text) {};
 
             connections[url].websocket = new WebSocket(wsUrl);
             connections[url].websocket.addEventListener(
@@ -1401,7 +1428,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
           );
         });
     } catch {
-      console.log("erreur")
+      console.log("erreur");
       showSnackbar("Failed to start stream", "error");
     }
   };
@@ -1506,7 +1533,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
           muted
         >
           Your browser does not support video
-          <source src={`http://localhost:3002/${videoPath}`} type="video/mp4" />
+          <source src={API_API_URL + `/${videoPath}`} type="video/mp4" />
         </video>
 
         <canvas
@@ -1522,7 +1549,11 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
       {!stream.output_port && (
         <Button
           variant="contained"
-          color="primary"
+          sx={{
+            backgroundColor: "#9E58FF",
+            color: "#ffff",
+            fontFamily: "time",
+          }}
           onClick={() => handleCameraButtonClick(camera)}
           className={classes.button}
         >
@@ -1542,7 +1573,14 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
             </Alert>
           </Snackbar>
           <Box sx={{ width: "100%", textAlign: "center" }}>
-            <Typography variant="h6" gutterBottom>
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{
+                fontFamily: "time",
+                fontSize: "25px",
+              }}
+            >
               {stream.stream_name} : {stream.input_stream}
             </Typography>
           </Box>
@@ -1683,7 +1721,11 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
               {" "}
               <Button
                 variant="contained"
-                color="primary"
+                sx={{
+                  backgroundColor: "#9E58FF",
+                  color: "#ffff",
+                  fontFamily: "time",
+                }}
                 onClick={() => drawRectangle(drawDirection)}
                 className={classes.button}
                 disabled={!link} // D
@@ -1696,6 +1738,11 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
                 variant="contained"
                 onClick={stopStream}
                 className={classes.buttonStop}
+                sx={{
+                  // backgroundColor: "#9E58FF",
+                  color: "#ffff",
+                  fontFamily: "time",
+                }}
               >
                 Stop Stream
               </Button>
@@ -1703,7 +1750,11 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
             <Col span={6}>
               <Button
                 variant="contained"
-                color="primary"
+                sx={{
+                  backgroundColor: "#9E58FF",
+                  color: "#ffff",
+                  fontFamily: "time",
+                }}
                 onClick={clearCanvas}
                 disabled={!isDrawingStart}
                 className={classes.button}
@@ -1712,11 +1763,21 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
               </Button>
             </Col>
             <input type="file" onChange={handleFileChange} />
-            <button onClick={handleUpload}>Upload Video</button>
+            <button
+              onClick={handleUpload}
+              variant="outlined"
+              color="secondary"
+              sx={{
+                color: "#F47B20",
+                borderColor: "#F47B20",
+                fontFamily: "time",
+              }}
+            >
+              Upload Video
+            </button>
           </Row>
         </>
       )}
-
     </>
   );
 };

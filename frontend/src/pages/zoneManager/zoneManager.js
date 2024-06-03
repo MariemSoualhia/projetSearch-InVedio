@@ -28,13 +28,18 @@ import {
   Pagination,
   ThemeProvider,
   createTheme,
+  CardActions,
 } from "@mui/material";
 import { Edit, Delete } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/core/styles";
 import { Snackbar, Alert, Switch, FormControlLabel } from "@mui/material";
 import axios from "axios";
 import api from "./api";
-
+import {
+  API_API_URL,
+  API_API_URLDetection,
+  API_API_URLRTSP,
+} from "../../config/serverApiConfig";
 const useStyles = makeStyles((theme) => ({
   root: {
     textAlign: "center",
@@ -46,10 +51,14 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(4),
     border: `2px solid var(--border-color)`,
     borderRadius: "8px",
-
+    backgroundColor: "var(--form-background-color)",
+    boxShadow: theme.shadows[3],
   },
   textField: {
-    marginBottom: theme.spacing(2),
+    marginBottom: "15px", // Add margin bottom
+    paddingBottom: "15px",
+    marginTop: "15px",
+
     "& .MuiOutlinedInput-root": {
       "& fieldset": {
         borderColor: "var(--input-border-color)",
@@ -60,6 +69,9 @@ const useStyles = makeStyles((theme) => ({
       },
       "&.Mui-focused fieldset": {
         borderColor: "var(--input-border-color)",
+      },
+      "&.Mui-focused + .MuiInputLabel-root": {
+        color: "#F47B20", // Focused label color
       },
       "& input": {
         color: "var(--input-text-color)",
@@ -87,6 +99,8 @@ const useStyles = makeStyles((theme) => ({
   },
   tableHeader: {
     fontWeight: "bold",
+    fontFamily: "time",
+    color: "#F47B20",
   },
   pagination: {
     marginTop: theme.spacing(2),
@@ -95,18 +109,29 @@ const useStyles = makeStyles((theme) => ({
     "& .MuiPaginationItem-root": {
       color: "#9E58FF",
     },
+    "& .Mui-selected": {
+      color: "#F47B20",
+      backgroundColor: "#e1ccff", // Optional: to ensure no background color
+    },
   },
   dialogTitle: {
-    //backgroundColor: "var(--background-color)",
+    textAlign: "center", // Center the title
     color: "var(--text-color)",
   },
   dialogContent: {
-    //backgroundColor: "var(--background-color)",
     color: "var(--text-color)",
   },
   dialogActions: {
-    //backgroundColor: "var(--background-color)",
     color: "var(--text-color)",
+  },
+  editButton: {
+    color: "#9E58FF",
+  },
+  deleteButton: {
+    color: "#f44336",
+  },
+  infoButton: {
+    color: "#1A237E",
   },
 }));
 
@@ -136,6 +161,7 @@ const ZoneManager = () => {
     areaName: "",
     dashboardToken: "",
   });
+  const currentUser = JSON.parse(localStorage.getItem("currentuser"));
 
   useEffect(() => {
     fetchZones();
@@ -164,18 +190,19 @@ const ZoneManager = () => {
 
   const fetchSettings = async () => {
     try {
-      const response = await axios.get("http://localhost:3002/api/settings");
-      if (Array.isArray(response.data) && response.data.length > 0) {
-        setPlatformSettings(response.data[0]);
-        setNewZone((prevZone) => ({
-          ...prevZone,
-          areaName: response.data[0].areaName,
-          CameraID: response.data[0].bassiraId,
-          TokenAPI: response.data[0].dashboardToken,
-        }));
-      } else {
-        console.error("Error: No settings found or invalid response format");
-      }
+      const response = await axios.get(API_API_URL + "/api/settings", {
+        params: {
+          token: currentUser.dashboardToken,
+        },
+      });
+
+      setPlatformSettings(response.data);
+      setNewZone((prevZone) => ({
+        ...prevZone,
+        areaName: response.data.areaName,
+        CameraID: response.data.bassiraId,
+        TokenAPI: response.data.dashboardToken,
+      }));
     } catch (error) {
       console.error("Error fetching settings:", error);
     }
@@ -275,7 +302,12 @@ const ZoneManager = () => {
     setDarkMode(newDarkMode);
     localStorage.setItem("darkMode", JSON.stringify(newDarkMode));
   };
-
+  const handleCloseDialog = () => {
+    setNewZone({
+      zone_name: "",
+      type: "",
+    });
+  };
   return (
     <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
       <CssBaseline />
@@ -283,65 +315,99 @@ const ZoneManager = () => {
         {/* <Button onClick={toggleDarkMode}>
           Toggle to {darkMode ? "Light" : "Dark"} Mode
         </Button> */}
-        <Typography variant="h3" gutterBottom className={classes.pageTitle} style={{ fontFamily: "time", fontSize: "36px" }}>
+        <Typography
+          variant="h3"
+          gutterBottom
+          className={classes.pageTitle}
+          style={{ fontFamily: "time", fontSize: "56px", color: "#9E58FF" }}
+        >
           Zone Management
         </Typography>
 
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6}>
-          <Card>
-            <form
-              onSubmit={handleSubmit}
-              className={classes.form}
-              noValidate
-              autoComplete="off"
-            >
-              <TextField
-                label="Zone Name"
-                name="zone_name"
-                value={newZone.zone_name}
-                onChange={handleInputChange}
-                required
-                fullWidth
-                className={classes.textField}
-              />
-              <br></br>
-              <br></br>
-              <FormControl fullWidth className={classes.textField}>
-                <InputLabel className={classes.inputLabel}>Type</InputLabel>
-                <Select
-                  name="type"
-                  value={newZone.type}
-                  onChange={handleInputChange}
-                  label="Type"
-                >
-                  <MenuItem value="gate zone">Gate</MenuItem>
-                  <MenuItem value="internal zone">Internal Zone</MenuItem>
-                </Select>
-              </FormControl>
-              <br></br>
-              <br></br>
-              <TextField
-                label="Area Name"
-                name="areaName"
-                value={newZone.areaName}
-                onChange={handleInputChange}
-                fullWidth
-                className={classes.textField}
-                disabled
-              />
-              <br></br>
-              <br></br>
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                className={classes.button}
-                style={{ fontFamily: "time", fontSize: "16px" }}
+            <Card>
+              <form
+                onSubmit={handleSubmit}
+                className={classes.form}
+                noValidate
+                autoComplete="off"
               >
-                Add Zone
-              </Button>
-            </form>
+                <FormControl
+                  fullWidth
+                  className={classes.textField}
+                  style={{ marginTop: "15px" }}
+                >
+                  <TextField
+                    label="Zone Name"
+                    name="zone_name"
+                    value={newZone.zone_name}
+                    onChange={handleInputChange}
+                    required
+                    //fullWidth
+                    //className={classes.textField}
+                  />
+                </FormControl>
+
+                <FormControl
+                  fullWidth
+                  className={classes.textField}
+                  style={{ marginTop: "15px" }}
+                >
+                  <InputLabel className={classes.inputLabel}>Type</InputLabel>
+                  <Select
+                    name="type"
+                    value={newZone.type}
+                    onChange={handleInputChange}
+                    label="Type"
+                  >
+                    <MenuItem value="gate zone">Gate</MenuItem>
+                    <MenuItem value="internal zone">Internal Zone</MenuItem>
+                  </Select>
+                </FormControl>
+                <FormControl
+                  fullWidth
+                  className={classes.textField}
+                  style={{ marginTop: "15px" }}
+                >
+                  <TextField
+                    label="Area Name"
+                    name="areaName"
+                    value={newZone.areaName}
+                    onChange={handleInputChange}
+                    //fullWidth
+                    // className={classes.textField}
+                    disabled
+                  />
+                </FormControl>
+                <CardActions className={classes.dialogActions}>
+                  <Button
+                    type="submit"
+                    className={classes.button}
+                    variant="contained"
+                    color="secondary"
+                    sx={{
+                      backgroundColor: "#9E58FF",
+                      color: "#ffff",
+                      fontFamily: "time",
+                    }}
+                  >
+                    Add Zone
+                  </Button>
+                  <Button
+                    onClick={handleCloseDialog}
+                    variant="outlined"
+                    color="secondary"
+                    sx={{
+                      color: "#F47B20",
+                      borderColor: "#F47B20",
+                      fontFamily: "time",
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </CardActions>
+              </form>
             </Card>
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -352,14 +418,40 @@ const ZoneManager = () => {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell className={classes.tableHeader}>
+                    <TableCell
+                      style={{
+                        fontFamily: "time",
+                        fontSize: "16px",
+                        fontWeight: "bold",
+                      }}
+                    >
                       Zone Name
                     </TableCell>
-                    <TableCell className={classes.tableHeader}>Type</TableCell>
-                    <TableCell className={classes.tableHeader}>
+                    <TableCell
+                      style={{
+                        fontFamily: "time",
+                        fontSize: "16px",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Type
+                    </TableCell>
+                    <TableCell
+                      style={{
+                        fontFamily: "time",
+                        fontSize: "16px",
+                        fontWeight: "bold",
+                      }}
+                    >
                       Area Name
                     </TableCell>
-                    <TableCell className={classes.tableHeader}>
+                    <TableCell
+                      style={{
+                        fontFamily: "time",
+                        fontSize: "16px",
+                        fontWeight: "bold",
+                      }}
+                    >
                       Actions
                     </TableCell>
                   </TableRow>
@@ -372,13 +464,13 @@ const ZoneManager = () => {
                       <TableCell>{zone.areaName}</TableCell>
                       <TableCell>
                         <IconButton
-                          color="primary"
+                          sx={{ color: "#9E58FF" }}
                           onClick={() => openEditDialog(zone)}
                         >
                           <Edit />
                         </IconButton>
                         <IconButton
-                          color="secondary"
+                          sx={{ color: "#F47B20" }}
                           onClick={() => handleDelete(zone._id)}
                         >
                           <Delete />
@@ -394,28 +486,45 @@ const ZoneManager = () => {
                 count={Math.ceil(zones.length / itemsPerPage)}
                 page={page}
                 onChange={handlePageChange}
-                color="primary"
+                className={classes.pagination}
               />
             </div>
           </Grid>
         </Grid>
         {editZone && (
           <Dialog open={openDialog} onClose={closeEditDialog}>
-            <DialogTitle className={classes.dialogTitle}>Edit Zone</DialogTitle>
+            <DialogTitle
+              className={classes.dialogTitle}
+              style={{
+                fontFamily: "time",
+                fontSize: "25px",
+                fontWeight: "bold",
+              }}
+            >
+              Edit Zone
+            </DialogTitle>
             <DialogContent className={classes.dialogContent}>
-              
-              <TextField
-                label="Zone Name"
-                name="zone_name"
-                value={editZone.zone_name}
-                onChange={handleEditChange}
-                required
+              <FormControl
                 fullWidth
                 className={classes.textField}
-              />
-                <br></br>
-                <br></br>
-              <FormControl fullWidth className={classes.textField}>
+                style={{ marginTop: "15px" }}
+              >
+                <TextField
+                  label="Zone Name"
+                  name="zone_name"
+                  value={editZone.zone_name}
+                  onChange={handleEditChange}
+                  required
+                  //fullWidth
+                  //className={classes.textField}
+                />
+              </FormControl>
+
+              <FormControl
+                fullWidth
+                className={classes.textField}
+                style={{ marginTop: "15px" }}
+              >
                 <InputLabel className={classes.inputLabel}>Type</InputLabel>
                 <Select
                   name="type"
@@ -427,23 +536,45 @@ const ZoneManager = () => {
                   <MenuItem value="internal zone">Internal Zone</MenuItem>
                 </Select>
               </FormControl>
-              <br></br>
-              <br></br>
-              <TextField
-                label="Area Name"
-                name="areaName"
-                value={editZone.areaName}
-                onChange={handleEditChange}
+              <FormControl
                 fullWidth
-                disabled
                 className={classes.textField}
-              />
+                style={{ marginTop: "15px" }}
+              >
+                <TextField
+                  label="Area Name"
+                  name="areaName"
+                  value={editZone.areaName}
+                  onChange={handleEditChange}
+                  //fullWidth
+                  disabled
+                  //className={classes.textField}
+                />
+              </FormControl>
             </DialogContent>
             <DialogActions className={classes.dialogActions}>
-              <Button onClick={closeEditDialog} color="secondary">
+              <Button
+                onClick={closeEditDialog}
+                variant="outlined"
+                color="secondary"
+                sx={{
+                  color: "#F47B20",
+                  borderColor: "#F47B20",
+                  fontFamily: "time",
+                }}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleEditSubmit} color="primary">
+              <Button
+                onClick={handleEditSubmit}
+                variant="contained"
+                color="secondary"
+                sx={{
+                  backgroundColor: "#9E58FF",
+                  color: "#ffff",
+                  fontFamily: "time",
+                }}
+              >
                 Update
               </Button>
             </DialogActions>

@@ -7,6 +7,7 @@ body.light {
   --selected-text-color: #9E58FF;
   --icon-color: #9E58FF;
   --icon-selected-color: #9E58FF;
+  --selected-border-color: #F47B20; /* New variable for selected border color */
 }
 
 body.dark {
@@ -17,6 +18,7 @@ body.dark {
   --selected-text-color: #9E58FF;
   --icon-color: #fff;
   --icon-selected-color: #9E58FF;
+  --selected-border-color: #F47B20; /* New variable for selected border color */
 }
 
 .menu-horizontal {
@@ -27,12 +29,21 @@ body.dark {
 .menu-horizontal .ant-menu-item a {
   color: var(--text-color); /* Use CSS variable for text color */
   font-family: 'time'; /* Font family */
-  font-size: 18px;
+  font-size: 16px;
+  font-weight: bold; /* Bold font weight for logo text */
 }
 
 .menu-horizontal .ant-menu-item a:hover {
   color: var(--hover-text-color); /* Use CSS variable for hover text color */
   background-color: transparent; /* Transparent background on hover */
+}
+
+.menu-horizontal .ant-menu-item-selected {
+  border-bottom: 2px solid var(--selected-border-color) !important; /* Ensure the border color for selected item */
+}
+
+.menu-horizontal .ant-menu-horizontal > .ant-menu-item-selected {
+  border-bottom: 2px solid var(--selected-border-color) !important; /* Ensure the border color for selected item */
 }
 
 .menu-horizontal .ant-menu-item-selected a {
@@ -61,6 +72,7 @@ body.dark {
   color: var(--text-color); /* Use CSS variable for logout item text color */
   font-family: 'time'; /* Font family */
   font-size: 18px; /* Font size for logo text */
+  font-weight: bold; /* Bold font weight for logo text */
 }
 
 .menu-horizontal .logout-item:hover {
@@ -85,7 +97,7 @@ body.dark {
   font-weight: bold; /* Bold font weight for logo text */
 }
 
-.user-item{
+.user-item {
   font-family: 'time'; /* Font family */
   font-size: 18px; /* Font size for logo text */
 }

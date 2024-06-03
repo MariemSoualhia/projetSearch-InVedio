@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import DetectionPage from "./DetectionPage";
 import axios from "axios";
-import { API_API_URL } from "../../config/serverApiConfig";
+import {
+  API_API_URL,
+  API_API_URLDetection,
+  API_API_URLRTSP,
+} from "../../config/serverApiConfig";
 import { Grid, Button, Typography, CircularProgress } from "@material-ui/core";
 import QueuePlayNextIcon from "@mui/icons-material/QueuePlayNext";
 

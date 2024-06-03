@@ -12,8 +12,14 @@ import {
   Alert,
   ThemeProvider,
   createTheme,
+  Paper,
+  Grid,
 } from "@mui/material";
-
+import {
+  API_API_URL,
+  API_API_URLDetection,
+  API_API_URLRTSP,
+} from "../../config/serverApiConfig";
 const ResetPasswordPage = () => {
   const { token } = useParams();
   const navigate = useNavigate();
@@ -47,7 +53,7 @@ const ResetPasswordPage = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:3002/api/user/reset-password/${token}`,
+        API_API_URL + `/api/user/reset-password/${token}`,
         {
           method: "POST",
           headers: {
@@ -86,7 +92,7 @@ const ResetPasswordPage = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Container component="main" maxWidth="xs">
+      <Container component="main" maxWidth="lg">
         <Box
           sx={{
             marginTop: 8,
@@ -95,77 +101,142 @@ const ResetPasswordPage = () => {
             alignItems: "center",
           }}
         >
-          <Typography component="h1" variant="h5">
-            Reset Password
-          </Typography>
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="New Password"
-              type="password"
-              id="password"
-              autoComplete="new-password"
-              value={password}
-              onChange={handlePasswordChange}
-              InputProps={{
-                style: { color: darkMode ? "#fff" : "#000" },
+          <Grid container>
+            <Grid
+              item
+              xs={false}
+              sm={4}
+              md={7}
+              sx={{
+                backgroundImage:
+                  "url(https://datadoit.io/wp-content/uploads/2023/08/datadoit-banner-768x462.png)",
+                backgroundRepeat: "no-repeat",
+                backgroundColor: (theme) =>
+                  theme.palette.mode === "light"
+                    ? theme.palette.grey[50]
+                    : theme.palette.grey[900],
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
               }}
-              InputLabelProps={{
-                style: { color: darkMode ? "#fff" : "#000" },
-              }}
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="confirmPassword"
-              label="Confirm Password"
-              type="password"
-              id="confirmPassword"
-              autoComplete="new-password"
-              value={confirmPassword}
-              onChange={handleConfirmPasswordChange}
-              InputProps={{
-                style: { color: darkMode ? "#fff" : "#000" },
-              }}
-              InputLabelProps={{
-                style: { color: darkMode ? "#fff" : "#000" },
-              }}
-            />
-            <Box sx={{ position: "relative", mt: 3, mb: 2 }}>
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
+            ></Grid>
+            <Grid
+              item
+              xs={12}
+              sm={8}
+              md={5}
+              component={Paper}
+              elevation={6}
+              square
+            >
+              <Box
                 sx={{
-                  backgroundColor: "#9e58ff",
-                  color: "#fff",
-                  ":hover": {
-                    backgroundColor: "#8e4ce0",
-                  },
+                  my: 8,
+                  mx: 4,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
                 }}
-                disabled={loading}
               >
-                Reset Password
-              </Button>
-              {loading && (
-                <CircularProgress
-                  size={24}
-                  sx={{
-                    color: "#9e58ff",
-                    position: "absolute",
-                    top: "50%",
-                    left: "50%",
-                    marginTop: "-12px",
-                    marginLeft: "-12px",
-                  }}
+                <img
+                  src="https://data-doit.com/wp-content/uploads/2022/11/datadoit1-150x150.png"
+                  alt="Logo"
                 />
-              )}
-            </Box>
-          </Box>
+                <Typography
+                  component="h1"
+                  variant="h5"
+                  sx={{
+                    fontFamily: "time",
+                    mt: 2,
+                    fontSize: "36px",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Reset Password
+                </Typography>
+                <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+                  <TextField
+                    margin="normal"
+                    required
+                    fullWidth
+                    name="password"
+                    label="New Password"
+                    type="password"
+                    id="password"
+                    autoComplete="new-password"
+                    value={password}
+                    onChange={handlePasswordChange}
+                    InputProps={{
+                      style: { color: darkMode ? "#fff" : "#000" },
+                    }}
+                    InputLabelProps={{
+                      style: {
+                        color: darkMode ? "#fff" : "#000",
+                        fontFamily: "time",
+                        fontSize: "20px",
+                      },
+                    }}
+                  />
+                  <TextField
+                    margin="normal"
+                    required
+                    fullWidth
+                    name="confirmPassword"
+                    label="Confirm Password"
+                    type="password"
+                    id="confirmPassword"
+                    autoComplete="new-password"
+                    value={confirmPassword}
+                    onChange={handleConfirmPasswordChange}
+                    InputProps={{
+                      style: { color: darkMode ? "#fff" : "#000" },
+                    }}
+                    InputLabelProps={{
+                      style: {
+                        color: darkMode ? "#fff" : "#000",
+                        fontFamily: "time",
+                        fontSize: "20px",
+                      },
+                    }}
+                  />
+                  <Box sx={{ position: "relative", mt: 3, mb: 2 }}>
+                    <Button
+                      type="submit"
+                      fullWidth
+                      variant="contained"
+                      sx={{
+                        backgroundColor: "#9e58ff",
+                        color: "#fff",
+                        ":hover": {
+                          backgroundColor: "#8e4ce0",
+                        },
+                        fontFamily: "time",
+                        fontSize: "20px",
+                      }}
+                      disabled={loading}
+                    >
+                      Reset Password
+                    </Button>
+                    {loading && (
+                      <CircularProgress
+                        size={24}
+                        sx={{
+                          color: "#9e58ff",
+                          position: "absolute",
+                          top: "50%",
+                          left: "50%",
+                          marginTop: "-12px",
+                          marginLeft: "-12px",
+                        }}
+                      />
+                    )}
+                  </Box>
+                </Box>
+              </Box>
+            </Grid>
+          </Grid>
         </Box>
         <Snackbar
           open={openSnackbar}

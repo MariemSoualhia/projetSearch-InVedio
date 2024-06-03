@@ -17,7 +17,11 @@ import { Alert, LinearProgress } from "@mui/material";
 import { createTheme, ThemeProvider } from "@material-ui/core/styles";
 import { makeStyles } from "@material-ui/core/styles";
 import NetworkConfig from "../NetworkConfig/NetworkConfig";
-
+import {
+  API_API_URL,
+  API_API_URLDetection,
+  API_API_URLRTSP,
+} from "../../config/serverApiConfig";
 const useStyles = makeStyles((theme) => ({
   root: {
     textAlign: "center",
@@ -96,11 +100,15 @@ const useStyles = makeStyles((theme) => ({
 const SettingsPage = () => {
   const classes = useStyles();
   const [darkMode, setDarkMode] = useState(false);
+  const currentUser = JSON.parse(localStorage.getItem("currentuser"));
+
   const [platformSettings, setPlatformSettings] = useState({
     bassiraId: "",
     areaName: "",
     dashboardToken: "",
+    userId: currentUser ? currentUser.id : "",
   });
+
   const [networkConfig, setNetworkConfig] = useState({
     interface: "eth0",
     dhcp: true,
@@ -142,24 +150,31 @@ const SettingsPage = () => {
   }, []);
 
   const fetchSettings = async () => {
-    try {
-      const response = await axios.get("http://localhost:3002/api/settings");
-      if (Array.isArray(response.data) && response.data.length > 0) {
-        setPlatformSettings(response.data[0]);
-      } else {
-        console.error("Error: No settings found or invalid response format");
+    if (currentUser && currentUser.dashboardToken) {
+      try {
+        const response = await axios.get(API_API_URL + "/api/settings", {
+          params: {
+            token: currentUser.dashboardToken,
+          },
+        });
+        if (response.data) {
+          setPlatformSettings(response.data);
+        } else {
+          console.error("Error: No settings found or invalid response format");
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error);
       }
-    } catch (error) {
-      console.error("Error fetching settings:", error);
     }
   };
 
   const saveSettings = async () => {
     setLoading(true);
+    console.log(platformSettings);
     if (platformSettings._id) {
       axios
         .put(
-          `http://localhost:3002/api/settings/${platformSettings._id}`,
+          API_API_URL + `/api/settings/${platformSettings._id}`,
           platformSettings
         )
         .then((rep) => {
@@ -184,8 +199,9 @@ const SettingsPage = () => {
           setLoading(false);
         });
     } else {
+      console.log("i'm here");
       axios
-        .post("http://localhost:3002/api/settings", platformSettings)
+        .post(API_API_URL + "/api/settings/", platformSettings)
         .then(() => {
           console.log("Settings created successfully");
           setSuccessMessage("Settings created successfully");

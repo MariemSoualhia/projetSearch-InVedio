@@ -15,7 +15,11 @@ import LiveTvIcon from "@mui/icons-material/LiveTv";
 import SettingsIcon from "@mui/icons-material/Settings";
 import CropFreeIcon from "@mui/icons-material/CropFree";
 import "./navigation.css";
-
+import {
+  API_API_URL,
+  API_API_URLDetection,
+  API_API_URLRTSP,
+} from "../../config/serverApiConfig";
 const { SubMenu } = Menu;
 
 const items = [
@@ -120,7 +124,7 @@ const Navigation = () => {
       <Dropdown overlay={menu} placement="bottomRight" className="logout-item">
         <Menu.Item key="user" className="logout-item">
           <Avatar
-            src={`http://localhost:3002${user.photoProfil}`}
+            src={API_API_URL + `${user.photoProfil}`}
             alt="User Profile Picture"
           />
         </Menu.Item>
