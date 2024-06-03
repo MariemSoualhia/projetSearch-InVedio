@@ -76,6 +76,7 @@ router.post("/signin", async (req, res) => {
         username: user.username,
         email: user.email,
         photoProfil: user.photoProfil,
+        dashboardToken: user.dashboardToken,
       },
     };
 
@@ -86,7 +87,6 @@ router.post("/signin", async (req, res) => {
   }
 });
 
-// Route pour récupérer tous les utilisateurs (GET)
 router.get("/users", async (req, res) => {
   try {
     const users = await User.find();
@@ -96,7 +96,6 @@ router.get("/users", async (req, res) => {
   }
 });
 
-// Route pour récupérer un utilisateur par son ID (GET)
 router.get("/users/:id", async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -109,7 +108,6 @@ router.get("/users/:id", async (req, res) => {
   }
 });
 
-// Route pour mettre à jour un utilisateur par son ID (PATCH)
 router.patch("/users/:id", async (req, res) => {
   try {
     const user = await User.findByIdAndUpdate(req.params.id, req.body, {
@@ -124,7 +122,6 @@ router.patch("/users/:id", async (req, res) => {
   }
 });
 
-// Route pour supprimer un utilisateur par son ID (DELETE)
 router.delete("/users/:id", async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
@@ -137,19 +134,16 @@ router.delete("/users/:id", async (req, res) => {
   }
 });
 
-// Route pour mettre à jour un utilisateur par son ID (PUT)
 router.put("/update/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { username, email, password } = req.body;
 
-    // Vérifiez si l'utilisateur existe
     const user = await User.findById(id);
     if (!user) {
       return res.status(404).send({ message: "User not found" });
     }
 
-    // Mettez à jour les informations de l'utilisateur
     if (username) user.username = username;
     if (email) user.email = email;
     if (password) {
@@ -157,29 +151,24 @@ router.put("/update/:id", async (req, res) => {
       user.password = hashedPassword;
     }
 
-    // Enregistrez les modifications
     await user.save();
 
-    // Réponse avec l'utilisateur mis à jour
     res.send(user);
   } catch (err) {
     res.status(400).send(err);
   }
 });
 
-// Route pour changer le mot de passe d'un utilisateur (PUT)
 router.put("/change-password/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { currentPassword, newPassword } = req.body;
 
-    // Vérifiez si l'utilisateur existe
     const user = await User.findById(id);
     if (!user) {
       return res.status(404).send({ message: "User not found" });
     }
 
-    // Vérifiez le mot de passe actuel
     const isPasswordValid = await bcrypt.compare(
       currentPassword,
       user.password
@@ -188,21 +177,17 @@ router.put("/change-password/:id", async (req, res) => {
       return res.status(401).send({ message: "Incorrect current password" });
     }
 
-    // Hachez le nouveau mot de passe et mettez à jour l'utilisateur
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedNewPassword;
 
-    // Enregistrez les modifications
     await user.save();
 
-    // Réponse avec l'utilisateur mis à jour
     res.send({ message: "Password changed successfully" });
   } catch (err) {
     res.status(400).send(err);
   }
 });
 
-// Route pour mettre à jour la photo de profil d'un utilisateur (PUT)
 router.put(
   "/update-profile-picture/:id",
   upload.single("photoProfil"),
@@ -210,19 +195,15 @@ router.put(
     try {
       const { id } = req.params;
 
-      // Vérifiez si l'utilisateur existe
       const user = await User.findById(id);
       if (!user) {
         return res.status(404).send({ message: "User not found" });
       }
 
-      // Enregistrez le chemin absolu de la photo de profil
       user.photoProfil = path.join("/uploads", req.file.filename);
 
-      // Enregistrez les modifications
       await user.save();
 
-      // Réponse avec l'utilisateur mis à jour
       res.send(user);
     } catch (err) {
       res.status(400).send(err);
@@ -230,17 +211,14 @@ router.put(
   }
 );
 
-// Configure the email transport using the default SMTP transport and a Gmail account.
-// For other email services, see https://nodemailer.com/about/
 const transporter = nodemailer.createTransport({
   service: "Gmail",
   auth: {
-    user: "siwargarrouri57@gmail.com",
-    pass: "qecfduhhdhkqpxgd",
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
 
-// Route pour demander une réinitialisation de mot de passe
 router.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
 
@@ -275,7 +253,6 @@ router.post("/forgot-password", async (req, res) => {
   }
 });
 
-// Route pour réinitialiser le mot de passe
 router.post("/reset-password/:token", async (req, res) => {
   try {
     const user = await User.findOne({
