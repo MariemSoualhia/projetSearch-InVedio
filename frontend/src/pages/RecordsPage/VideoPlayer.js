@@ -19,6 +19,7 @@ import {
   OutlinedInput,
   Alert,
   Snackbar,
+  Slider
 } from "@mui/material";
 import {
   API_API_URL,
@@ -161,6 +162,7 @@ const VideoPlayer = ({ videoId, videoPath }) => {
           ))}
         </Select>
       </FormControl>
+      <Slider defaultValue={0.5} step={0.1} marks min={0} max={1}  />
       <video
         ref={videoRef}
         width="100%"
