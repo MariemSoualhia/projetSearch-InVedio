@@ -53,7 +53,7 @@ const createCamera = async (req, res) => {
       login: req.body.username,
       pwd: req.body.password,
     };
-    const response = await axios.post('http://localhost:5000/add_network', networkData);
+    const response = await axios.post('http://localhost:5002/add_network', networkData);
 
     // Vérifier la réponse et enregistrer l'URL RTSP dans la base de données
     const rtspUrl = response.data.valid_links.find(link => link.includes(req.body.address));

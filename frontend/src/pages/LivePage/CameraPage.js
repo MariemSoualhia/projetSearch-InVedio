@@ -214,7 +214,7 @@ const CameraPage = () => {
 
   const fetchCamerasAddress = async () => {
     try {
-      const response = await axios.get(API_API_URLRTSP + "scan_ips");
+      const response = await axios.get(API_API_URLRTSP + "/scan_ips");
       setListAddress(response.data.list_ips);
       localStorage.setItem("addresses", JSON.stringify(response.data.list_ips));
     } catch (error) {

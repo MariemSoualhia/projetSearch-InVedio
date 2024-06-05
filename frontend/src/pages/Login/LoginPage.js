@@ -109,7 +109,7 @@ const LoginPage = () => {
       const responseData = await response.json();
       const token = responseData.token;
       const user = JSON.stringify(responseData.user);
-
+      console.log(user)
       localStorage.setItem("token", token);
       localStorage.setItem("currentuser", user);
 

@@ -83,3 +83,30 @@ exports.updateSettings = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Nouvelle fonction pour obtenir tous les paramètres
+exports.getAllSettings = async (req, res) => {
+  try {
+    const settings = await Settings.find();
+    res.status(200).json(settings);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Nouvelle fonction pour supprimer des paramètres
+exports.deleteSettings = async (req, res) => {
+  const { _id } = req.params;
+  
+  try {
+    const settings = await Settings.findByIdAndDelete(_id);
+
+    if (!settings) {
+      return res.status(404).json({ message: "Settings not found" });
+    }
+
+    res.status(200).json({ message: "Settings deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

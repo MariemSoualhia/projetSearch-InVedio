@@ -79,6 +79,94 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   checked: {},
+  form: {
+    maxWidth: "600px",
+    margin: "auto",
+    padding: theme.spacing(4),
+    border: `2px solid var(--border-color)`,
+    borderRadius: "8px",
+    backgroundColor: "var(--form-background-color)",
+    boxShadow: theme.shadows[3],
+  },
+  textField: {
+    marginBottom: "15px", // Add margin bottom
+    paddingBottom: "15px",
+    marginTop: "15px",
+
+    "& .MuiOutlinedInput-root": {
+      "& fieldset": {
+        borderColor: "var(--input-border-color)",
+        backgroundColor: "var(--input-background-color)",
+      },
+      "&:hover fieldset": {
+        borderColor: "var(--input-border-color)",
+      },
+      "&.Mui-focused fieldset": {
+        borderColor: "var(--input-border-color)",
+      },
+      "&.Mui-focused + .MuiInputLabel-root": {
+        color: "#F47B20", // Focused label color
+      },
+      "& input": {
+        color: "var(--input-text-color)",
+      },
+    },
+    "& .MuiInputLabel-root": {
+      color: "var(--label-color)",
+    },
+  },
+  button: {
+    marginRight: theme.spacing(1),
+  },
+  tableContainer: {
+    marginTop: theme.spacing(2),
+    backgroundColor: "var(--background-color)",
+    borderRadius: "8px",
+    border: `2px solid var(--border-color)`,
+    padding: theme.spacing(2),
+  },
+  pageTitle: {
+    fontSize: "24px",
+    fontWeight: "bold",
+    marginBottom: theme.spacing(3),
+    color: "var(--text-color)",
+  },
+  tableHeader: {
+    fontWeight: "bold",
+    fontFamily: "time",
+    color: "#F47B20",
+  },
+  pagination: {
+    marginTop: theme.spacing(2),
+    display: "flex",
+    justifyContent: "center",
+    "& .MuiPaginationItem-root": {
+      color: "#9E58FF",
+    },
+    "& .Mui-selected": {
+      color: "#F47B20",
+      backgroundColor: "#e1ccff", // Optional: to ensure no background color
+    },
+  },
+  dialogTitle: {
+    textAlign: "center", // Center the title
+    color: "var(--text-color)",
+  },
+  dialogContent: {
+    color: "var(--text-color)",
+  },
+  dialogActions: {
+    color: "var(--text-color)",
+  },
+  editButton: {
+    color: "#9E58FF",
+  },
+  deleteButton: {
+    color: "#f44336",
+  },
+  infoButton: {
+    color: "#1A237E",
+  },
 }));
 
 const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
@@ -135,12 +223,18 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
     areaName: "",
     dashboardToken: "",
   });
+  const currentUser = JSON.parse(localStorage.getItem("currentuser"));
+
   // Fonction pour récupérer les paramètres depuis l'API
   const fetchSettings = async () => {
     try {
-      const response = await axios.get(API_API_URL + "/api/settings");
-      if (Array.isArray(response.data) && response.data.length > 0) {
-        setPlatformSettings(response.data[0]);
+      const response = await axios.get(API_API_URL + "/api/settings", {
+        params: {
+          token: currentUser.dashboardToken,
+        },
+      });
+      if (response.data) {
+        setPlatformSettings(response.data);
       } else {
         console.error("Error: No settings found or invalid response format");
         showSnackbar(
@@ -1587,7 +1681,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
           <Row>
             <Col span={12}>
               {" "}
-              <FormControl component="fieldset">
+              <FormControl  className={classes.textField} component="fieldset">
                 <RadioGroup
                   color="#f44336"
                   aria-labelledby="demo-radio-buttons-group-label"
@@ -1623,9 +1717,11 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
               </FormControl>
             </Col>
             <Col span={12}>
-              <InputLabel id="demo-simple-select-label">
+            <FormControl fullWidth className={classes.textField}>
+              <InputLabel  className={classes.textField}>
                 Link to zone{" "}
               </InputLabel>
+        
               <Select labelId="direction-label" id="direction-select" required>
                 {drawMode === "roi" &&
                   internalZones.map((zone, index) => (
@@ -1648,12 +1744,14 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
                     </MenuItem>
                   ))}
               </Select>
+              </FormControl>
             </Col>
           </Row>
           <Row>
             <Col span={12}>
               {" "}
               {drawMode === "roi" && (
+                      <FormControl fullWidth className={classes.textField}>
                 <FormGroup>
                   <FormControlLabel
                     control={
@@ -1669,6 +1767,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
                     label="Timer"
                   />
                 </FormGroup>
+                </FormControl>
               )}
             </Col>
             <Row></Row>
@@ -1678,7 +1777,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
               <>
                 <Col span={8}>
                   {" "}
-                  <FormControl style={{ width: "80%" }}>
+                  <FormControl style={{ width: "80%" }} className={classes.textField}>
                     <InputLabel id="demo-simple-select-label">
                       Position
                     </InputLabel>
@@ -1696,7 +1795,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
                 </Col>
                 <Col span={8}>
                   {" "}
-                  <FormControl style={{ width: "80%" }}>
+                  <FormControl style={{ width: "80%" }} className={classes.textField}> 
                     <InputLabel>Flow direction</InputLabel>
                     <Select
                       labelId="direction-label"
@@ -1762,19 +1861,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
                 Clear
               </Button>
             </Col>
-            <input type="file" onChange={handleFileChange} />
-            <button
-              onClick={handleUpload}
-              variant="outlined"
-              color="secondary"
-              sx={{
-                color: "#F47B20",
-                borderColor: "#F47B20",
-                fontFamily: "time",
-              }}
-            >
-              Upload Video
-            </button>
+
           </Row>
         </>
       )}

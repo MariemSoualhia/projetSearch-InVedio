@@ -27,6 +27,7 @@ import {
   API_API_URLRTSP,
   API_API_SEARCH,
 } from "../../config/serverApiConfig";
+
 const predefinedClasses = [
   "person",
   "bicycle",
@@ -54,6 +55,8 @@ const VideoPlayer = ({ videoId, videoPath }) => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [alertSeverity, setAlertSeverity] = useState("success");
+  const [threshold, setThreshold] = useState(0.1);
+
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.pause();
@@ -67,26 +70,34 @@ const VideoPlayer = ({ videoId, videoPath }) => {
       target: { value },
     } = event;
     setSelectedClasses(typeof value === "string" ? value.split(",") : value);
+    setSearchResults([]); // Clear previous search results
 
     setLoading(true);
     try {
       const data = {
         video_path: videoPath,
-        texts: value, // Only search for the first selected class
+        object: value, // Only search for the first selected class
+        threshold: threshold
       };
-
+      console.log(data)
       const response = await axios.post(API_API_SEARCH + "/detect", data);
-      console.log(response.data.first_detection_time);
+      if (response.data.first_detection_time === undefined) {
+        throw new Error("No detection time found for the selected class.");
+      }
       const res = [response.data.first_detection_time];
       setSearchResults(res);
     } catch (error) {
       console.error("Error fetching detection times:", error);
-      setAlertMessage("Failed to search in video.");
+      setAlertMessage(error.message || "Failed to search in video.");
       setAlertSeverity("error");
       setSnackbarOpen(true);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSliderChange = (event, newValue) => {
+    setThreshold(newValue);
   };
 
   const handleResultClick = (timestamp) => {
@@ -116,6 +127,7 @@ const VideoPlayer = ({ videoId, videoPath }) => {
     setModalOpen(false);
     setSelectedFrame(null);
   };
+
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);
   };
@@ -141,7 +153,6 @@ const VideoPlayer = ({ videoId, videoPath }) => {
         <InputLabel id="class-select-label">Select Classes</InputLabel>
         <Select
           labelId="class-select-label"
-          //multiple
           value={selectedClasses}
           onChange={handleClassChange}
           input={
@@ -162,7 +173,34 @@ const VideoPlayer = ({ videoId, videoPath }) => {
           ))}
         </Select>
       </FormControl>
-      <Slider defaultValue={0.5} step={0.1} marks min={0} max={1}  />
+      <Box sx={{ width: "80%", margin: "20px auto" }}>
+        <Typography variant="h6">Accuracy: {threshold.toFixed(2)}</Typography>
+        <Slider
+          value={threshold}
+          onChange={handleSliderChange}
+          step={0.05}
+          marks
+          min={0}
+          max={1}
+          valueLabelDisplay="auto" // This will display the value label above the slider thumb
+          sx={{
+            color: "#9E58FF", // Slider color
+            '& .MuiSlider-thumb': {
+              width: 24,
+              height: 24,
+              '&:focus, &:hover, &.Mui-active': {
+                boxShadow: '0px 0px 0px 8px rgba(158, 88, 255, 0.16)',
+              },
+            },
+            '& .MuiSlider-track': {
+              height: 8,
+            },
+            '& .MuiSlider-rail': {
+              height: 8,
+            },
+          }}
+        />
+      </Box>
       <video
         ref={videoRef}
         width="100%"
@@ -188,7 +226,7 @@ const VideoPlayer = ({ videoId, videoPath }) => {
         </List>
       )}
       <Typography variant="h6" gutterBottom>
-        Video Frames:
+        
       </Typography>
       <Paper
         elevation={3}

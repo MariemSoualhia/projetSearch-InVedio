@@ -124,7 +124,7 @@ const Navigation = () => {
       <Dropdown overlay={menu} placement="bottomRight" className="logout-item">
         <Menu.Item key="user" className="logout-item">
           <Avatar
-            src={API_API_URL + `${user.photoProfil}`}
+            src={API_API_URL + `/${user.photoProfil}`}
             alt="User Profile Picture"
           />
         </Menu.Item>
