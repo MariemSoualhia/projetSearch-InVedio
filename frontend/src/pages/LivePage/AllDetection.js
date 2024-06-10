@@ -123,6 +123,7 @@ const AllDetection = () => {
   const [cameras, setCameras] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [videos, setVideos] = useState([]);
   const [uploadStatus, setUploadStatus] = useState("");
   const [darkMode, setDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -142,6 +143,15 @@ const AllDetection = () => {
     } catch (error) {
       console.error("Error fetching cameras:", error);
       setLoading(false);
+    }
+  };
+  const fetchVideos = async () => {
+    try {
+      const response = await axios.get(API_API_URL + "/api/videosUploads");
+      console.log("Videos:", response.data);
+      setVideos(response.data);
+    } catch (error) {
+      console.error("Error fetching videos:", error);
     }
   };
 
@@ -169,6 +179,7 @@ const AllDetection = () => {
 
   useEffect(() => {
     fetchCameras();
+    fetchVideos();
     fetchStreams();
   }, []);
 
@@ -198,37 +209,18 @@ const AllDetection = () => {
     setSelectedFile(event.target.files[0]);
   };
 
-  const handleUpload = async () => {
-    if (!selectedFile) {
-      setUploadStatus("Please select a file first");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-
-    try {
-      const response = await axios.post(API_API_URL + "/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      if (response.data.success) {
-        setUploadStatus("File uploaded successfully");
+  const handleUpload = async (cam) => {
+  
+ 
+       
         const dataCam = {
-          rtspUrl: response.data.filePath,
-          name: response.data.filePath,
+          rtspUrl:cam.path,
+          name: cam.name
         };
-        console.log("File uploaded successfully", response.data.filePath);
+      console.log(dataCam)
         handleCameraButtonClick(dataCam);
-      } else {
-        setUploadStatus("File upload failed");
-      }
-    } catch (error) {
-      console.error("Error uploading file:", error);
-      setUploadStatus("Error uploading file");
-    }
+      
+    
   };
   const theme = createTheme({
     palette: {
@@ -264,39 +256,24 @@ const AllDetection = () => {
                     </Button>
                   </Grid>
                 ))}
-                <Grid item>
-                  <input
-                    accept="video/*"
-                    style={{ display: "none" }}
-                    id="raised-button-file"
-                    type="file"
-                    onChange={handleFileChange}
-                  />
-                  <label htmlFor="raised-button-file">
+                {videos.map((camera) => (
+                  <Grid item key={camera.id}>
                     <Button
                       variant="contained"
-                      component="span"
-                      className={classes.uploadButton}
+                      className={classes.button}
+                      style={{
+                        fontFamily: "time",
+                        fontSize: "16px",
+                        backgroundColor: "#9E58FF",
+                        fontWeight: "bold",
+                      }}
+                      onClick={() => handleUpload(camera)}
+                      startIcon={<QueuePlayNextIcon />}
                     >
-                      Upload Video
+                      {camera.name}
                     </Button>
-                  </label>
-                  <Button
-                    variant="contained"
-                    onClick={handleUpload}
-                    className={classes.uploadButton}
-                  >
-                    Upload
-                  </Button>
-                  {uploadStatus && (
-                    <Typography
-                      variant="body2"
-                      style={{ color: "red", marginTop: "10px" }}
-                    >
-                      {uploadStatus}
-                    </Typography>
-                  )}
-                </Grid>
+                  </Grid>
+                ))}
               </Grid>
             )}
           </Grid>

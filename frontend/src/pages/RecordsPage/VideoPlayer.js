@@ -182,9 +182,9 @@ const VideoPlayer = ({ videoId, videoPath }) => {
           marks
           min={0}
           max={1}
-          valueLabelDisplay="auto" // This will display the value label above the slider thumb
+          valueLabelDisplay="auto" 
           sx={{
-            color: "#9E58FF", // Slider color
+            color: "#9E58FF", 
             '& .MuiSlider-thumb': {
               width: 24,
               height: 24,

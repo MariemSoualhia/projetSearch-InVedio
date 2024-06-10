@@ -9,8 +9,10 @@ const cameraRoutes = require("./routes/cameraRoutes");
 const userRoutes = require("./routes/userRoutes");
 const videoRoutes = require("./routes/videoRoutesjs");
 const streamRoutes = require("./routes/streamRoutes");
-const zoneRoutes = require("./routes/zoneRoutes"); // Assurez-vous que le chemin est correct
+const zoneRoutes = require("./routes/zoneRoutes"); 
 const settingsRoutes = require("./routes/settingsRoutes");
+const eventsRoutes = require("./routes/eventsRoutes"); 
+const videoUploadsRoutes = require('./routes/videoUploadsRoutes');
 const Video = require("./models/Video");
 const moment = require("moment");
 const path = require("path");
@@ -46,6 +48,8 @@ app.use("/api/videos", videoRoutes);
 app.use("/api/stream", streamRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/zone", zoneRoutes); // Préfixe pour les routes de l'API
+app.use("/api/event", eventsRoutes); // Base path for event routes
+app.use('/api/videosUploads', videoUploadsRoutes);
 
 app.get("/api/test", (req, res) => {
   res.send(200).json({ test: `ok` });
@@ -467,7 +471,7 @@ function statusDeviceScheduler() {
 }
 //createDevice()
 // Appel de la fonction de planification
-statusDeviceScheduler();
+//statusDeviceScheduler();
 
 app.listen(process.env.PORT, () => {
   console.log(`Server running on port ${process.env.PORT}`);

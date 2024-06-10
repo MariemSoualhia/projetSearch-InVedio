@@ -20,6 +20,7 @@ import {
   Checkbox,
   FormGroup,
   Box,
+  TextField
 } from "@material-ui/core";
 import { Snackbar, Alert } from "@mui/material";
 import { Col, Row } from "antd";
@@ -249,6 +250,8 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [isTimer, setTimer] = useState("off");
+  const [enableAlert, setEnableAlert] = useState("off");
+  const [scheduleAlert, setScheduleAlert] = useState();
   const [link, setLink] = useState();
   const [videoPath, setVideoPath] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
@@ -406,6 +409,12 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
     setTimer(event.target.checked ? "on" : "off");
     console.log(isTimer);
   };
+  const handleAlertChange = (event) => {
+    console.log(event.target.checked);
+    setEnableAlert(event.target.checked ? "on" : "off");
+    console.log(isTimer);
+  };
+
 
   const fetchCameras = async () => {
     try {
@@ -643,6 +652,16 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
       }
 
       function sendStream(hostname, port, path, configuration, reportErrorCB) {
+        console.log("in video")
+        console.log(hostname, port, path, configuration, reportErrorCB)
+        if (stream.input_stream && !hostname && !port) {
+          const data = {
+            input_stream: stream.input_stream,
+          };
+          console.log(data);
+    
+          axios.put(API_API_URL + `/api/stream/stop/${stream._id}`);
+        }
         var l = window.location;
         if (path == "null") return;
         if (l.protocol != "https:") {
@@ -651,8 +670,10 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
         }
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           alert("getUserMedia() not available (confirm HTTPS is being used)");
+          
           return;
         }
+       
         var wsProt = l.protocol == "https:" ? "wss://" : "ws://";
         var wsHost = hostname != undefined ? hostname : l.hostname;
         var wsPort =
@@ -674,6 +695,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
 
         connections[url].websocket = new WebSocket(wsUrl);
         connections[url].websocket.addEventListener("message", onServerMessage);
+       
       }
 
       playStream(
@@ -1222,6 +1244,8 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
         sessionID: link.SessionID,
         type_zone: link.type,
         idZone: link._id,
+        enable_alert:enableAlert,
+        schedule_alert:scheduleAlert,
         x1: { x: x1, y: y1 },
         y1: { x: x2, y: y2 },
         x2: { x: x3, y: y3 },
@@ -1241,6 +1265,8 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
         sessionID: link.SessionID,
         type_zone: link.type,
         idZone: link._id,
+        enable_alert:enableAlert,
+        schedule_alert:scheduleAlert,
         x1: points[0],
         y1: points[1],
         x2: points[2],
@@ -1651,7 +1677,11 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
-
+  const handleInputChange = (e) => {
+    console.log(e.target.value)
+    const {value } = e.target;
+   setScheduleAlert(e.target.value)
+  };
   return (
     <>
       <div className={classes.streamContainer}>
@@ -1856,12 +1886,48 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
                     </Select>
                   </FormControl>
                 </Col>
+           
               </>
             )}
           </Row>
           <br />
           <br />
-
+          <Row>
+          <Col span={8}>
+                <FormControl fullWidth className={classes.textField}>
+                  <FormGroup>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={enableAlert === "on"}
+                          onChange={handleAlertChange}
+                          classes={{
+                            root: classes.radio,
+                            checked: classes.checked,
+                          }}
+                        />
+                      }
+                      label="Enable Alert"
+                    />
+                  </FormGroup>
+                </FormControl>
+                </Col>
+                {enableAlert === "on" &&( <Col span={8}>
+                <FormControl fullWidth className={classes.textField}>
+                <TextField
+                    label="Schedule Alert (Minutes)"
+                    variant="outlined"
+                    fullWidth
+                    name="scheduleAlert"
+                    type="number"
+                    value={scheduleAlert}
+                    onChange={handleInputChange}
+                 
+                    disabled={!enableAlert}
+                  />
+                </FormControl>
+                </Col>)}
+                </Row>
           <Row>
             <Col span={6}>
               {" "}

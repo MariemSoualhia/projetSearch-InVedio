@@ -1,3 +1,4 @@
+// src/components/CameraPage.js
 import React, { useState, useEffect } from "react";
 import {
   Grid,
@@ -29,42 +30,42 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import { makeStyles } from "@material-ui/core/styles";
 import DeleteIcon from "@material-ui/icons/Delete";
 import EditIcon from "@material-ui/icons/Edit";
-import ReportGmailerrorredIcon from "@mui/icons-material/ReportGmailerrorred";
-import InfoIcon from "@material-ui/icons/Info";
 import { PlayArrow, Stop, FiberManualRecord } from "@material-ui/icons";
-import { Col, Row } from "antd";
+import InfoIcon from "@material-ui/icons/Info";
+import { makeStyles } from "@material-ui/core/styles";
+import ReportGmailerrorredIcon from "@mui/icons-material/ReportGmailerrorred";
 import axios from "axios";
+import { API_API_URL, API_API_URLRTSP } from "../../config/serverApiConfig";
 import moment from "moment";
 import JSMpeg from "@cycjimmy/jsmpeg-player";
-import {
-  API_API_URL,
-  API_API_URLDetection,
-  API_API_URLRTSP,
-} from "../../config/serverApiConfig";
-import { LinearProgress } from "@mui/material";
-
 const useStyles = makeStyles((theme) => ({
   root: {
     textAlign: "center",
     paddingTop: theme.spacing(4),
   },
-  formContainer: {
-    maxWidth: "600px",
-    margin: "auto",
-    padding: theme.spacing(4),
-    border: `2px solid ${theme.palette.divider}`,
-    borderRadius: "8px",
-    backgroundColor: theme.palette.background.paper,
-    [theme.breakpoints.down("sm")]: {
-      padding: theme.spacing(2),
+  button: {
+    marginRight: theme.spacing(1),
+    backgroundColor: "#9E58FF",
+    color: "#fff",
+    "&:hover": {
+      backgroundColor: "#8E4CE0",
     },
   },
+  dialogContent: {
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+  },
+  uploadButton: {
+    marginRight: theme.spacing(1),
+    backgroundColor: "#9E58FF",
+    color: "#fff",
+    fontFamily: "time",
+    marginBottom: theme.spacing(2),
+  },
   textField: {
-    marginBottom: "15px", // Add margin bottom
-    paddingBottom: "15px",
+    marginBottom: "15px",
     marginTop: "15px",
     "& .MuiOutlinedInput-root": {
       "& fieldset": {
@@ -85,78 +86,6 @@ const useStyles = makeStyles((theme) => ({
       color: "var(--label-color)",
     },
   },
-  button: {
-    marginRight: theme.spacing(1),
-    backgroundColor: "#9E58FF",
-    color: "#fff",
-    "&:hover": {
-      backgroundColor: "#8E4CE0",
-    },
-  },
-  cameraList: {
-    backgroundColor: theme.palette.background.paper,
-    borderRadius: "8px",
-    border: `2px solid ${theme.palette.divider}`,
-    padding: theme.spacing(2),
-  },
-  listItem: {
-    marginBottom: theme.spacing(1),
-    backgroundColor: theme.palette.background.default,
-    borderRadius: "4px",
-    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
-    color: theme.palette.text.primary,
-  },
-  listItemText: {
-    "& .MuiListItemText-primary": {
-      fontWeight: "bold",
-    },
-    "& .MuiListItemText-secondary": {
-      color: theme.palette.text.secondary,
-    },
-  },
-  editButton: {
-    color: "#9E58FF",
-  },
-  deleteButton: {
-    color: "#f44336",
-  },
-  infoButton: {
-    color: "#1A237E",
-  },
-  streamContainer: {
-    margin: "10px",
-    padding: theme.spacing(2),
-    border: "1px solid #ccc",
-    borderRadius: "5px",
-  },
-
-  pageTitle: {
-    fontSize: "24px",
-    fontWeight: "bold",
-    marginBottom: theme.spacing(3),
-    color: theme.palette.text.primary,
-  },
-  pagination: {
-    marginTop: theme.spacing(2),
-    display: "flex",
-    justifyContent: "center",
-    "& .MuiPaginationItem-root": {
-      color: "#9E58FF",
-    },
-  },
-  dialogTitle: {
-    //backgroundColor: "var(--background-color)",
-    textAlign: "center", // Center the title
-    color: "var(--text-color)",
-  },
-  dialogContent: {
-    //backgroundColor: "var(--background-color)",
-    color: "var(--text-color)",
-  },
-  dialogActions: {
-    //backgroundColor: "var(--background-color)",
-    color: "var(--text-color)",
-  },
 }));
 
 const CameraPage = () => {
@@ -172,8 +101,6 @@ const CameraPage = () => {
   const [listAddress, setListAddress] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [infoDialogOpen, setInfoDialogOpen] = useState(false);
-  const [currentCamera, setCurrentCamera] = useState(null);
   const [loading, setLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -182,19 +109,13 @@ const CameraPage = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [openUploadDialog, setOpenUploadDialog] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploadStatus, setUploadStatus] = useState("");
 
   useEffect(() => {
     fetchCameras();
     fetchCamerasAddress();
-  }, []);
-
-  useEffect(() => {
-    const storedAddresses = localStorage.getItem("addresses");
-    if (storedAddresses) {
-      setListAddress(JSON.parse(storedAddresses));
-    } else {
-      fetchCamerasAddress();
-    }
   }, []);
 
   useEffect(() => {
@@ -208,7 +129,7 @@ const CameraPage = () => {
       setCameras(response.data);
     } catch (error) {
       console.error("Error fetching cameras:", error);
-      showSnackbar("Failed to fetching cameras.", "error");
+      showSnackbar("Failed to fetch cameras.", "error");
     }
   };
 
@@ -218,8 +139,8 @@ const CameraPage = () => {
       setListAddress(response.data.list_ips);
       localStorage.setItem("addresses", JSON.stringify(response.data.list_ips));
     } catch (error) {
-      console.error("Error fetching ip cameras:", error);
-      showSnackbar("Failed fetching ip cameras.", "error");
+      console.error("Error fetching camera addresses:", error);
+      showSnackbar("Failed to fetch IP cameras.", "error");
     }
   };
 
@@ -234,25 +155,23 @@ const CameraPage = () => {
   const handleAddCamera = async () => {
     try {
       setLoading(true);
-      const res = await axios.post(API_API_URL + "/api/cameras", formData);
-      if (res) {
-        fetchCameras();
-        setFormData({
-          name: "",
-          address: "",
-          username: "",
-          password: "",
-          resolution: "",
-        });
-        //setLoading(false);
-        setOpenDialog(false);
-        showSnackbar("Camera added successfully!", "success");
-      }
+      await axios.post(API_API_URL + "/api/cameras", formData);
+      fetchCameras();
+      setFormData({
+        name: "",
+        address: "",
+        username: "",
+        password: "",
+        resolution: "",
+      });
+      setOpenDialog(false);
+      showSnackbar("Camera added successfully!", "success");
     } catch (error) {
       console.error("Error adding camera:", error);
       setLoading(false);
       showSnackbar("Failed to add camera.", "error");
     }
+    setLoading(false);
   };
 
   const handleDeleteCamera = async (id) => {
@@ -276,10 +195,6 @@ const CameraPage = () => {
       resolution: camera.resolution,
     });
     setEditDialogOpen(true);
-  };
-
-  const handleAddressChange = (event) => {
-    setFormData({ ...formData, address: event.target.value });
   };
 
   const handleUpdateCamera = async () => {
@@ -311,7 +226,38 @@ const CameraPage = () => {
     });
     setOpenDialog(false);
     setEditDialogOpen(false);
-    setInfoDialogOpen(false);
+  };
+
+  const handleFileChange = (event) => {
+    setSelectedFile(event.target.files[0]);
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      setUploadStatus("Please select a file first");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    try {
+      const response = await axios.post(API_API_URL + "/api/videosUploads/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (response.data.success) {
+        setUploadStatus("File uploaded successfully");
+        setOpenUploadDialog(false);
+      } else {
+        setUploadStatus("File upload failed");
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      setUploadStatus("Error uploading file");
+    }
   };
 
   const showSnackbar = (message, severity) => {
@@ -330,10 +276,6 @@ const CameraPage = () => {
     },
   });
 
-  const handleThemeToggle = () => {
-    setDarkMode(!darkMode);
-  };
-
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -341,15 +283,16 @@ const CameraPage = () => {
       <Button
         variant="contained"
         className={classes.button}
-        style={{
-          fontFamily: "time",
-          fontSize: "16px",
-          backgroundColor: "#9E58FF",
-          fontweight: "bold",
-        }}
         onClick={() => setOpenDialog(true)}
       >
         + Add Camera
+      </Button>
+      <Button
+        variant="contained"
+        className={classes.uploadButton}
+        onClick={() => setOpenUploadDialog(true)}
+      >
+        Upload Video
       </Button>
 
       {cameras.length === 0 ? (
@@ -377,8 +320,6 @@ const CameraPage = () => {
                 camera={camera}
                 handleEditCamera={handleEditCamera}
                 handleDeleteCamera={handleDeleteCamera}
-                setInfoDialogOpen={setInfoDialogOpen}
-                setCurrentCamera={setCurrentCamera}
                 classes={classes}
               />
             </Grid>
@@ -387,53 +328,26 @@ const CameraPage = () => {
       )}
 
       <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle
-          className={classes.dialogTitle}
-          style={{
-            fontFamily: "time",
-            fontSize: "25px",
-            fontWeight: "bold",
-          }}
-        >
-          Add Camera
-        </DialogTitle>
+        <DialogTitle className={classes.dialogTitle}>Add Camera</DialogTitle>
         <DialogContent className={classes.dialogContent}>
-          <FormControl
-            fullWidth
-            className={classes.textField}
-            style={{ marginTop: "15px" }}
-          >
+          <FormControl fullWidth className={classes.textField}>
             <TextField
               label="Camera Name"
               variant="outlined"
-              //fullWidth
-              //className={classes.textField}
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-              style={{ marginTop: "15px" }}
             />
           </FormControl>
 
-          <FormControl
-            fullWidth
-            variant="outlined"
-            className={classes.textField}
-            style={{ marginTop: "15px" }}
-          >
-            <InputLabel
-              id="address-select-label"
-              className={classes.inputLabel}
-            >
-              IP Address
-            </InputLabel>
+          <FormControl fullWidth variant="outlined" className={classes.textField}>
+            <InputLabel id="address-select-label">IP Address</InputLabel>
             <Select
               labelId="address-select-label"
               id="address-select"
               value={formData.address}
-              onChange={handleAddressChange}
-              label="IP Address"
-              color="secondary"
+              onChange={handleInputChange}
+              name="address"
             >
               {listAddress.map((address, index) => (
                 <MenuItem key={index} value={address}>
@@ -447,13 +361,9 @@ const CameraPage = () => {
             <TextField
               label="Username"
               variant="outlined"
-              //fullWidth
-              //className={classes.textField}
               name="username"
               value={formData.username}
               onChange={handleInputChange}
-              color="secondary"
-              style={{ marginTop: "15px" }}
             />
           </FormControl>
 
@@ -461,98 +371,47 @@ const CameraPage = () => {
             <TextField
               label="Password"
               variant="outlined"
-              //fullWidth
-              //className={classes.textField}
               name="password"
               value={formData.password}
               onChange={handleInputChange}
-              color="secondary"
-              style={{ marginTop: "15px" }}
             />
           </FormControl>
         </DialogContent>
-        <DialogActions className={classes.dialogActions}>
-          {loading == true && <CircularProgress color="secondary" />}
-          {!loading && (
-            <>
-              <Button
-                onClick={handleCloseDialog}
-                variant="outlined"
-                color="secondary"
-                sx={{
-                  color: "#F47B20",
-                  borderColor: "#F47B20",
-                  fontFamily: "time",
-                }}
-              >
-                Cancel
-              </Button>
-
-              <Button
-                variant="contained"
-                color="secondary"
-                sx={{
-                  backgroundColor: "#9E58FF",
-                  color: "#ffff",
-                  fontFamily: "time",
-                }}
-                onClick={handleAddCamera}
-              >
-                Save
-              </Button>
-            </>
-          )}
+        <DialogActions>
+          <Button onClick={handleCloseDialog} variant="outlined">
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleAddCamera}
+            disabled={loading}
+          >
+            {loading ? <CircularProgress size={24} /> : "Save"}
+          </Button>
         </DialogActions>
       </Dialog>
 
       <Dialog open={editDialogOpen} onClose={handleCloseDialog}>
-        <DialogTitle
-          className={classes.dialogTitle}
-          style={{
-            fontFamily: "time",
-            fontSize: "25px",
-            fontWeight: "bold",
-          }}
-        >
-          Edit Camera
-        </DialogTitle>
+        <DialogTitle className={classes.dialogTitle}>Edit Camera</DialogTitle>
         <DialogContent className={classes.dialogContent}>
-          <FormControl
-            fullWidth
-            className={classes.textField}
-            style={{ marginTop: "15px" }}
-          >
+          <FormControl fullWidth className={classes.textField}>
             <TextField
               label="Camera Name"
               variant="outlined"
-              //fullWidth
-              //className={classes.textField}
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-              color="secondary"
             />
           </FormControl>
 
-          <FormControl
-            fullWidth
-            variant="outlined"
-            className={classes.textField}
-            style={{ marginTop: "15px" }}
-          >
-            <InputLabel
-              id="address-select-label"
-              className={classes.inputLabel}
-            >
-              IP Address
-            </InputLabel>
+          <FormControl fullWidth variant="outlined" className={classes.textField}>
+            <InputLabel id="address-select-label">IP Address</InputLabel>
             <Select
               labelId="address-select-label"
               id="address-select"
               value={formData.address}
-              onChange={handleAddressChange}
-              label="IP Address"
-              color="secondary"
+              onChange={handleInputChange}
+              name="address"
             >
               {listAddress.map((address, index) => (
                 <MenuItem key={index} value={address}>
@@ -562,93 +421,70 @@ const CameraPage = () => {
             </Select>
           </FormControl>
 
-          <FormControl
-            fullWidth
-            className={classes.textField}
-            style={{ marginTop: "15px" }}
-          >
+          <FormControl fullWidth className={classes.textField}>
             <TextField
               label="Username"
               variant="outlined"
-              //fullWidth
-              //className={classes.textField}
               name="username"
               value={formData.username}
               onChange={handleInputChange}
-              color="secondary"
             />
           </FormControl>
 
-          <FormControl
-            fullWidth
-            className={classes.textField}
-            style={{ marginTop: "15px" }}
-          >
+          <FormControl fullWidth className={classes.textField}>
             <TextField
               label="Password"
               variant="outlined"
-              fullWidth
-              className={classes.textField}
               name="password"
               value={formData.password}
               onChange={handleInputChange}
-              color="secondary"
             />
           </FormControl>
         </DialogContent>
-        <DialogActions className={classes.dialogActions}>
-          {loading == true && (
-            <LinearProgress
-              color="secondary"
-              style={{
-                backgroundColor: "#F47B20",
-                color: "#9E58FF",
-                marginTop: "10px",
-              }}
-            />
-          )}
-          {!loading && (
-            <>
-              <Button
-                onClick={handleCloseDialog}
-                variant="outlined"
-                color="secondary"
-                sx={{
-                  color: "#F47B20",
-                  borderColor: "#F47B20",
-                  fontFamily: "time",
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleUpdateCamera}
-                variant="contained"
-                color="secondary"
-                sx={{
-                  backgroundColor: "#9E58FF",
-                  color: "#ffff",
-                  fontFamily: "time",
-                }}
-              >
-                Update
-              </Button>
-            </>
-          )}
+        <DialogActions>
+          <Button onClick={handleCloseDialog} variant="outlined">
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleUpdateCamera}
+            disabled={loading}
+          >
+            {loading ? <CircularProgress size={24} /> : "Update"}
+          </Button>
         </DialogActions>
       </Dialog>
 
-      <Dialog open={infoDialogOpen} onClose={handleCloseDialog}>
-        <DialogTitle className={classes.dialogTitle}>Camera Info</DialogTitle>
+      <Dialog open={openUploadDialog} onClose={() => setOpenUploadDialog(false)}>
+        <DialogTitle className={classes.dialogTitle}>Upload Video</DialogTitle>
         <DialogContent className={classes.dialogContent}>
-          <Typography>Name: {currentCamera?.name}</Typography>
-          <Typography>IP Address: {currentCamera?.address}</Typography>
-          <Typography>Username: {currentCamera?.username}</Typography>
-          <Typography>Password: {currentCamera?.password}</Typography>
+          <input
+            accept="video/*"
+            style={{ display: "none" }}
+            id="raised-button-file"
+            type="file"
+            onChange={handleFileChange}
+          />
+          <label htmlFor="raised-button-file">
+            <Button variant="contained" component="span" className={classes.uploadButton}>
+              Choose File
+            </Button>
+          </label>
+          {uploadStatus && (
+            <Typography
+              variant="body2"
+              style={{ color: "red", marginTop: "10px" }}
+            >
+              {uploadStatus}
+            </Typography>
+          )}
         </DialogContent>
-        <DialogActions className={classes.dialogActions}>
-          <Button onClick={handleCloseDialog} color="primary">
-            Close
+        <DialogActions>
+          <Button onClick={() => setOpenUploadDialog(false)} variant="outlined">
+            Cancel
+          </Button>
+          <Button variant="contained" onClick={handleUpload} disabled={loading}>
+            {loading ? <CircularProgress size={24} /> : "Upload"}
           </Button>
         </DialogActions>
       </Dialog>
@@ -670,8 +506,6 @@ const StreamComponent = ({
   camera,
   handleEditCamera,
   handleDeleteCamera,
-  setInfoDialogOpen,
-  setCurrentCamera,
   classes,
 }) => {
   const [isStreaming, setIsStreaming] = useState(
@@ -733,10 +567,9 @@ const StreamComponent = ({
 
   const startStream = async (rtspUrl, port) => {
     try {
-      const resp = await axios.get(
+      await axios.get(
         API_API_URL + `/streamAll?rtsp=${rtspUrl}&port=${port}`
       );
-      console.log(resp);
       localStorage.setItem(`isStreaming-${rtspUrl}`, "true");
       setIsStreaming(true);
     } catch (error) {
@@ -758,17 +591,13 @@ const StreamComponent = ({
     try {
       let dateTime = moment();
       let nameRecord = cameraName + dateTime.format("YYYY-MM-DD_HH:mm:ss");
-      const response = await axios.post(
-        API_API_URL + "/api/startAllRecording",
-        {
-          url: rtspUrl,
-          port: port,
-          recordingDuration: 3600,
-          name: nameRecord,
-          cameraName: cameraName,
-        }
-      );
-      console.log(response);
+      await axios.post(API_API_URL + "/api/startAllRecording", {
+        url: rtspUrl,
+        port: port,
+        recordingDuration: 3600,
+        name: nameRecord,
+        cameraName: cameraName,
+      });
       setIsRecording(true);
     } catch (error) {
       console.error("Error starting recording:", error);
@@ -784,11 +613,6 @@ const StreamComponent = ({
     } catch (error) {
       console.error("Error stopping recording:", error);
     }
-  };
-
-  const handleInfoClick = () => {
-    setCurrentCamera(camera);
-    setInfoDialogOpen(true);
   };
 
   return (
@@ -828,10 +652,6 @@ const StreamComponent = ({
         >
           <FiberManualRecord />
           <span style={{ marginLeft: "5px", fontSize: "0.6em" }}>Record</span>
-        </IconButton>
-
-        <IconButton onClick={handleInfoClick} className={classes.infoButton}>
-          <InfoIcon />
         </IconButton>
 
         <IconButton
