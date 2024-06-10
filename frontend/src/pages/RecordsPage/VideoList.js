@@ -474,7 +474,6 @@ const VideoList = () => {
         variant="outlined"
         value={searchTerm}
         onChange={handleSearchChange}
-        fullWidth
         margin="normal"
         placeholder="Search for videos..."
         className={classes.searchField}

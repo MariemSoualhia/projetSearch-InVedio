@@ -38,8 +38,8 @@ import {
 const useStyles = makeStyles((theme) => ({
   streamContainer: {
     position: "relative",
-    width: "854px", // Ajouter une largeur fixe pour le conteneur
-    height: "480px", // Ajouter une hauteur fixe pour le conteneur
+    width: "854px",
+    height: "480px",
   },
   stream: {
     position: "absolute",
@@ -48,22 +48,20 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
     height: "100%",
     borderRadius: theme.spacing(1),
-    backgroundColor: "transparent", // Modification pour rendre le canvas transparent
+    backgroundColor: "transparent",
   },
   controlsContainer: {
     display: "flex",
     flexDirection: "column",
-    //alignItems: 'flex-start',
-    gap: theme.spacing(2), // Espacement entre les éléments
-    padding: theme.spacing(2), // Ajoutez du padding selon vos besoins
-    backgroundColor: "#f0f0f0", // Couleur de fond
-    borderRadius: theme.shape.borderRadius, // Ajoutez des bordures arrondies
-    boxShadow: theme.shadows[2], // Ajoutez une ombre si nécessaire
+    gap: theme.spacing(2),
+    padding: theme.spacing(2),
+    backgroundColor: theme.palette.mode === "dark" ? "#333" : "#f0f0f0",
+    borderRadius: theme.shape.borderRadius,
+    boxShadow: theme.shadows[2],
   },
   button: {
     margin: theme.spacing(1),
     borderRadius: theme.spacing(2),
-
     color: "#fff",
   },
   buttonStop: {
@@ -83,36 +81,72 @@ const useStyles = makeStyles((theme) => ({
     maxWidth: "600px",
     margin: "auto",
     padding: theme.spacing(4),
-    border: `2px solid var(--border-color)`,
+    border: `2px solid ${
+      theme.palette.mode === "dark" ? "#555" : "var(--border-color)"
+    }`,
     borderRadius: "8px",
-    backgroundColor: "var(--form-background-color)",
+    backgroundColor:
+      theme.palette.mode === "dark"
+        ? "#424242"
+        : "var(--form-background-color)",
     boxShadow: theme.shadows[3],
   },
   textField: {
-    marginBottom: "15px", // Add margin bottom
+    marginBottom: "15px",
     paddingBottom: "15px",
     marginTop: "15px",
 
     "& .MuiOutlinedInput-root": {
       "& fieldset": {
-        borderColor: "var(--input-border-color)",
-        backgroundColor: "var(--input-background-color)",
+        borderColor:
+          theme.palette.mode === "dark" ? "#888" : "var(--input-border-color)",
+        backgroundColor:
+          theme.palette.mode === "dark"
+            ? "#555"
+            : "var(--input-background-color)",
       },
       "&:hover fieldset": {
-        borderColor: "var(--input-border-color)",
+        borderColor:
+          theme.palette.mode === "dark" ? "#aaa" : "var(--input-border-color)",
       },
       "&.Mui-focused fieldset": {
-        borderColor: "var(--input-border-color)",
-      },
-      "&.Mui-focused + .MuiInputLabel-root": {
-        color: "#F47B20", // Focused label color
+        borderColor:
+          theme.palette.mode === "dark" ? "#ccc" : "var(--input-border-color)",
       },
       "& input": {
-        color: "var(--input-text-color)",
+        color:
+          theme.palette.mode === "dark" ? "#fff" : "var(--input-text-color)",
       },
     },
     "& .MuiInputLabel-root": {
-      color: "var(--label-color)",
+      color: theme.palette.mode === "dark" ? "#ccc" : "var(--label-color)",
+    },
+  },
+  selectField: {
+    "& .MuiOutlinedInput-root": {
+      "& fieldset": {
+        borderColor:
+          theme.palette.mode === "dark" ? "#888" : "var(--input-border-color)",
+        backgroundColor:
+          theme.palette.mode === "dark"
+            ? "#555"
+            : "var(--input-background-color)",
+      },
+      "&:hover fieldset": {
+        borderColor:
+          theme.palette.mode === "dark" ? "#aaa" : "var(--input-border-color)",
+      },
+      "&.Mui-focused fieldset": {
+        borderColor:
+          theme.palette.mode === "dark" ? "#ccc" : "var(--input-border-color)",
+      },
+      "& input": {
+        color:
+          theme.palette.mode === "dark" ? "#fff" : "var(--input-text-color)",
+      },
+    },
+    "& .MuiInputLabel-root": {
+      color: theme.palette.mode === "dark" ? "#ccc" : "var(--label-color)",
     },
   },
   button: {
@@ -120,16 +154,19 @@ const useStyles = makeStyles((theme) => ({
   },
   tableContainer: {
     marginTop: theme.spacing(2),
-    backgroundColor: "var(--background-color)",
+    backgroundColor:
+      theme.palette.mode === "dark" ? "#333" : "var(--background-color)",
     borderRadius: "8px",
-    border: `2px solid var(--border-color)`,
+    border: `2px solid ${
+      theme.palette.mode === "dark" ? "#555" : "var(--border-color)"
+    }`,
     padding: theme.spacing(2),
   },
   pageTitle: {
     fontSize: "24px",
     fontWeight: "bold",
     marginBottom: theme.spacing(3),
-    color: "var(--text-color)",
+    color: theme.palette.mode === "dark" ? "#fff" : "var(--text-color)",
   },
   tableHeader: {
     fontWeight: "bold",
@@ -145,18 +182,18 @@ const useStyles = makeStyles((theme) => ({
     },
     "& .Mui-selected": {
       color: "#F47B20",
-      backgroundColor: "#e1ccff", // Optional: to ensure no background color
+      backgroundColor: "#e1ccff",
     },
   },
   dialogTitle: {
-    textAlign: "center", // Center the title
-    color: "var(--text-color)",
+    textAlign: "center",
+    color: theme.palette.mode === "dark" ? "#fff" : "var(--text-color)",
   },
   dialogContent: {
-    color: "var(--text-color)",
+    color: theme.palette.mode === "dark" ? "#fff" : "var(--text-color)",
   },
   dialogActions: {
-    color: "var(--text-color)",
+    color: theme.palette.mode === "dark" ? "#fff" : "var(--text-color)",
   },
   editButton: {
     color: "#9E58FF",
@@ -223,6 +260,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
     areaName: "",
     dashboardToken: "",
   });
+
   const currentUser = JSON.parse(localStorage.getItem("currentuser"));
 
   // Fonction pour récupérer les paramètres depuis l'API
@@ -1681,7 +1719,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
           <Row>
             <Col span={12}>
               {" "}
-              <FormControl  className={classes.textField} component="fieldset">
+              <FormControl className={classes.textField} component="fieldset">
                 <RadioGroup
                   color="#f44336"
                   aria-labelledby="demo-radio-buttons-group-label"
@@ -1717,33 +1755,36 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
               </FormControl>
             </Col>
             <Col span={12}>
-            <FormControl fullWidth className={classes.textField}>
-              <InputLabel  className={classes.textField}>
-                Link to zone{" "}
-              </InputLabel>
-        
-              <Select labelId="direction-label" id="direction-select" required>
-                {drawMode === "roi" &&
-                  internalZones.map((zone, index) => (
-                    <MenuItem
-                      key={index}
-                      value={zone.zone_name}
-                      onClick={() => handleSelectLink(zone)}
-                    >
-                      {zone.zone_name}
-                    </MenuItem>
-                  ))}
-                {drawMode === "line" &&
-                  gateZones.map((zone, index) => (
-                    <MenuItem
-                      key={index}
-                      value={zone.zone_name}
-                      onClick={() => handleSelectLink(zone)}
-                    >
-                      {zone.zone_name}
-                    </MenuItem>
-                  ))}
-              </Select>
+              <FormControl
+                fullWidth
+                className={classes.textField}
+                style={{ marginTop: "15px" }}
+              >
+                <InputLabel className={classes.inputLabel}>
+                  Link to zone
+                </InputLabel>
+                <Select label="Link to zone">
+                  {drawMode === "roi" &&
+                    internalZones.map((zone, index) => (
+                      <MenuItem
+                        key={index}
+                        value={zone.zone_name}
+                        onClick={() => handleSelectLink(zone)}
+                      >
+                        {zone.zone_name}
+                      </MenuItem>
+                    ))}
+                  {drawMode === "line" &&
+                    gateZones.map((zone, index) => (
+                      <MenuItem
+                        key={index}
+                        value={zone.zone_name}
+                        onClick={() => handleSelectLink(zone)}
+                      >
+                        {zone.zone_name}
+                      </MenuItem>
+                    ))}
+                </Select>
               </FormControl>
             </Col>
           </Row>
@@ -1751,22 +1792,22 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
             <Col span={12}>
               {" "}
               {drawMode === "roi" && (
-                      <FormControl fullWidth className={classes.textField}>
-                <FormGroup>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={isTimer === "on"}
-                        onChange={handleTimerChange}
-                        classes={{
-                          root: classes.radio,
-                          checked: classes.checked,
-                        }}
-                      />
-                    }
-                    label="Timer"
-                  />
-                </FormGroup>
+                <FormControl fullWidth className={classes.textField}>
+                  <FormGroup>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={isTimer === "on"}
+                          onChange={handleTimerChange}
+                          classes={{
+                            root: classes.radio,
+                            checked: classes.checked,
+                          }}
+                        />
+                      }
+                      label="Timer"
+                    />
+                  </FormGroup>
                 </FormControl>
               )}
             </Col>
@@ -1777,7 +1818,10 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
               <>
                 <Col span={8}>
                   {" "}
-                  <FormControl style={{ width: "80%" }} className={classes.textField}>
+                  <FormControl
+                    style={{ width: "80%" }}
+                    className={classes.textField}
+                  >
                     <InputLabel id="demo-simple-select-label">
                       Position
                     </InputLabel>
@@ -1795,7 +1839,10 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
                 </Col>
                 <Col span={8}>
                   {" "}
-                  <FormControl style={{ width: "80%" }} className={classes.textField}> 
+                  <FormControl
+                    style={{ width: "80%" }}
+                    className={classes.textField}
+                  >
                     <InputLabel>Flow direction</InputLabel>
                     <Select
                       labelId="direction-label"
@@ -1861,7 +1908,6 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
                 Clear
               </Button>
             </Col>
-
           </Row>
         </>
       )}

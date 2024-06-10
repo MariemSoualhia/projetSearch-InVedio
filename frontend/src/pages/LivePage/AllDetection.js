@@ -13,6 +13,7 @@ import {
   CircularProgress,
   Box,
 } from "@material-ui/core";
+import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
 import QueuePlayNextIcon from "@mui/icons-material/QueuePlayNext";
 import { makeStyles } from "@material-ui/core/styles";
 
@@ -123,8 +124,15 @@ const AllDetection = () => {
   const [loading, setLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadStatus, setUploadStatus] = useState("");
+  const [darkMode, setDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem("theme");
+    return savedTheme === "dark";
+  });
   const classes = useStyles();
-
+  useEffect(() => {
+    document.body.className = darkMode ? "dark" : "light";
+    localStorage.setItem("theme", darkMode ? "dark" : "light");
+  }, [darkMode]);
   const fetchCameras = async () => {
     try {
       const response = await axios.get(API_API_URL + "/api/cameras");
@@ -222,41 +230,81 @@ const AllDetection = () => {
       setUploadStatus("Error uploading file");
     }
   };
-
+  const theme = createTheme({
+    palette: {
+      mode: darkMode ? "dark" : "light",
+    },
+  });
   return (
     <>
-      <Grid container spacing={2}>
-        <Grid item xs={12}>
-          {loading ? (
-            <CircularProgress />
-          ) : (
-            <Grid container spacing={2}>
-              {cameras.map((camera) => (
-                <Grid item key={camera.id}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            {loading ? (
+              <CircularProgress />
+            ) : (
+              <Grid container spacing={2}>
+                {cameras.map((camera) => (
+                  <Grid item key={camera.id}>
+                    <Button
+                      variant="contained"
+                      className={classes.button}
+                      style={{
+                        fontFamily: "time",
+                        fontSize: "16px",
+                        backgroundColor: "#9E58FF",
+                        fontWeight: "bold",
+                      }}
+                      onClick={() => handleCameraButtonClick(camera)}
+                      startIcon={<QueuePlayNextIcon />}
+                    >
+                      {camera.name}
+                    </Button>
+                  </Grid>
+                ))}
+                <Grid item>
+                  <input
+                    accept="video/*"
+                    style={{ display: "none" }}
+                    id="raised-button-file"
+                    type="file"
+                    onChange={handleFileChange}
+                  />
+                  <label htmlFor="raised-button-file">
+                    <Button
+                      variant="contained"
+                      component="span"
+                      className={classes.uploadButton}
+                    >
+                      Upload Video
+                    </Button>
+                  </label>
                   <Button
                     variant="contained"
-                    className={classes.button}
-                    style={{
-                      fontFamily: "time",
-                      fontSize: "16px",
-                      backgroundColor: "#9E58FF",
-                      fontWeight: "bold",
-                    }}
-                    onClick={() => handleCameraButtonClick(camera)}
-                    startIcon={<QueuePlayNextIcon />}
+                    onClick={handleUpload}
+                    className={classes.uploadButton}
                   >
-                    {camera.name}
+                    Upload
                   </Button>
+                  {uploadStatus && (
+                    <Typography
+                      variant="body2"
+                      style={{ color: "red", marginTop: "10px" }}
+                    >
+                      {uploadStatus}
+                    </Typography>
+                  )}
                 </Grid>
-              ))}
-  
-            </Grid>
-          )}
+              </Grid>
+            )}
+          </Grid>
+          <Grid container spacing={2}>
+            {components.map((component) => component.stream)}
+          </Grid>
         </Grid>
-        <Grid container spacing={2}>
-          {components.map((component) => component.stream)}
-        </Grid>
-      </Grid>
+      </ThemeProvider>
     </>
   );
 };
