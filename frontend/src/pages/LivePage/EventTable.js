@@ -1,65 +1,132 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+// EventTable.js
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
   TableRow,
   Paper,
-  Typography,
-} from "@mui/material";
-import { API_API_URL } from "../../config/serverApiConfig";
+  TablePagination,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogActions,
+} from "@material-ui/core";
+import { makeStyles } from "@material-ui/core/styles";
 
-const EventTable = ({ source, type }) => {
-  const [events, setEvents] = useState([]);
+const useStyles = makeStyles((theme) => ({
+  paper: {
+    width: '100%',
+    overflowX: 'auto',
+  },
+  table: {
+    minWidth: 650,
+  },
+  imageButton: {
+    backgroundColor: "#9E58FF",
+    color: "#fff",
+    "&:hover": {
+      backgroundColor: "#8E4CE0",
+    },
+  },
+  image: {
+    maxWidth: "100%",
+    maxHeight: "80vh",
+  },
+}));
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        let response;
-        if (type === "camera") {
-          response = await axios.get(
-            API_API_URL + `/api/events?cameraId=${source._id}`
-          );
-        } else {
-          response = await axios.get(
-            API_API_URL + `/api/events?videoPath=${source}`
-          );
-        }
-        setEvents(response.data);
-      } catch (error) {
-        console.error("Error fetching events:", error);
-      }
-    };
-    fetchEvents();
-  }, [source, type]);
+const EventTable = ({ events }) => {
+  const classes = useStyles();
+  const [page, setPage] = useState(0);
+  const rowsPerPage = 5;
+  const [open, setOpen] = useState(false);
+  const [currentImage, setCurrentImage] = useState("");
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleClickOpen = (imagePath) => {
+    setCurrentImage(imagePath);
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setCurrentImage("");
+  };
+
+  const currentEvents = events.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
 
   return (
-    <TableContainer component={Paper}>
-      <Typography variant="h6" gutterBottom style={{ padding: "16px" }}>
-        Live Events
-      </Typography>
-      <Table>
+    <Paper className={classes.paper}>
+      <Table className={classes.table}>
         <TableHead>
           <TableRow>
+            <TableCell>Event ID</TableCell>
             <TableCell>Timestamp</TableCell>
-            <TableCell>Event Type</TableCell>
             <TableCell>Camera Name</TableCell>
+            <TableCell>Event Type</TableCell>
+            <TableCell>Image</TableCell>
+            {/* Ajoutez d'autres colonnes si nécessaire */}
           </TableRow>
         </TableHead>
         <TableBody>
-          {events.map((event) => (
+          {currentEvents.map((event) => (
             <TableRow key={event._id}>
-              <TableCell>{event.Timestamp}</TableCell>
-              <TableCell>{event.EventType}</TableCell>
+              <TableCell>{event.EventID}</TableCell>
+              <TableCell>{new Date(event.Created).toLocaleString()}</TableCell>
               <TableCell>{event.CameraName}</TableCell>
+              <TableCell>{event.EventType}</TableCell>
+              <TableCell> <img src={currentImage} alt="Event"  /></TableCell>
+              <TableCell>
+                {event.PictureURL && (
+                  <Button
+                    variant="contained"
+                    className={classes.imageButton}
+                    onClick={() => handleClickOpen(event.PictureURL)}
+                  >
+                    View
+                  </Button>
+                )}
+              </TableCell>
+              {/* Ajoutez d'autres cellules si nécessaire */}
             </TableRow>
           ))}
         </TableBody>
       </Table>
-    </TableContainer>
+      <TablePagination
+        component="div"
+        count={events.length}
+        page={page}
+        onPageChange={handleChangePage}
+        rowsPerPage={rowsPerPage}
+        rowsPerPageOptions={[]} // Désactiver le changement de lignes par page
+      />
+
+      <Dialog open={open} onClose={handleClose}  >
+        <DialogTitle>Image</DialogTitle>
+        <DialogContent>
+        {currentImage}
+        <div>
+        <img src={currentImage} alt="Event"  />
+        </div>
+        
+
+       
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Paper>
   );
 };
 

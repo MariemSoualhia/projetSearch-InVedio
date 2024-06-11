@@ -16,7 +16,6 @@ import {
 import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
 import QueuePlayNextIcon from "@mui/icons-material/QueuePlayNext";
 import { makeStyles } from "@material-ui/core/styles";
-import EventTable from "./EventTable";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -124,8 +123,8 @@ const AllDetection = () => {
   const [cameras, setCameras] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [videos, setVideos] = useState([]);
   const [uploadStatus, setUploadStatus] = useState("");
+  const [videos, setVideos] = useState([]);
   const [darkMode, setDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem("theme");
     return savedTheme === "dark";
@@ -156,6 +155,7 @@ const AllDetection = () => {
     }
   };
 
+
   const fetchStreams = async () => {
     try {
       const response = await axios.get(API_API_URL + "/api/stream/play");
@@ -180,11 +180,11 @@ const AllDetection = () => {
 
   useEffect(() => {
     fetchCameras();
-    fetchVideos();
     fetchStreams();
+    fetchVideos()
   }, []);
 
-  const addComponent = (source, type, camera) => {
+  const addComponent = (camera) => {
     setComponents((prevComponents) => [
       ...prevComponents,
       {
@@ -196,9 +196,6 @@ const AllDetection = () => {
               allCameras={cameras}
               stream={camera}
             />
-            <div className={classes.eventContainer}>
-              <EventTable source={source} type={type} />
-            </div>
           </Grid>
         ),
       },
@@ -206,14 +203,8 @@ const AllDetection = () => {
   };
 
   const handleCameraButtonClick = (camera) => {
-    
     addComponent(camera);
   };
-
-  const handleFileChange = (event) => {
-    setSelectedFile(event.target.files[0]);
-  };
-
   const handleUpload = async (cam) => {
     const dataCam = {
       rtspUrl: cam.path,
@@ -222,6 +213,12 @@ const AllDetection = () => {
     console.log(dataCam);
     handleCameraButtonClick(dataCam);
   };
+
+  const handleFileChange = (event) => {
+    setSelectedFile(event.target.files[0]);
+  };
+
+ 
   const theme = createTheme({
     palette: {
       mode: darkMode ? "dark" : "light",
@@ -274,6 +271,39 @@ const AllDetection = () => {
                     </Button>
                   </Grid>
                 ))}
+                <Grid item>
+                  <input
+                    accept="video/*"
+                    style={{ display: "none" }}
+                    id="raised-button-file"
+                    type="file"
+                    onChange={handleFileChange}
+                  />
+                  <label htmlFor="raised-button-file">
+                    <Button
+                      variant="contained"
+                      component="span"
+                      className={classes.uploadButton}
+                    >
+                      Upload Video
+                    </Button>
+                  </label>
+                  <Button
+                    variant="contained"
+                    onClick={handleUpload}
+                    className={classes.uploadButton}
+                  >
+                    Upload
+                  </Button>
+                  {uploadStatus && (
+                    <Typography
+                      variant="body2"
+                      style={{ color: "red", marginTop: "10px" }}
+                    >
+                      {uploadStatus}
+                    </Typography>
+                  )}
+                </Grid>
               </Grid>
             )}
           </Grid>

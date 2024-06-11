@@ -35,7 +35,7 @@ import {
   API_API_URLDetection,
   API_API_URLRTSP,
 } from "../../config/serverApiConfig";
-
+import EventTable from "./EventTable";
 const useStyles = makeStyles((theme) => ({
   streamContainer: {
     position: "relative",
@@ -251,7 +251,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [isTimer, setTimer] = useState("off");
   const [enableAlert, setEnableAlert] = useState("off");
-  const [scheduleAlert, setScheduleAlert] = useState();
+  const [scheduleAlert, setScheduleAlert] = useState(0);
   const [link, setLink] = useState();
   const [videoPath, setVideoPath] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
@@ -265,7 +265,26 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
   });
 
   const currentUser = JSON.parse(localStorage.getItem("currentuser"));
+  const [events, setEvents] = useState([]);
 
+  const fetchEvent = async () => {
+    try {
+      const response = await axios.get(`${API_API_URL}/api/event/byCameraNameAndToday/${camera.name}`);
+      if (response.data) {
+        setEvents(response.data);
+      } else {
+        console.error("Error: No events found or invalid response format");
+      }
+    } catch (error) {
+      console.error("Failed fetching events.", error);
+    }
+  };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchEvent();
+    }, 5000); return () => clearInterval(interval);
+  }, []);
   // Fonction pour récupérer les paramètres depuis l'API
   const fetchSettings = async () => {
     try {
@@ -654,14 +673,14 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
       function sendStream(hostname, port, path, configuration, reportErrorCB) {
         console.log("in video")
         console.log(hostname, port, path, configuration, reportErrorCB)
-        if (stream.input_stream && !hostname && !port) {
+        /*if (stream.input_stream && !hostname && !port) {
           const data = {
             input_stream: stream.input_stream,
           };
           console.log(data);
     
           axios.put(API_API_URL + `/api/stream/stop/${stream._id}`);
-        }
+        }*/
         var l = window.location;
         if (path == "null") return;
         if (l.protocol != "https:") {
@@ -1233,6 +1252,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
     if (drawMode == "line") {
       rectangleData = {
         input_stream: stream.input_stream,
+        camera_name:stream.stream_name,
         port: stream.output_port,
         type_app: drawMode,
         pos_line: drawDirection,
@@ -1254,6 +1274,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
     } else {
       rectangleData = {
         input_stream: stream.input_stream,
+        camera_name:stream.stream_name,
         port: stream.output_port,
         type_app: drawMode,
         enable_timer: isTimer,
@@ -1975,6 +1996,10 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
               </Button>
             </Col>
           </Row>
+          <div>
+   
+      <EventTable events={events} />
+    </div>
         </>
       )}
     </>

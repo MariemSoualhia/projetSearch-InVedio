@@ -102,6 +102,29 @@ const getEventsByVideoPath = async (req, res) => {
     });
   }
 };
+const getEventsByCameraNameAndToday = async (req, res) => {
+  try {
+    const { cameraName } = req.params; // Utilisez req.params au lieu de req.query
+    if (!cameraName) {
+      return res.status(400).json({ message: "Le nom de la caméra est requis" });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    const events = await Event.find({
+      CameraName: cameraName,
+      Created: { $gte: today, $lt: tomorrow },
+    });
+
+    res.status(200).json(events);
+  } catch (error) {
+    res.status(500).json({ message: "Erreur lors de la récupération des événements", error });
+  }
+};
+
 module.exports = {
   createEvent,
   getAllEvents,
@@ -110,4 +133,5 @@ module.exports = {
   deleteEvent,
   getEventsByCameraId,
   getEventsByVideoPath,
+  getEventsByCameraNameAndToday,
 };
