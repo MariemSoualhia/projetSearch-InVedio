@@ -16,6 +16,7 @@ import {
 import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
 import QueuePlayNextIcon from "@mui/icons-material/QueuePlayNext";
 import { makeStyles } from "@material-ui/core/styles";
+import EventTable from "./EventTable";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -183,7 +184,7 @@ const AllDetection = () => {
     fetchStreams();
   }, []);
 
-  const addComponent = (camera) => {
+  const addComponent = (source, type, camera) => {
     setComponents((prevComponents) => [
       ...prevComponents,
       {
@@ -195,6 +196,9 @@ const AllDetection = () => {
               allCameras={cameras}
               stream={camera}
             />
+            <div className={classes.eventContainer}>
+              <EventTable source={source} type={type} />
+            </div>
           </Grid>
         ),
       },
@@ -202,6 +206,7 @@ const AllDetection = () => {
   };
 
   const handleCameraButtonClick = (camera) => {
+    
     addComponent(camera);
   };
 
@@ -210,17 +215,12 @@ const AllDetection = () => {
   };
 
   const handleUpload = async (cam) => {
-  
- 
-       
-        const dataCam = {
-          rtspUrl:cam.path,
-          name: cam.name
-        };
-      console.log(dataCam)
-        handleCameraButtonClick(dataCam);
-      
-    
+    const dataCam = {
+      rtspUrl: cam.path,
+      name: cam.name,
+    };
+    console.log(dataCam);
+    handleCameraButtonClick(dataCam);
   };
   const theme = createTheme({
     palette: {
