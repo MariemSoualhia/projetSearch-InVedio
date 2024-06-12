@@ -114,10 +114,11 @@ const getEventsByCameraNameAndToday = async (req, res) => {
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
+    // Trouver les événements et les trier par Created en ordre décroissant
     const events = await Event.find({
       CameraName: cameraName,
       Created: { $gte: today, $lt: tomorrow },
-    });
+    }).sort({ Created: -1 }); // Trier par 'Created' dans l'ordre décroissant
 
     res.status(200).json(events);
   } catch (error) {

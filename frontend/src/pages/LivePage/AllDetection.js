@@ -16,7 +16,8 @@ import {
 import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
 import QueuePlayNextIcon from "@mui/icons-material/QueuePlayNext";
 import { makeStyles } from "@material-ui/core/styles";
-
+import OndemandVideoIcon from '@mui/icons-material/OndemandVideo';
+import LinkedCameraIcon from '@mui/icons-material/LinkedCamera';
 const useStyles = makeStyles((theme) => ({
   root: {
     textAlign: "center",
@@ -115,6 +116,27 @@ const useStyles = makeStyles((theme) => ({
     color: "#fff",
     fontFamily: "time",
     marginBottom: theme.spacing(2),
+  },
+  buttonCamera: {
+    margin: theme.spacing(1),
+    backgroundColor: "#9E58FF",
+    color: "#fff",
+    fontWeight: "bold",
+    textTransform: "none",
+    "&:hover": {
+      backgroundColor: "#8C4FE9",
+    },
+  },
+  buttonVideo: {
+    margin: theme.spacing(1),
+    borderColor: "#9E58FF",
+    color: "#9E58FF",
+    fontWeight: "bold",
+    textTransform: "none",
+    "&:hover": {
+      borderColor: "#8C4FE9",
+      color: "#8C4FE9",
+    },
   },
 }));
 
@@ -239,15 +261,16 @@ const AllDetection = () => {
                   <Grid item key={camera.id}>
                     <Button
                       variant="contained"
-                      className={classes.button}
+                      className={classes.buttonCamera}
                       style={{
                         fontFamily: "time",
                         fontSize: "16px",
                         backgroundColor: "#9E58FF",
                         fontWeight: "bold",
+                        
                       }}
                       onClick={() => handleCameraButtonClick(camera)}
-                      startIcon={<QueuePlayNextIcon />}
+                      startIcon={<LinkedCameraIcon />}
                     >
                       {camera.name}
                     </Button>
@@ -256,54 +279,23 @@ const AllDetection = () => {
                 {videos.map((camera) => (
                   <Grid item key={camera.id}>
                     <Button
-                      variant="contained"
-                      className={classes.button}
+                      variant="outlined"
+                      color="9E58FF"
+                      className={classes.buttonVideo}
                       style={{
                         fontFamily: "time",
                         fontSize: "16px",
-                        backgroundColor: "#9E58FF",
+                      
                         fontWeight: "bold",
                       }}
                       onClick={() => handleUpload(camera)}
-                      startIcon={<QueuePlayNextIcon />}
+                      startIcon={<OndemandVideoIcon />}
                     >
                       {camera.name}
                     </Button>
                   </Grid>
                 ))}
-                <Grid item>
-                  <input
-                    accept="video/*"
-                    style={{ display: "none" }}
-                    id="raised-button-file"
-                    type="file"
-                    onChange={handleFileChange}
-                  />
-                  <label htmlFor="raised-button-file">
-                    <Button
-                      variant="contained"
-                      component="span"
-                      className={classes.uploadButton}
-                    >
-                      Upload Video
-                    </Button>
-                  </label>
-                  <Button
-                    variant="contained"
-                    onClick={handleUpload}
-                    className={classes.uploadButton}
-                  >
-                    Upload
-                  </Button>
-                  {uploadStatus && (
-                    <Typography
-                      variant="body2"
-                      style={{ color: "red", marginTop: "10px" }}
-                    >
-                      {uploadStatus}
-                    </Typography>
-                  )}
-                </Grid>
+          
               </Grid>
             )}
           </Grid>
