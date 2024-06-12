@@ -67,10 +67,13 @@ const useStyles = makeStyles((theme) => ({
   },
   buttonStop: {
     margin: theme.spacing(1),
-    borderRadius: theme.spacing(2),
-    padding: `${theme.spacing(1)}px ${theme.spacing(3)}px`,
-    color: "#fff",
     backgroundColor: "#f44336",
+    color: "#fff",
+    fontWeight: "bold",
+    textTransform: "none",
+    "&:hover": {
+      backgroundColor: "#d32f2f",
+    },
   },
   radio: {
     "&$checked": {
@@ -205,6 +208,16 @@ const useStyles = makeStyles((theme) => ({
   infoButton: {
     color: "#1A237E",
   },
+  buttonCamera: {
+    margin: theme.spacing(1),
+    backgroundColor: "#9E58FF",
+    color: "#fff",
+    fontWeight: "bold",
+    textTransform: "none",
+    "&:hover": {
+      backgroundColor: "#8C4FE9",
+    },
+  },
 }));
 
 const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
@@ -266,6 +279,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
 
   const currentUser = JSON.parse(localStorage.getItem("currentuser"));
   const [events, setEvents] = useState([]);
+  const [controlsVisible, setControlsVisible] = useState(true);
 
   const fetchEvent = async () => {
     try {
@@ -370,7 +384,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
 
     const videoElement = videoRef.current;
     //const playPromise = videoElement.play();
-    if (stream) {
+    if (stream.output_port) {
       FristStream();
     }
   }, []);
@@ -519,6 +533,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
       }
 
       function getConnectionStats(url, reportType) {
+        
         if (reportType == undefined) reportType = "all";
 
         connections[url].webrtcPeer.getStats(null).then((stats) => {
@@ -568,7 +583,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
         } catch (e) {
           return;
         }
-
+      
         if (!connections[url].webrtcPeer) {
           connections[url].webrtcPeer = new RTCPeerConnection(
             connections[url].webrtcConfig
@@ -618,7 +633,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
         reportErrorCB
       ) {
         var l = window.location;
-
+        console.log("**************************************************")
         if (path == "null") return;
         var wsProt = l.protocol == "https:" ? "wss://" : "ws://";
         var wsHost = hostname != undefined ? hostname : l.hostname;
@@ -638,6 +653,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
           reportErrorCB != undefined ? reportErrorCB : function (text) {};
 
         connections[url].websocket = new WebSocket(wsUrl);
+      
         connections[url].websocket.addEventListener("message", onServerMessage);
         connections[url].websocket.addEventListener("close", function (event) {
           console.log(
@@ -646,26 +662,16 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
             "and reason:",
             event.reason
           );
-          if (stream.input_stream) {
-            const data = {
-              input_stream: stream.input_stream,
-            };
-            console.log(data);
-
-            axios.put(API_API_URL + `/api/stream/stop/${stream._id}`);
-          }
+          
+        
         });
 
         connections[url].websocket.addEventListener("error", function (error) {
           console.error("WebSocket error:", error);
-          if (stream.input_stream) {
-            const data = {
-              input_stream: stream.input_stream,
-            };
-            console.log(data);
-
+          if(stream.output_port){
             axios.put(API_API_URL + `/api/stream/stop/${stream._id}`);
           }
+   
         });
         showSnackbar("Stream start successfully!", "success");
       }
@@ -673,6 +679,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
       function sendStream(hostname, port, path, configuration, reportErrorCB) {
         console.log("in video")
         console.log(hostname, port, path, configuration, reportErrorCB)
+        
         /*if (stream.input_stream && !hostname && !port) {
           const data = {
             input_stream: stream.input_stream,
@@ -714,6 +721,23 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
 
         connections[url].websocket = new WebSocket(wsUrl);
         connections[url].websocket.addEventListener("message", onServerMessage);
+        connections[url].websocket.addEventListener("error", function (error) {
+          console.error("WebSocket error 1:", error);
+          
+   
+        });
+        connections[url].websocket.addEventListener("close", function (event) {
+          console.log(
+            "Connection closed 1 with code:",
+            event.code,
+            "and reason:",
+            event.reason
+          );
+          
+        
+        });
+        
+        
        
       }
 
@@ -859,9 +883,13 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
           connections[url].webrtcPeer
             .addIceCandidate(candidate)
             .catch(reportError);
+           
         }
 
         function getConnectionStats(url, reportType) {
+          
+           
+          
           if (reportType == undefined) reportType = "all";
 
           connections[url].webrtcPeer.getStats(null).then((stats) => {
@@ -914,7 +942,9 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
           if (!connections[url].webrtcPeer) {
             connections[url].webrtcPeer = new RTCPeerConnection(
               connections[url].webrtcConfig
+              
             );
+            
             connections[url].webrtcPeer.url = url;
 
             connections[url].webrtcPeer.onconnectionstatechange = (ev) => {
@@ -932,6 +962,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
                     ? "inbound-rtp"
                     : "outbound-rtp"
                 );
+                
             };
 
             if (connections[url].type == "inbound")
@@ -1013,6 +1044,21 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
             "message",
             onServerMessage
           );
+          connections[url].websocket.addEventListener("error", function (error) {
+            console.error("WebSocket error 2:", error);
+            
+     
+          });
+          connections[url].websocket.addEventListener("close", function (event) {
+            console.log(
+              "Connection closed 2 with code:",
+              event.code,
+              "and reason:",
+              event.reason
+            );
+            
+          
+          });
           //connections[url].websocket.close()
 
           //localStorage.setItem('connections', JSON.stringify(connections[url]));
@@ -1065,6 +1111,21 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
             "message",
             onServerMessage
           );
+          connections[url].websocket.addEventListener("error", function (error) {
+            console.error("WebSocket error 3:", error);
+            
+     
+          });
+          connections[url].websocket.addEventListener("close", function (event) {
+            console.log(
+              "Connection closed 3 with code:",
+              event.code,
+              "and reason:",
+              event.reason
+            );
+            
+          
+          });
           showSnackbar("Stream start successfully!", "success");
         }
 
@@ -1222,6 +1283,8 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
 
   const drawRectangle = (side) => {
     // Récupération des coordonnées de la ligne
+        setControlsVisible(false); // Hide the controls
+
     const { start, end } = lineCoordinates;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
@@ -1336,6 +1399,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
           var port = response.data.port;
 
           function getLocalStream() {
+            
             var constraints = { audio: false, video: true };
             if (navigator.mediaDevices.getUserMedia) {
               return navigator.mediaDevices.getUserMedia(constraints);
@@ -1530,6 +1594,21 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
               "message",
               onServerMessage
             );
+            connections[url].websocket.addEventListener("error", function (error) {
+              console.error("WebSocket error 4:", error);
+              
+       
+            });
+            connections[url].websocket.addEventListener("close", function (event) {
+              console.log(
+                "Connection closed 4 with code:",
+                event.code,
+                "and reason:",
+                event.reason
+              );
+              
+            
+            });
             showSnackbar("Stream start successfully!", "success");
           }
 
@@ -1578,6 +1657,21 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
               "message",
               onServerMessage
             );
+            connections[url].websocket.addEventListener("error", function (error) {
+              console.error("WebSocket error 5:", error);
+              
+       
+            });
+            connections[url].websocket.addEventListener("close", function (event) {
+              console.log(
+                "Connection closed 5 with code:",
+                event.code,
+                "and reason:",
+                event.reason
+              );
+              
+            
+            });
           }
 
           playStream(
@@ -1755,22 +1849,11 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
               {snackbarMessage}
             </Alert>
           </Snackbar>
-          <Box sx={{ width: "100%", textAlign: "center" }}>
-            <Typography
-              variant="h6"
-              gutterBottom
-              sx={{
-                fontFamily: "time",
-                fontSize: "25px",
-              }}
-            >
-              {stream.stream_name} : {stream.input_stream}
-            </Typography>
-          </Box>
-          <Row>
-            <Col span={12}>
-              {" "}
-              <FormControl className={classes.textField} component="fieldset">
+        
+    
+         {controlsVisible&&( <Grid container spacing={2}>
+          <Grid item xs={12}>
+          <FormControl className={classes.textField} component="fieldset">
                 <RadioGroup
                   color="#f44336"
                   aria-labelledby="demo-radio-buttons-group-label"
@@ -1804,9 +1887,9 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
                   />
                 </RadioGroup>
               </FormControl>
-            </Col>
-            <Col span={12}>
-              <FormControl
+            </Grid>
+            <Grid item xs={12}>
+            <FormControl
                 fullWidth
                 className={classes.textField}
                 style={{ marginTop: "15px" }}
@@ -1837,11 +1920,8 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
                     ))}
                 </Select>
               </FormControl>
-            </Col>
-          </Row>
-          <Row>
-            <Col span={12}>
-              {" "}
+            </Grid>
+            {" "}
               {drawMode === "roi" && (
                 <FormControl fullWidth className={classes.textField}>
                   <FormGroup>
@@ -1861,25 +1941,12 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
                   </FormGroup>
                 </FormControl>
               )}
-            </Col>
-            <Row></Row>
-          </Row>
-          <Row>
             {drawMode === "line" && (
               <>
-                <Col span={8}>
-                  {" "}
-                  <FormControl
-                    style={{ width: "80%" }}
-                    className={classes.textField}
-                  >
-                    <InputLabel id="demo-simple-select-label">
-                      Position
-                    </InputLabel>
-
+                <Grid item xs={6}>
+                  <FormControl fullWidth className={classes.formControl}>
+                    <InputLabel>Position</InputLabel>
                     <Select
-                      labelId="direction-label"
-                      id="direction-select"
                       value={drawDirection}
                       onChange={handleDirectionChange}
                     >
@@ -1887,17 +1954,11 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
                       <MenuItem value="right">Right</MenuItem>
                     </Select>
                   </FormControl>
-                </Col>
-                <Col span={8}>
-                  {" "}
-                  <FormControl
-                    style={{ width: "80%" }}
-                    className={classes.textField}
-                  >
+                </Grid>
+                <Grid item xs={6}>
+                  <FormControl fullWidth className={classes.formControl}>
                     <InputLabel>Flow direction</InputLabel>
                     <Select
-                      labelId="direction-label"
-                      id="direction-select"
                       value={drawFlowDirection}
                       onChange={handleFlowDirectionChange}
                     >
@@ -1906,15 +1967,11 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
                       <MenuItem value="out">Out</MenuItem>
                     </Select>
                   </FormControl>
-                </Col>
-           
+                </Grid>
               </>
             )}
-          </Row>
-          <br />
-          <br />
-          <Row>
-          <Col span={8}>
+    
+              <Grid item xs={4}>
                 <FormControl fullWidth className={classes.textField}>
                   <FormGroup>
                     <FormControlLabel
@@ -1932,8 +1989,10 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
                     />
                   </FormGroup>
                 </FormControl>
-                </Col>
-                {enableAlert === "on" &&( <Col span={8}>
+                </Grid>
+                {enableAlert === "on" &&( 
+                
+                  <Grid item xs={4}>
                 <FormControl fullWidth className={classes.textField}>
                 <TextField
                     label="Schedule Alert (Minutes)"
@@ -1947,59 +2006,45 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
                     disabled={!enableAlert}
                   />
                 </FormControl>
-                </Col>)}
-                </Row>
-          <Row>
-            <Col span={6}>
-              {" "}
-              <Button
+                </Grid>
+                )}
+
+                
+          </Grid>
+         )}
+
+          <Grid container spacing={2} alignItems="center" mt={4}>
+            <Grid item xs={4}>
+            {controlsVisible&&(<Button
                 variant="contained"
-                sx={{
-                  backgroundColor: "#9E58FF",
-                  color: "#ffff",
-                  fontFamily: "time",
-                }}
-                onClick={() => drawRectangle(drawDirection)}
                 className={classes.button}
-                disabled={!link} // D
+                onClick={() => drawRectangle(drawDirection)}
+
+                disabled={!link}
               >
                 Start Counting
               </Button>
-            </Col>
-            <Col span={6}>
-              <Button
+            )}
+            </Grid>
+            <Grid item xs={4}>
+            {(<Button
                 variant="contained"
-                onClick={stopStream}
                 className={classes.buttonStop}
-                sx={{
-                  // backgroundColor: "#9E58FF",
-                  color: "#ffff",
-                  fontFamily: "time",
-                }}
+                onClick={stopStream}
               >
                 Stop Stream
               </Button>
-            </Col>
-            <Col span={6}>
-              <Button
-                variant="contained"
-                sx={{
-                  backgroundColor: "#9E58FF",
-                  color: "#ffff",
-                  fontFamily: "time",
-                }}
-                onClick={clearCanvas}
-                disabled={!isDrawingStart}
-                className={classes.button}
-              >
-                Clear
-              </Button>
-            </Col>
-          </Row>
-          <div>
+              )}
+            </Grid>
+            
    
-      <EventTable events={events} />
-    </div>
+          </Grid>
+
+          {!controlsVisible&& (<Box mt={4}>
+            <EventTable events={events} />
+          </Box>)}
+        
+ 
         </>
       )}
     </>

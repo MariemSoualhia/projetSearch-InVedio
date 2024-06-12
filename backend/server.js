@@ -54,6 +54,32 @@ app.use('/api/videosUploads', videoUploadsRoutes);
 app.get("/api/test", (req, res) => {
   res.send(200).json({ test: `ok` });
 });
+const imageDirectory = "/home/datadoit/model_detection/imgs";
+
+
+// Endpoint pour accéder aux images avec vérification de l'existence
+app.get("/static-images/*", (req, res) => {
+  const filePath = req.params[0]; // Récupère le chemin complet après /static-images/
+
+  // Utiliser path.resolve pour obtenir un chemin absolu sécurisé
+  const resolvedFilePath = path.resolve(filePath);
+
+  // Vérifier que le chemin résolu est dans les limites de l'emplacement autorisé
+  if (!resolvedFilePath.startsWith("/home/datadoit/model_detection/imgs")) {
+    return res.status(403).send("Access denied");
+  }
+
+  // Vérifier l'existence du fichier
+  fs.access(resolvedFilePath, fs.constants.F_OK, (err) => {
+    if (err) {
+      console.error(`File not found: ${resolvedFilePath}`);
+      return res.status(404).send("Image not found");
+    }
+
+    // Envoyer le fichier
+    res.sendFile(resolvedFilePath);
+  });
+});
 // Configurer multer pour les uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
