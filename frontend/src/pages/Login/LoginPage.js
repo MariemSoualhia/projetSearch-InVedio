@@ -113,7 +113,7 @@ const LoginPage = () => {
       localStorage.setItem("token", token);
       localStorage.setItem("currentuser", user);
 
-      navigate("/liveAll");
+      navigate("/live");
       window.location.reload();
     } catch (error) {
       setErrorMessage(error.message);

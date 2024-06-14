@@ -33,6 +33,7 @@ const predefinedClasses = [
   "bicycle",
   "car",
   "cat",
+  "bag",
   "motorcycle",
   "airplane",
   "bus",

@@ -21,8 +21,9 @@ const multer = require("multer");
 const dotenv = require("dotenv");
 const fs = require("fs");
 const axios = require("axios");
-
+const User = require("./models/User");
 const Settings = require("./models/Settings");
+const bcrypt = require("bcrypt");
 const app = express();
 const port = 3002;
 let stream = null;
@@ -396,6 +397,7 @@ app.post("/api/stopAllRecording", async (req, res) => {
 });
 
 app.post("/config", async (req, res) => {
+  console.log('hiiiiiiiiiiiiii')
   const { interface, dhcp, ip, prefix, gateway } = req.body;
   console.log(req.body);
   try {
@@ -498,6 +500,35 @@ function statusDeviceScheduler() {
 //createDevice()
 // Appel de la fonction de planification
 //statusDeviceScheduler();
+
+
+const createUser = async (username, email, password) => {
+  try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      throw new Error("This email is already in use");
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({ username, email, password: hashedPassword });
+    await newUser.save();
+    console.log("User created successfully:", newUser);
+    return newUser;
+  } catch (err) {
+    console.error("Error during user creation:", err);
+    throw err; // Rejeter l'erreur pour la gestion en amont
+  }
+};
+
+// Exemple d'utilisation de la fonction createUser
+(async () => {
+  try {
+    const newUser = await createUser("admin", "admin@gmail.com", "admin");
+    console.log("Created User:", newUser);
+  } catch (err) {
+    console.error("Failed to create user:", err.message);
+  }
+})();
 
 app.listen(process.env.PORT, () => {
   console.log(`Server running on port ${process.env.PORT}`);

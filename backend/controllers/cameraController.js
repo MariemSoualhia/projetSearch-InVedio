@@ -105,7 +105,7 @@ const updateCameraById = async (req, res) => {
       pwd: req.body.password,
     };
 
-    const response = await axios.post('http://localhost:5000/add_network', networkData);
+    const response = await axios.post('http://localhost:5002/add_network', networkData);
 
     // Vérifier la réponse et récupérer l'URL RTSP mise à jour
     const rtspUrl = response.data.valid_links.find(link => link.includes(req.body.address));

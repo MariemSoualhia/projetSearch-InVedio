@@ -30,6 +30,8 @@ import FormControl from "@material-ui/core/FormControl";
 import InputLabel from "@material-ui/core/InputLabel";
 import { makeStyles } from "@material-ui/core/styles";
 import { ContactSupportOutlined, Videocam } from "@material-ui/icons";
+import DeleteIcon from "@mui/icons-material/Delete";
+
 import {
   API_API_URL,
   API_API_URLDetection,
@@ -220,7 +222,8 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
+const DetectionPage = ({ camera, stream: initialStream, allCameras,   componentId,
+  onDelete}) => {
   const classes = useStyles();
   const [selectedCamera, setSelectedCamera] = useState({
     name: "",
@@ -385,6 +388,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
     const videoElement = videoRef.current;
     //const playPromise = videoElement.play();
     if (stream.output_port) {
+      console.log("fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
       FristStream();
     }
   }, []);
@@ -662,16 +666,28 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
             "and reason:",
             event.reason
           );
-          
+          if (stream.input_stream  ) {
+            const data = {
+              input_stream: stream.input_stream,
+            };
+            console.log(data);
+      
+            axios.put(API_API_URL + `/api/stream/stop/${stream._id}`);
+          }
         
         });
 
         connections[url].websocket.addEventListener("error", function (error) {
           console.error("WebSocket error:", error);
-          if(stream.output_port){
+          if (stream.input_stream  ) {
+            const data = {
+              input_stream: stream.input_stream,
+            };
+            console.log(data);
+      
             axios.put(API_API_URL + `/api/stream/stop/${stream._id}`);
           }
-   
+          
         });
         showSnackbar("Stream start successfully!", "success");
       }
@@ -723,6 +739,14 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
         connections[url].websocket.addEventListener("message", onServerMessage);
         connections[url].websocket.addEventListener("error", function (error) {
           console.error("WebSocket error 1:", error);
+           if (stream.input_stream ) {
+          const data = {
+            input_stream: stream.input_stream,
+          };
+          console.log(data);
+    
+          axios.put(API_API_URL + `/api/stream/stop/${stream._id}`);
+        }
           
    
         });
@@ -733,6 +757,9 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
             "and reason:",
             event.reason
           );
+      
+            
+          
           
         
         });
@@ -1260,25 +1287,31 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
       input_stream: selectedCamera.rtspUrl,
     };
     console.log(data);
-
-    const response = await axios.post(
-      API_API_URLDetection + "/stop_stream",
-      data
-    );
+       
     const response2 = await axios.put(
       API_API_URL + `/api/stream/stop/${stream._id}`
     );
+if(videoRef.current){
+  const response = await axios.post(
+    API_API_URLDetection + "/stop_stream",
+    data
+  );
+  
+  if (response && response2) {
+    console.log(response);
+    console.log(response2);
+    //window.location.reload();
 
-    if (response && response2) {
-      console.log(response);
-      console.log(response2);
-      window.location.reload();
+    // Récupérer les données de connexion du localStorage
+    const connectionData = JSON.parse(
+      localStorage.getItem("connections[" + stream.output_port + "]")
+    );
+  }
+  handleDelete()
 
-      // Récupérer les données de connexion du localStorage
-      const connectionData = JSON.parse(
-        localStorage.getItem("connections[" + stream.output_port + "]")
-      );
-    }
+}
+
+    
   };
 
   const drawRectangle = (side) => {
@@ -1797,6 +1830,9 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
     const {value } = e.target;
    setScheduleAlert(e.target.value)
   };
+  const handleDelete = () => {
+    if (onDelete) onDelete(componentId);
+  };
   return (
     <>
       <div className={classes.streamContainer}>
@@ -1824,6 +1860,7 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
         />
       </div>
       {!stream.output_port && (
+        <Grid item xs={12}>
         <Button
           variant="contained"
           sx={{
@@ -1836,7 +1873,18 @@ const DetectionPage = ({ camera, stream: initialStream, allCameras }) => {
         >
           Play
         </Button>
+        <Button
+        variant="contained"
+        className={classes.deleteButtonSmall}
+        onClick={handleDelete}
+        color="secondary"
+        startIcon={<DeleteIcon />}
+      >
+       
+      </Button>
+      </Grid>
       )}
+            
 
       {(stream.output_port || videoPath) && (
         <>

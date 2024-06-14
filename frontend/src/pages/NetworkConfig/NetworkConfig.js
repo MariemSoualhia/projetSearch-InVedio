@@ -14,6 +14,7 @@ import {
   CssBaseline,
 } from "@mui/material";
 import { makeStyles } from "@material-ui/core/styles";
+import axios from "axios";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -26,10 +27,6 @@ const useStyles = makeStyles((theme) => ({
   },
   title: {
     marginBottom: theme.spacing(5),
-    //fontWeight: "bold",
-
-    //color: "#9E58FF",
-    //borderBottom: `2px solid ${theme.palette.primary.main}`,
     paddingBottom: theme.spacing(4),
   },
   textField: {
@@ -54,13 +51,14 @@ const NetworkConfig = ({ onConfig }) => {
   const [ip, setIp] = useState("");
   const [subnetMask, setSubnetMask] = useState("");
   const [gateway, setGateway] = useState("");
+  const [responseMessage, setResponseMessage] = useState("");
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     document.body.className = savedTheme || "light";
   }, []);
 
-  const handleConfig = () => {
+  const handleConfig = async () => {
     const config = {
       interface: interfaceName,
       dhcp: dhcp,
@@ -68,7 +66,16 @@ const NetworkConfig = ({ onConfig }) => {
       prefix: dhcp ? "" : subnetMask,
       gateway: dhcp ? "" : gateway,
     };
-    onConfig(config);
+    
+    try {
+      const response = await axios.post("http://localhost:3002/config", config);
+      console.log('Réponse du serveur :', response.data);
+      setResponseMessage(`Succès : ${response.data}`);
+      onConfig(config);
+    } catch (error) {
+      console.error('Erreur lors de la configuration du réseau :', error);
+      setResponseMessage(`Erreur : ${error.response ? error.response.data : error.message}`);
+    }
   };
 
   return (
@@ -86,8 +93,6 @@ const NetworkConfig = ({ onConfig }) => {
         >
           Network Configuration
         </Typography>
-        <br></br>
-        <br></br>
         <TextField
           fullWidth
           label="Interface Name"
@@ -156,6 +161,11 @@ const NetworkConfig = ({ onConfig }) => {
         >
           Configure
         </Button>
+        {responseMessage && (
+          <Typography variant="body1" color="error" style={{ marginTop: 16 }}>
+            {responseMessage}
+          </Typography>
+        )}
       </Paper>
     </ThemeProvider>
   );

@@ -8,5 +8,8 @@ router.get("/", eventsController.getAllEvents);
 router.get("/:id", eventsController.getEventById);
 router.put("/:id", eventsController.updateEvent);
 router.delete("/:id", eventsController.deleteEvent);
+router.get("/camera/:cameraId", eventsController.getEventsByCameraId);
+router.get("/video", eventsController.getEventsByVideoPath);
+router.get("/byCameraNameAndToday/:cameraName", eventsController.getEventsByCameraNameAndToday);
 
 module.exports = router;

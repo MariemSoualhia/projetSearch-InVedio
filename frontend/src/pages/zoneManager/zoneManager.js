@@ -224,7 +224,12 @@ const ZoneManager = () => {
       await api.post("/zones", newZone);
       handleSuccessSnackbar("Zone added successfully");
       fetchZones();
-      setNewZone({ zone_name: "", type: "", areaName: "" });
+   
+      setNewZone((prevZone) => ({
+        ...prevZone,
+      
+        zone_name: "", type: "",
+      }));
     } catch (error) {
       console.error("Error creating zone:", error);
     }

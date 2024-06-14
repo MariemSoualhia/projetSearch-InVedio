@@ -201,7 +201,7 @@ const SettingsPage = () => {
     } else {
       console.log("i'm here");
       axios
-        .post(API_API_URL + "/api/settings/", platformSettings)
+        .post(API_API_URL + "/api/settings", platformSettings)
         .then(() => {
           console.log("Settings created successfully");
           setSuccessMessage("Settings created successfully");
@@ -366,13 +366,7 @@ const SettingsPage = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <NetworkConfig onConfig={saveNetworkConfig} />
-              </CardContent>
-            </Card>
-          </Grid>
+
         </Grid>
         <Snackbar
           open={snackbarOpen}
